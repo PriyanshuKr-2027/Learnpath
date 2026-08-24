@@ -16,6 +16,7 @@ import {
   Star,
   CheckCircle,
   WarningCircle,
+  Cards,
 } from "@phosphor-icons/react";
 import { LevelNode } from "@/types";
 
@@ -100,6 +101,12 @@ export function LevelDetailsDrawer({ node, onClose }: LevelDetailsDrawerProps) {
               <Clock className="w-4 h-4 text-cyan-400" />
               {node.estimatedMinutes} Minutes
             </span>
+            {node.flashcards && node.flashcards.length > 0 && (
+              <span className="flex items-center gap-1.5 font-medium text-orange-400">
+                <Cards className="w-4 h-4" />
+                {node.flashcards.length} Flashcards
+              </span>
+            )}
             {isCompleted && (
               <div className="flex items-center gap-1 text-amber-400 ml-auto font-semibold">
                 <Star className="w-4 h-4" weight="fill" />
@@ -116,6 +123,22 @@ export function LevelDetailsDrawer({ node, onClose }: LevelDetailsDrawerProps) {
             </div>
             <p className="text-xs text-zinc-300 leading-relaxed">{node.whyRecommended}</p>
           </div>
+
+          {/* Flashcards Preview Card for Remediation Levels */}
+          {node.flashcards && node.flashcards.length > 0 && (
+            <div className="p-4 rounded-2xl border border-orange-500/30 bg-orange-950/10 flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-orange-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Cards className="w-4 h-4" weight="fill" />
+                  Interactive 3D Flashcard Deck
+                </span>
+                <span className="text-[11px] font-mono text-orange-400/80">{node.flashcards.length} Cards</span>
+              </div>
+              <p className="text-xs text-zinc-300 leading-relaxed">
+                Includes diagnostic recall cards focusing on <strong className="text-zinc-100">{node.flashcards[0]?.front}</strong> and key syntax patterns.
+              </p>
+            </div>
+          )}
 
           {/* Pruned Video Card */}
           {node.video && (

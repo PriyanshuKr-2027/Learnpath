@@ -18,8 +18,9 @@ import {
   WarningCircle,
   ArrowLeft,
   Question,
+  Cards,
 } from "@phosphor-icons/react";
-import { CATAttempt, CATQuestion, CATSession, LearningPath, LevelNode } from "@/types";
+import { CATAttempt, CATQuestion, LearningPath, LevelNode } from "@/types";
 import { mockStore } from "@/lib/services/mockStore";
 import { getOrCreateCuratedResource, PRESEEDED_CURATED_CORPUS } from "@/lib/data/curatedCorpus";
 import {
@@ -47,6 +48,9 @@ export default function CATAssessmentPage() {
   const [attempts, setAttempts] = useState<CATAttempt[]>([]);
   const [currentTheta, setCurrentTheta] = useState<number>(DEFAULT_INITIAL_THETA);
   const [thetaHistory, setThetaHistory] = useState<number[]>([DEFAULT_INITIAL_THETA]);
+
+  // Mistakes tracker for mistake-proportional sub-level scaling (.1 per mistake)
+  const [missedQuestions, setMissedQuestions] = useState<CATQuestion[]>([]);
 
   // Active question interaction
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
@@ -115,6 +119,10 @@ export default function CATAssessmentPage() {
     setCurrentTheta(newTheta);
     setIsAnswerSubmitted(true);
 
+    if (!isCorrect) {
+      setMissedQuestions((prev) => [...prev, currentQuestion]);
+    }
+
     // Update subtopic diagnostics
     const topic = currentQuestion.topic || "Core Fundamentals";
     setSubtopicScores((prev) => {
@@ -148,7 +156,7 @@ export default function CATAssessmentPage() {
     }
   };
 
-  // Outcome 1: Complete and claim verified badge
+  // Outcome 1: Complete and claim verified badge (if 0 mistakes or >= 70%)
   const handleClaimBadge = () => {
     mockStore.updateLevelProgress(level.id, {
       status: "completed",
@@ -157,20 +165,24 @@ export default function CATAssessmentPage() {
     router.push("/roadmap");
   };
 
-  // Outcome 2: Trigger Autonomous Adaptive In-Place Remediation
-  const handleTriggerAdaptiveRecalibration = (forcedTopic?: string) => {
-    // Find weakest subtopic
-    let weakest = forcedTopic || "DAX Measures & Filter Context";
-    for (const [topic, score] of Object.entries(subtopicScores)) {
-      if (score.correct / score.total < 0.6) {
-        weakest = topic;
-        break;
-      }
+  // Outcome 2: Autonomous Adaptive In-Place Remediation (Mistake-Proportional: .1 per mistake)
+  const handleTriggerAdaptiveRecalibration = (forcedTopics?: string[]) => {
+    let topicsToRemediate: string[] = [];
+
+    if (forcedTopics && forcedTopics.length > 0) {
+      topicsToRemediate = forcedTopics;
+    } else if (missedQuestions.length > 0) {
+      // Unique list of missed subtopics
+      topicsToRemediate = Array.from(new Set(missedQuestions.map((q) => q.topic)));
+    } else {
+      topicsToRemediate = ["DAX Measures & Context Transition", "Star Schema Relationships"];
     }
 
-    mockStore.injectRemediation(level.id, weakest);
+    mockStore.injectRemediation(level.id, topicsToRemediate);
     router.push("/roadmap");
   };
+
+  const totalMistakesCount = missedQuestions.length;
 
   return (
     <div className="flex flex-col gap-6 w-full max-w-4xl mx-auto pb-12">
@@ -200,16 +212,27 @@ export default function CATAssessmentPage() {
           </div>
         </div>
 
-        {/* 1-Click Judge Simulator Button */}
-        <button
-          type="button"
-          onClick={() => handleTriggerAdaptiveRecalibration("DAX Context Transition")}
-          className="px-3 py-1.5 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 text-orange-400 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
-          title="Instantly test in-place Level 5.1 remediation injection"
-        >
-          <Lightning className="w-3.5 h-3.5" weight="fill" />
-          <span>⚡ Test Adaptive Re-Routing</span>
-        </button>
+        {/* 1-Click Judge Simulator Buttons */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => handleTriggerAdaptiveRecalibration(["DAX Context Transition"])}
+            className="px-2.5 py-1.5 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 text-orange-400 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+            title="Inject Level 5.1 for 1 Mistake"
+          >
+            <Lightning className="w-3.5 h-3.5" weight="fill" />
+            <span>⚡ 1 Mistake (5.1)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleTriggerAdaptiveRecalibration(["DAX Context Transition", "Multi-Table Joins"])}
+            className="px-2.5 py-1.5 rounded-xl bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/40 text-orange-300 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+            title="Inject Level 5.1 & Level 5.2 for 2 Mistakes"
+          >
+            <Cards className="w-3.5 h-3.5" weight="fill" />
+            <span>⚡ 2 Mistakes (5.1 + 5.2)</span>
+          </button>
+        </div>
       </div>
 
       {/* Real-time Latent Ability (θ) Gauge Panel */}
@@ -326,7 +349,7 @@ export default function CATAssessmentPage() {
                   </span>
                 ) : (
                   <span className="text-rose-400 flex items-center gap-1">
-                    <WarningCircle className="w-4 h-4" weight="fill" /> Incorrect. (-θ calibration)
+                    <WarningCircle className="w-4 h-4" weight="fill" /> Incorrect. (-θ calibration ➔ Sub-level scheduled)
                   </span>
                 )}
               </div>
@@ -365,12 +388,16 @@ export default function CATAssessmentPage() {
         <div className="flex flex-col gap-6 p-6 sm:p-8 rounded-3xl border border-zinc-800 bg-zinc-900/60 backdrop-blur-xl shadow-2xl text-center items-center">
           <div
             className={`w-20 h-20 rounded-3xl flex items-center justify-center shadow-2xl ${
-              currentTheta >= 0.65
+              totalMistakesCount === 0 && currentTheta >= 0.65
                 ? "bg-gradient-to-tr from-emerald-500 to-teal-400 text-zinc-950 shadow-emerald-500/30"
                 : "bg-gradient-to-tr from-amber-500 to-orange-500 text-zinc-950 shadow-orange-500/30"
             }`}
           >
-            {currentTheta >= 0.65 ? <Trophy className="w-10 h-10" weight="fill" /> : <Brain className="w-10 h-10" weight="fill" />}
+            {totalMistakesCount === 0 && currentTheta >= 0.65 ? (
+              <Trophy className="w-10 h-10" weight="fill" />
+            ) : (
+              <Brain className="w-10 h-10" weight="fill" />
+            )}
           </div>
 
           <div>
@@ -381,7 +408,9 @@ export default function CATAssessmentPage() {
               Calibrated Ability: {proficiency.label} ({(currentTheta * 100).toFixed(0)}%)
             </h2>
             <p className="text-xs text-zinc-400 mt-1 max-w-md mx-auto">
-              Your true latent ability converged across {TOTAL_QUESTIONS_IN_TEST} adaptive items using the 1-Parameter Logistic Rasch Model.
+              {totalMistakesCount === 0
+                ? "Zero errors detected! Your mastery is verified across all sub-dimensions."
+                : `Detected ${totalMistakesCount} question mistake(s). Autonomous adaptive loop will inject .1 sub-levels for each mistake.`}
             </p>
           </div>
 
@@ -406,10 +435,10 @@ export default function CATAssessmentPage() {
           </div>
 
           {/* Decision Outcome */}
-          {currentTheta >= 0.65 ? (
+          {totalMistakesCount === 0 && currentTheta >= 0.65 ? (
             <div className="flex flex-col gap-3 w-full max-w-md">
               <div className="p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/30 text-xs text-emerald-300">
-                🎉 <strong>Mastery Verified!</strong> Prerequisite roadblocks removed. Levels 6–10 are now unlocked on your map.
+                🎉 <strong>Perfect Mastery Verified!</strong> Prerequisite roadblocks cleared. Next 5 levels unlocked.
               </div>
               <button
                 type="button"
@@ -422,16 +451,25 @@ export default function CATAssessmentPage() {
             </div>
           ) : (
             <div className="flex flex-col gap-3 w-full max-w-md">
-              <div className="p-3 rounded-xl bg-orange-950/30 border border-orange-500/30 text-xs text-orange-300 text-left">
-                ⚠️ <strong>Autonomous Adaptive Loop:</strong> A comprehension gap was detected in subtopic <em>DAX Measures & Context Transition</em>. The system will inject <strong>Level 5.1 Remediation</strong> right into your path.
+              <div className="p-3.5 rounded-xl bg-orange-950/30 border border-orange-500/30 text-xs text-orange-300 text-left">
+                ⚠️ <strong>Mistake-Proportional Adaptive Recalibration:</strong>
+                <ul className="list-disc list-inside mt-1.5 space-y-1 text-[11px] text-zinc-300">
+                  {missedQuestions.map((q, idx) => (
+                    <li key={idx}>
+                      Mistake #{idx + 1} in <strong>{q.topic}</strong> ➔ Injecting <strong>Level {level.levelNumber}.{idx + 1} Flashcard Lab</strong>
+                    </li>
+                  ))}
+                </ul>
               </div>
               <button
                 type="button"
                 onClick={() => handleTriggerAdaptiveRecalibration()}
                 className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:opacity-90 text-zinc-950 font-bold text-sm shadow-xl shadow-orange-500/20 transition-all cursor-pointer flex items-center justify-center gap-2"
               >
-                <Lightning className="w-5 h-5" weight="fill" />
-                <span>Inject Level 5.1 & View Updated Graph</span>
+                <Cards className="w-5 h-5" weight="fill" />
+                <span>
+                  Inject {totalMistakesCount || 1} Sub-Level(s) & Open Flashcards
+                </span>
               </button>
             </div>
           )}

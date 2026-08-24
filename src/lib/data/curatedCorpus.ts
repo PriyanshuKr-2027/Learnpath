@@ -1,4 +1,4 @@
-import { CATQuestion, DocResource, GitHubRepoResource, VideoResource } from "@/types";
+import { CATQuestion, DocResource, Flashcard, GitHubRepoResource, VideoResource } from "@/types";
 
 export interface PreSeededTopicResource {
   skillName: string;
@@ -7,6 +7,7 @@ export interface PreSeededTopicResource {
   githubRepo: GitHubRepoResource;
   whyRecommendedTemplate: string;
   catQuestions: CATQuestion[];
+  flashcards?: Flashcard[];
 }
 
 export const PRESEEDED_CURATED_CORPUS: Record<string, PreSeededTopicResource> = {
@@ -92,6 +93,29 @@ export const PRESEEDED_CURATED_CORPUS: Record<string, PreSeededTopicResource> = 
         explanation: "MATERIALIZED forces Postgres to evaluate the CTE as an optimization barrier, which is beneficial when the CTE is expensive and referenced multiple times.",
       },
     ],
+    flashcards: [
+      {
+        id: "fc-sql-1",
+        front: "What is the exact evaluation order of SQL clauses in the engine?",
+        back: "1. FROM / JOIN\n2. WHERE\n3. GROUP BY\n4. HAVING\n5. SELECT / Window Functions\n6. DISTINCT\n7. ORDER BY\n8. LIMIT / OFFSET",
+        category: "SQL Query Lifecycle",
+        codeSnippet: "-- WHERE filters before grouping, HAVING filters after grouping\nSELECT dept, AVG(salary) FROM employees WHERE active = true GROUP BY dept HAVING AVG(salary) > 80000;",
+      },
+      {
+        id: "fc-sql-2",
+        front: "What is the difference between ROW_NUMBER(), RANK(), and DENSE_RANK() on tied values (e.g. 100, 100, 90)?",
+        back: "• ROW_NUMBER(): Strict sequential integers (1, 2, 3)\n• RANK(): Ties share rank, leaves gaps (1, 1, 3)\n• DENSE_RANK(): Ties share rank, no gaps (1, 1, 2)",
+        category: "Window Functions",
+        codeSnippet: "SELECT score, DENSE_RANK() OVER (ORDER BY score DESC) as ranking FROM scores;",
+      },
+      {
+        id: "fc-sql-3",
+        front: "When should you use an EXISTS clause instead of IN with a subquery?",
+        back: "Use EXISTS when the subquery may contain NULLs or when evaluating large subqueries. EXISTS short-circuits on the first true match and handles NULL values without breaking 3-valued boolean logic.",
+        category: "Performance & Subqueries",
+        codeSnippet: "SELECT * FROM customers c WHERE EXISTS (SELECT 1 FROM orders o WHERE o.cust_id = c.id);",
+      },
+    ],
   },
   "power bi & dax": {
     skillName: "Power BI & DAX",
@@ -153,6 +177,28 @@ export const PRESEEDED_CURATED_CORPUS: Record<string, PreSeededTopicResource> = 
         explanation: "CALCULATE is the only DAX function capable of altering filter context and transforming existing row contexts into filter context (context transition).",
       },
     ],
+    flashcards: [
+      {
+        id: "fc-dax-1",
+        front: "What is 'Context Transition' in DAX and when does it occur?",
+        back: "Context Transition is the transformation of all active Row Contexts into equivalent Filter Contexts. It happens automatically whenever CALCULATE() or CALCULATETABLE() is called inside an iterator or row context.",
+        category: "DAX Evaluation Engine",
+        codeSnippet: "-- Calling a Measure inside SUMX triggers context transition automatically:\nSUMX(Customers, [Total Sales])",
+      },
+      {
+        id: "fc-dax-2",
+        front: "What is the difference between ALL() and ALLEXCEPT() in DAX?",
+        back: "• ALL(Table[Column]): Completely clears all filters applied to the specified table or column, returning all rows.\n• ALLEXCEPT(Table, Table[Col1]): Clears all filters on the table EXCEPT for the specified preserved column(s).",
+        category: "DAX Filter Modifiers",
+        codeSnippet: "-- Percent of Total Sales:\nDIVIDE([Total Sales], CALCULATE([Total Sales], ALL(Products)))",
+      },
+      {
+        id: "fc-dax-3",
+        front: "Why should you prefer Star Schema over Snowflake Schema in Power BI Tabular Engine (VertiPaq)?",
+        back: "VertiPaq column-store compression is heavily optimized for single-hop 1-to-many relationships in a Star Schema (Central Fact + Dimension tables). Snowflake schemas introduce multi-hop joins which increase memory footprint and query latency.",
+        category: "Data Modeling",
+      },
+    ],
   },
   "pytorch & deep learning foundations": {
     skillName: "PyTorch & Deep Learning Foundations",
@@ -198,93 +244,51 @@ export const PRESEEDED_CURATED_CORPUS: Record<string, PreSeededTopicResource> = 
         explanation: "By default, gradients accumulate in .grad buffers. If not zeroed, gradients from previous batches would sum together incorrectly.",
       },
     ],
-  },
-  "retrieval-augmented generation (rag)": {
-    skillName: "Retrieval-Augmented Generation (RAG)",
-    video: {
-      youtubeId: "tcqEUSNCn8I",
-      title: "Building Production RAG Systems with Vector Databases and LangChain",
-      channelTitle: "James Briggs",
-      durationSeconds: 7200,
-      durationFormatted: "2:00:00",
-      relevantStartSeconds: 600,
-      relevantEndSeconds: 5400,
-      pruningReason: "Focuses on semantic chunking, reciprocal rank fusion (RRF), and hybrid sparse-dense search.",
-    },
-    doc: {
-      title: "LangChain & LlamaIndex Production RAG Guide",
-      url: "https://docs.llamaindex.ai/en/stable/optimizing/production_rag/",
-      provider: "LlamaIndex & Pinecone Research",
-      summary: "Production patterns for metadata filtering, re-ranking with Cohere, and contextual retrieval.",
-    },
-    githubRepo: {
-      repoName: "enterprise-rag-architecture",
-      repoUrl: "https://github.com/learnpath/enterprise-rag-architecture",
-      owner: "learnpath",
-      starsCount: 2450,
-      description: "FastAPI + pgvector + Groq/Llama-3.3 enterprise RAG template with evaluation metrics (RAGAS).",
-    },
-    whyRecommendedTemplate: "RAG is the #1 requested skill in modern AI job descriptions, combining vector search with grounded LLM generation.",
-    catQuestions: [
+    flashcards: [
       {
-        id: "cat-rag-1",
-        skillName: "Retrieval-Augmented Generation (RAG)",
-        topic: "Vector Search & Retrieval",
-        difficultyTier: 4,
-        calibratedDifficulty: 0.76,
-        question: "What is the primary benefit of Hybrid Search (combining BM25 Sparse Search with Dense Vector Embeddings)?",
-        options: [
-          "It captures both exact keyword matches (e.g. part numbers, names) and conceptual semantic meaning",
-          "It reduces vector database storage by 90%",
-          "It eliminates the need for an LLM during answer generation",
-          "It allows running neural networks without GPUs",
-        ],
-        correctOptionIndex: 0,
-        explanation: "Dense vectors capture semantics but struggle with exact alphanumeric IDs/keywords. BM25 excels at keywords. Hybrid search combines the best of both.",
-      },
-    ],
-  },
-  "react 19 & next.js 16 app router": {
-    skillName: "React 19 & Next.js 16 App Router",
-    video: {
-      youtubeId: "wm5gMKuwSYk",
-      title: "Next.js 16 Full Course - React Server Components & Streaming",
-      channelTitle: "Jack Herrington",
-      durationSeconds: 14400,
-      durationFormatted: "4:00:00",
-      relevantStartSeconds: 1200,
-      relevantEndSeconds: 7800,
-      pruningReason: "Focuses on Server Action boundaries, parallel routes, and streaming Suspense architecture.",
-    },
-    doc: {
-      title: "Next.js App Router Official Architecture Guide",
-      url: "https://nextjs.org/docs/app",
-      provider: "Vercel Next.js Documentation",
-      summary: "Complete reference for Server vs Client components, caching tiers, route handlers, and streaming UI.",
-    },
-    githubRepo: {
-      repoName: "nextjs16-modern-saas-starter",
-      repoUrl: "https://github.com/learnpath/nextjs16-modern-saas-starter",
-      owner: "learnpath",
-      starsCount: 1890,
-      description: "Next.js 16 + Tailwind v4 + Supabase Auth + React Flow interactive dashboard boilerplate.",
-    },
-    whyRecommendedTemplate: "Next.js 16 is the industry standard for production-grade fullstack web applications with high performance.",
-    catQuestions: [
-      {
-        id: "cat-next-1",
-        skillName: "React 19 & Next.js 16 App Router",
-        topic: "Server Components vs Client",
-        difficultyTier: 3,
-        calibratedDifficulty: 0.52,
-        question: "In Next.js App Router, which directive must be placed at the top of a file to enable useState and useEffect hooks?",
-        options: ["'use client'", "'use server'", "'use dynamic'", "'use strict'"],
-        correctOptionIndex: 0,
-        explanation: "'use client' marks the boundary between Server Components and interactive Client Components where browser APIs and state hooks are permitted.",
+        id: "fc-torch-1",
+        front: "What is the exact sequence of steps in a standard PyTorch training loop iteration?",
+        back: "1. optimizer.zero_grad() — Clear previous gradients\n2. outputs = model(inputs) — Forward pass\n3. loss = criterion(outputs, labels) — Compute loss\n4. loss.backward() — Backpropagation (compute gradients)\n5. optimizer.step() — Update weights",
+        category: "PyTorch Core Engine",
+        codeSnippet: "for x, y in dataloader:\n    optimizer.zero_grad()\n    out = model(x)\n    loss = loss_fn(out, y)\n    loss.backward()\n    optimizer.step()",
       },
     ],
   },
 };
+
+/**
+ * Generates tailored Flashcards for any remedial subtopic (e.g. for Level 5.1, 5.2, 5.3)
+ */
+export function generateFlashcardsForSubtopic(subtopic: string, skillName: string): Flashcard[] {
+  const key = skillName.toLowerCase().trim();
+  const corpus = PRESEEDED_CURATED_CORPUS[key];
+
+  if (corpus?.flashcards && corpus.flashcards.length > 0) {
+    return corpus.flashcards;
+  }
+
+  // Dynamic generative fallback
+  return [
+    {
+      id: `fc-${subtopic.toLowerCase().replace(/[^a-z0-9]/g, "-")}-1`,
+      front: `What is the core architectural principle of ${subtopic}?`,
+      back: `${subtopic} defines the foundation for ensuring data correctness, performance scaling, and avoiding common execution anti-patterns in ${skillName}.`,
+      category: `${skillName} • Core Concept`,
+    },
+    {
+      id: `fc-${subtopic.toLowerCase().replace(/[^a-z0-9]/g, "-")}-2`,
+      front: `What is the most common pitfall or mistake when implementing ${subtopic}?`,
+      back: `Failing to account for context boundaries, state accumulation, or incorrect order-of-operations. Always verify baseline constraints before applying complex transformations.`,
+      category: `${skillName} • Debugging & Optimization`,
+    },
+    {
+      id: `fc-${subtopic.toLowerCase().replace(/[^a-z0-9]/g, "-")}-3`,
+      front: `How do you verify and test mastery of ${subtopic}?`,
+      back: `Implement a minimal reproduction script or query verifying that edge cases (nulls, tied ranks, empty batches) behave deterministically.`,
+      category: `${skillName} • Production Readiness`,
+    },
+  ];
+}
 
 /**
  * Fallback generator for any arbitrary skill requested by user that isn't pre-seeded.
@@ -295,19 +299,17 @@ export function getOrCreateCuratedResource(skillName: string): PreSeededTopicRes
     return PRESEEDED_CURATED_CORPUS[key];
   }
 
-  // Find fuzzy match
   for (const [k, val] of Object.entries(PRESEEDED_CURATED_CORPUS)) {
     if (k.includes(key) || key.includes(k)) {
       return val;
     }
   }
 
-  // Dynamic fallback synthesis
   const formattedTitle = skillName.charAt(0).toUpperCase() + skillName.slice(1);
   return {
     skillName: formattedTitle,
     video: {
-      youtubeId: "rfscVS0vtbw", // Python/CS foundational video ID as reliable fallback
+      youtubeId: "rfscVS0vtbw",
       title: `${formattedTitle} Masterclass - Zero to Production`,
       channelTitle: "freeCodeCamp.org / LearnPath AI",
       durationSeconds: 7200,
@@ -348,5 +350,6 @@ export function getOrCreateCuratedResource(skillName: string): PreSeededTopicRes
         explanation: `${formattedTitle} provides standard patterns designed to solve domain-specific engineering problems efficiently.`,
       },
     ],
+    flashcards: generateFlashcardsForSubtopic("Core Fundamentals", formattedTitle),
   };
 }

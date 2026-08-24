@@ -4,6 +4,15 @@ export type SkillSource = "resume" | "github" | "manual" | "inferred";
 export type NodeStatus = "completed" | "active" | "locked" | "remediation";
 export type DifficultyTier = 1 | 2 | 3 | 4 | 5; // 1: Beginner, 2: Elementary, 3: Intermediate, 4: Advanced, 5: Expert
 
+// --- Flashcard Schema for Remedial Sub-Levels (5.1, 5.2...) ---
+export interface Flashcard {
+  id: string;
+  front: string;              // Question / Term / Prompt
+  back: string;               // Core Solution / Rule / Takeaway
+  category: string;
+  codeSnippet?: string;
+}
+
 // --- Learner Profile & Onboarding Types ---
 export interface SkillEntry {
   name: string;
@@ -126,8 +135,8 @@ export interface ResourceScore {
 // --- Candy Crush RPG Level & DAG Types ---
 export interface LevelNode {
   id: string;                  // e.g. "lvl-1", "lvl-5", "lvl-5.1"
-  levelNumber: number;         // 1, 2, 3... (remediation levels use float/sub-index e.g. 5.1)
-  displayLevel: string;        // "1", "2", "5", "5.1"
+  levelNumber: number;         // 1, 2, 3... (remediation levels use float/sub-index e.g. 5.1, 5.2)
+  displayLevel: string;        // "1", "2", "5", "5.1", "5.2"
   title: string;
   skillName: string;
   phase: string;               // e.g. "Phase 1: Foundations", "Phase 2: Core Modeling"
@@ -136,10 +145,11 @@ export interface LevelNode {
   status: NodeStatus;
   starsEarned: number;         // 0 to 3
   isBossCheckpoint: boolean;   // true every 5 levels (e.g. lvl-5, lvl-10)
-  isRemediation: boolean;      // true if injected dynamically
+  isRemediation: boolean;      // true if injected dynamically (5.1, 5.2...)
   video: VideoResource;
   doc: DocResource;
   githubRepo: GitHubRepoResource;
+  flashcards?: Flashcard[];    // Interactive flashcard deck for remedial levels
   whyRecommended: string;      // XAI reasoning string
   prerequisites: string[];     // Array of level IDs that must be completed
   coordinates: { x: number; y: number }; // Serpentine S-curve layout
@@ -206,8 +216,8 @@ export interface CATSession {
   subtopicScores: Record<string, number>; // subtopic -> score%
   recommendedRemediation?: {
     needsRemediation: boolean;
-    weakSubtopic?: string;
-    remedialLevelTitle?: string;
+    weakSubtopics?: string[];
+    remedialLevelTitles?: string[];
   };
 }
 

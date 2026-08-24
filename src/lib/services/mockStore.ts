@@ -1,5 +1,6 @@
 import {
   DAGEdge,
+  Flashcard,
   LearnerProfile,
   LearningPath,
   LevelNode,
@@ -9,7 +10,11 @@ import {
   UserLessonNote,
 } from "@/types";
 import { PRESEEDED_CAREER_ROLES } from "@/lib/data/roleTaxonomy";
-import { getOrCreateCuratedResource, PRESEEDED_CURATED_CORPUS } from "@/lib/data/curatedCorpus";
+import {
+  getOrCreateCuratedResource,
+  PRESEEDED_CURATED_CORPUS,
+  generateFlashcardsForSubtopic,
+} from "@/lib/data/curatedCorpus";
 import { scheduleNodesWithKahns, TopoNodeInput } from "@/lib/algorithms/kahnsAlgorithm";
 import {
   generateSerpentineCoordinates,
@@ -105,6 +110,7 @@ export function generateLearningPathFromProfile(profile: LearnerProfile): Learni
       video: curated.video,
       doc: curated.doc,
       githubRepo: curated.githubRepo,
+      flashcards: curated.flashcards,
       whyRecommended: curated.whyRecommendedTemplate,
       prerequisites: idx === 0 ? [] : [`lvl-${idx}`],
       coordinates: coordinates[idx] || { x: 350, y: idx * 160 + 60 },
@@ -143,95 +149,115 @@ export function generateLearningPathFromProfile(profile: LearnerProfile): Learni
 
 /**
  * In-Place Remediation Injection Engine:
- * Spliced dynamically into the active roadmap when score on subtopic is < 70%.
+ * Mistake-Proportional Sub-Level Scaling:
+ * 1 mistake -> Injects Level 5.1 with Flashcards
+ * 2 mistakes -> Injects Level 5.1 and Level 5.2 with Flashcards
+ * 3 mistakes -> Injects Level 5.1, 5.2, 5.3...
  */
-export function injectRemedialLevelIntoPath(
+export function injectRemedialLevelsIntoPath(
   currentPath: LearningPath,
   parentLevelId: string,
-  weakSubtopicName: string
+  weakSubtopics: string[]
 ): { updatedPath: LearningPath; diff: RoadmapDiff } {
   const parentIndex = currentPath.levels.findIndex((l) => l.id === parentLevelId);
-  if (parentIndex === -1) return { updatedPath: currentPath, diff: null as any };
+  if (parentIndex === -1 || !weakSubtopics || weakSubtopics.length === 0) {
+    return { updatedPath: currentPath, diff: null as any };
+  }
 
   const parentLevel = currentPath.levels[parentIndex];
-  const remedialId = `${parentLevel.id}.1`;
-
-  // Calculate dedicated offset coordinate
-  const remedialCoord = calculateRemediationCoordinate(parentLevel.coordinates, 1);
-
-  const remedialLevel: LevelNode = {
-    id: remedialId,
-    levelNumber: parentLevel.levelNumber + 0.1,
-    displayLevel: `${parentLevel.levelNumber}.1`,
-    title: `Remediation Lab: ${weakSubtopicName}`,
-    skillName: parentLevel.skillName,
-    phase: `${parentLevel.phase} (Targeted Remediation)`,
-    targetWeek: parentLevel.targetWeek,
-    estimatedMinutes: 45,
-    status: "active",
-    starsEarned: 0,
-    isBossCheckpoint: false,
-    isRemediation: true,
-    video: {
-      youtubeId: "rfscVS0vtbw",
-      title: `${weakSubtopicName} - Rapid Concept & Syntax Refresher`,
-      channelTitle: "LearnPath AI Remediation Lab",
-      durationSeconds: 1200,
-      durationFormatted: "20:00",
-      relevantStartSeconds: 0,
-      relevantEndSeconds: 1200,
-      pruningReason: `Dynamically injected because your diagnostic score on '${weakSubtopicName}' was below 70%.`,
-    },
-    doc: {
-      title: `${weakSubtopicName} Deep-Dive Cheat Sheet`,
-      url: "https://devdocs.io/",
-      provider: "LearnPath AI Diagnostic Lab",
-      summary: `Targeted cheat sheet focusing on common pitfalls, edge cases, and best practices in ${weakSubtopicName}.`,
-    },
-    githubRepo: {
-      repoName: `${weakSubtopicName.toLowerCase().replace(/[^a-z0-9]/g, "-")}-remedial-sandbox`,
-      repoUrl: "https://github.com/learnpath/remedial-sandbox",
-      owner: "learnpath",
-      starsCount: 410,
-      description: `Targeted interactive sandbox challenge to master ${weakSubtopicName}.`,
-    },
-    whyRecommended: `Injected dynamically by the Autonomous Adaptive Loop because your assessment identified a comprehension gap in ${weakSubtopicName}.`,
-    prerequisites: [parentLevel.id],
-    coordinates: remedialCoord,
-  };
-
-  // Clone levels and insert right after parent
-  const newLevels = [...currentPath.levels];
-  newLevels.splice(parentIndex + 1, 0, remedialLevel);
-
-  // Update edges to branch to remedial node
+  const injectedLevels: LevelNode[] = [];
   const newEdges = [...currentPath.edges];
-  newEdges.push({
-    id: `e-${parentLevel.id}-${remedialId}`,
-    source: parentLevel.id,
-    target: remedialId,
-    isRemediationEdge: true,
+
+  // Generate sub-levels (.1, .2, .3...) for each mistake
+  weakSubtopics.forEach((subtopic, idx) => {
+    const mistakeIndex = idx + 1; // 1, 2, 3...
+    const subLevelNumber = Number((parentLevel.levelNumber + mistakeIndex * 0.1).toFixed(1));
+    const subDisplayLevel = `${parentLevel.levelNumber}.${mistakeIndex}`;
+    const remedialId = `${parentLevel.id}.${mistakeIndex}`;
+
+    const remedialCoord = calculateRemediationCoordinate(parentLevel.coordinates, mistakeIndex);
+    const flashcardDeck = generateFlashcardsForSubtopic(subtopic, parentLevel.skillName);
+
+    const remedialLevel: LevelNode = {
+      id: remedialId,
+      levelNumber: subLevelNumber,
+      displayLevel: subDisplayLevel,
+      title: `Remediation Lab: ${subtopic}`,
+      skillName: parentLevel.skillName,
+      phase: `${parentLevel.phase} (Mistake #${mistakeIndex} Remediation)`,
+      targetWeek: parentLevel.targetWeek,
+      estimatedMinutes: 30,
+      status: "active",
+      starsEarned: 0,
+      isBossCheckpoint: false,
+      isRemediation: true,
+      flashcards: flashcardDeck,
+      video: {
+        youtubeId: "rfscVS0vtbw",
+        title: `${subtopic} — Concept & Syntax Deep Dive`,
+        channelTitle: "LearnPath AI Remediation Lab",
+        durationSeconds: 900,
+        durationFormatted: "15:00",
+        relevantStartSeconds: 0,
+        relevantEndSeconds: 900,
+        pruningReason: `Dynamically injected because Mistake #${mistakeIndex} in assessment was in '${subtopic}'.`,
+      },
+      doc: {
+        title: `${subtopic} High-Yield Flashcard Cheat Sheet`,
+        url: "https://devdocs.io/",
+        provider: "LearnPath AI Diagnostic Lab",
+        summary: `Interactive Flashcards & targeted cheat sheet focusing on ${subtopic}.`,
+      },
+      githubRepo: {
+        repoName: `${subtopic.toLowerCase().replace(/[^a-z0-9]/g, "-")}-sandbox`,
+        repoUrl: "https://github.com/learnpath/remedial-sandbox",
+        owner: "learnpath",
+        starsCount: 420,
+        description: `Targeted practice challenge to master ${subtopic}.`,
+      },
+      whyRecommended: `Injected dynamically by the Autonomous Adaptive Loop for Mistake #${mistakeIndex} (${subtopic}).`,
+      prerequisites: idx === 0 ? [parentLevel.id] : [`${parentLevel.id}.${idx}`],
+      coordinates: remedialCoord,
+    };
+
+    injectedLevels.push(remedialLevel);
+
+    // Edge from parent (or previous sub-level) to this sub-level
+    const sourceNodeId = idx === 0 ? parentLevel.id : `${parentLevel.id}.${idx}`;
+    newEdges.push({
+      id: `e-${sourceNodeId}-${remedialId}`,
+      source: sourceNodeId,
+      target: remedialId,
+      isRemediationEdge: true,
+    });
   });
 
+  // Edge from last sub-level to downstream next level
+  const lastSubLevel = injectedLevels[injectedLevels.length - 1];
   const nextLevel = currentPath.levels[parentIndex + 1];
-  if (nextLevel) {
+  if (nextLevel && lastSubLevel) {
     newEdges.push({
-      id: `e-${remedialId}-${nextLevel.id}`,
-      source: remedialId,
+      id: `e-${lastSubLevel.id}-${nextLevel.id}`,
+      source: lastSubLevel.id,
       target: nextLevel.id,
       isRemediationEdge: true,
     });
   }
 
+  // Clone levels and insert all injected sub-levels right after parent
+  const newLevels = [...currentPath.levels];
+  newLevels.splice(parentIndex + 1, 0, ...injectedLevels);
+
   const newVersion = currentPath.version + 1;
+  const subLevelNames = injectedLevels.map((l) => `Level ${l.displayLevel} (${l.title.replace("Remediation Lab: ", "")})`).join(", ");
 
   const diff: RoadmapDiff = {
     previousVersion: currentPath.version,
     newVersion,
-    injectedLevels: [remedialLevel],
-    modifiedLevelIds: [parentLevel.id, remedialId],
-    remedialTopic: weakSubtopicName,
-    summaryMessage: `⚠️ Autonomous Adaptive Recalibration: Injected Level ${remedialLevel.displayLevel} (${weakSubtopicName}) to strengthen prerequisites before proceeding.`,
+    injectedLevels,
+    modifiedLevelIds: [parentLevel.id, ...injectedLevels.map((l) => l.id)],
+    remedialTopic: weakSubtopics.join(", "),
+    summaryMessage: `⚠️ Autonomous Adaptive Recalibration: Detected ${weakSubtopics.length} question mistake(s) ➔ Injected ${subLevelNames} with Interactive Flashcard Decks.`,
     timestamp: new Date().toISOString(),
   };
 
@@ -365,9 +391,10 @@ export const mockStore = {
     return updatedPath;
   },
 
-  injectRemediation(parentLevelId: string, weakSubtopic: string): { updatedPath: LearningPath; diff: RoadmapDiff } {
+  injectRemediation(parentLevelId: string, weakSubtopics: string | string[]): { updatedPath: LearningPath; diff: RoadmapDiff } {
     const currentPath = this.getLearningPath();
-    const result = injectRemedialLevelIntoPath(currentPath, parentLevelId, weakSubtopic);
+    const subtopicsArray = Array.isArray(weakSubtopics) ? weakSubtopics : [weakSubtopics];
+    const result = injectRemedialLevelsIntoPath(currentPath, parentLevelId, subtopicsArray);
     this.saveLearningPath(result.updatedPath);
     if (typeof window !== "undefined") {
       localStorage.setItem(DIFF_KEY, JSON.stringify(result.diff));

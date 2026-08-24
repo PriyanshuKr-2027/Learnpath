@@ -41,19 +41,21 @@ export function generateSerpentineCoordinates(
 }
 
 /**
- * Calculates the offset coordinate for an injected remediation level (e.g. Level 5.1).
- * Places it alongside the checkpoint node so it appears as a distinct remedial side-quest.
+ * Calculates distinct offset coordinates for dynamically injected remediation sub-levels
+ * (e.g. Level 5.1 for mistake 1, Level 5.2 for mistake 2, Level 5.3 for mistake 3).
+ * Staggers sub-levels cleanly along a side branch so they never collide.
  */
 export function calculateRemediationCoordinate(
   parentCoord: Coordinate,
   remediationIndex: number = 1
 ): Coordinate {
-  const isRightSide = parentCoord.x < 350;
-  const offsetX = isRightSide ? 200 : -200;
-  const offsetY = 70 * remediationIndex;
+  // If parent is on the left side of canvas, branch right (+X); otherwise branch left (-X)
+  const isRightBranch = parentCoord.x <= 350;
+  const offsetX = isRightBranch ? 220 : -220;
+  const offsetY = (remediationIndex - 1) * 130 + 50;
 
   return {
-    x: parentCoord.x + offsetX,
-    y: parentCoord.y + offsetY,
+    x: Math.round(parentCoord.x + offsetX),
+    y: Math.round(parentCoord.y + offsetY),
   };
 }

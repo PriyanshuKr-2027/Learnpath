@@ -16,12 +16,14 @@ import {
   ArrowRight,
   ArrowsClockwise,
   WarningCircle,
+  Cards,
 } from "@phosphor-icons/react";
 import { LevelNode, LearningPath } from "@/types";
 import { mockStore } from "@/lib/services/mockStore";
 import { VideoPlayerWithControls } from "@/components/canvas/VideoPlayerWithControls";
 import { MarkdownNotesEditor } from "@/components/canvas/MarkdownNotesEditor";
 import { SocraticCopilotSidecar } from "@/components/canvas/SocraticCopilotSidecar";
+import { FlashcardDeck } from "@/components/canvas/FlashcardDeck";
 
 export default function LearningCanvasPage() {
   const params = useParams();
@@ -32,14 +34,13 @@ export default function LearningCanvasPage() {
   const [level, setLevel] = useState<LevelNode | null>(null);
   const [seekSeconds, setSeekSeconds] = useState<number | null>(null);
   const [injectedSnippet, setInjectedSnippet] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"notes" | "copilot">("copilot");
+  const [activeTab, setActiveTab] = useState<"copilot" | "notes">("copilot");
   const [showCompletionModal, setShowCompletionModal] = useState(false);
 
   useEffect(() => {
     const activePath = mockStore.getLearningPath();
     setPath(activePath);
 
-    // Locate level by ID or index
     const foundLevel =
       activePath.levels.find((l) => l.id === stepId) ||
       activePath.levels.find((l) => l.displayLevel === stepId) ||
@@ -73,7 +74,6 @@ export default function LearningCanvasPage() {
     setShowCompletionModal(true);
   };
 
-  // Find next level in sequence
   const currentIdx = path.levels.findIndex((l) => l.id === level.id);
   const nextLevel = currentIdx !== -1 && currentIdx + 1 < path.levels.length ? path.levels[currentIdx + 1] : null;
 
@@ -152,8 +152,20 @@ export default function LearningCanvasPage() {
 
       {/* Main Split-Screen Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* LEFT COLUMN (7 Cols): Video & Authoritative Documentation / Starter Repos */}
+        {/* LEFT COLUMN (7 Cols): Flashcards + Video & Documentation */}
         <div className="lg:col-span-7 flex flex-col gap-4">
+          {/* Interactive Flashcard Deck (Rendered prominently for remediation and core levels) */}
+          {level.flashcards && level.flashcards.length > 0 && (
+            <FlashcardDeck
+              flashcards={level.flashcards}
+              title={
+                isRemediation
+                  ? `Level ${level.displayLevel} Remedial Flashcards`
+                  : `${level.skillName} High-Yield Flashcards`
+              }
+            />
+          )}
+
           <VideoPlayerWithControls
             video={level.video}
             seekSeconds={seekSeconds}
