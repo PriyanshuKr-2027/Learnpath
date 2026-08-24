@@ -1,291 +1,325 @@
 "use client";
 
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useEffect } from "react";
-import { Day, Problem } from "@/types";
-import { useRouter } from "next/navigation";
 import {
+  Sparkle,
+  GameController,
+  Target,
+  Trophy,
   Fire,
-  PlayCircle,
-  ArrowRight,
+  Clock,
   CheckCircle,
-  Circle,
-  ArrowUpRight,
+  ArrowRight,
+  Sliders,
+  WarningCircle,
+  Play,
+  Brain,
+  RocketLaunch,
+  Note,
 } from "@phosphor-icons/react";
-import { useSupabase } from "@/components/providers/SupabaseProvider";
-import { getPatternBadgeStyle, getDifficultyStyle } from "@/lib/badgeStyle";
-
-interface DashboardProblem {
-  name: string;
-  difficulty: "Easy" | "Medium" | "Hard";
-  leetcodeUrl: string;
-  done: boolean;
-  dayId: number;
-  pattern: string;
-  problemIndex: number;
-}
+import { LearnerProfile, LearningPath, LevelNode, SkillGap } from "@/types";
+import { mockStore, computeSkillGaps } from "@/lib/services/mockStore";
 
 export default function DashboardPage() {
-  const router = useRouter();
-  const { 
-    profile, 
-    days, 
-    planProgress, 
-    dayManualDone, 
-    streak, 
-    loading: providerLoading, 
-    toggleProblem 
-  } = useSupabase();
+  const [profile, setProfile] = useState<LearnerProfile | null>(null);
+  const [path, setPath] = useState<LearningPath | null>(null);
+  const [gaps, setGaps] = useState<SkillGap[]>([]);
 
-  // Redirect admin users to the admin overview page
   useEffect(() => {
-    if (profile && profile.role === "admin") {
-      router.push("/admin");
-    }
-  }, [profile, router]);
+    const p = mockStore.getProfile();
+    const activePath = mockStore.getLearningPath();
+    const computedGaps = computeSkillGaps(p);
 
-  const getDayProgressPercentage = (dayId: number) => {
-    const day = days.find((d: Day) => d.id === dayId);
-    if (!day) return 0;
-    const total = day.problems?.length || 0;
-    if (total === 0) {
-      return dayManualDone[dayId] ? 100 : 0;
-    }
-    const solved = day.problems.filter((_: Problem, idx: number) => !!planProgress[`${dayId}_${idx}`]).length;
-    return Math.round((solved / total) * 100);
-  };
+    setProfile(p);
+    setPath(activePath);
+    setGaps(computedGaps);
+  }, []);
 
-  const getDayIsCompleted = (dayId: number) => {
-    return getDayProgressPercentage(dayId) === 100;
-  };
-
-  if (providerLoading || days.length === 0) {
+  if (!profile || !path) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 space-y-4">
-        <h2 className="text-xl font-bold">Loading Dashboard...</h2>
+      <div className="min-h-[70vh] flex items-center justify-center text-zinc-400">
+        <span>Loading LearnPath AI Dashboard...</span>
       </div>
     );
   }
 
-  const profileName = profile?.name ? profile.name.split(" ")[0] : "Learner";
+  // Find active focus node
+  const activeLevel =
+    path.levels.find((l) => l.status === "active") ||
+    path.levels.find((l) => l.status !== "completed") ||
+    path.levels[0];
 
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 17) return "Good afternoon";
-    return "Good evening";
-  };
-
-  // 1. Total Completed Days
-  const completedDaysCount = days.filter((d: Day) => getDayIsCompleted(d.id)).length;
-
-  // 2. Total Problems Solved vs Total
-  let totalProblemsCount = 0;
-  let solvedProblemsCount = 0;
-  days.forEach((day: Day) => {
-    day.problems?.forEach((_: Problem, idx: number) => {
-      totalProblemsCount++;
-      if (planProgress[`${day.id}_${idx}`]) {
-        solvedProblemsCount++;
-      }
-    });
-  });
-
-  // 3. Current active day (first incomplete day)
-  const currentActiveDay = days.find((d: Day) => !getDayIsCompleted(d.id)) || days[91];
-  const currentDayId = currentActiveDay ? currentActiveDay.id : 1;
-
-  // 4. Carousel Days: Next 4 incomplete or unstarted days
-  const carouselDays = days.filter((d: Day) => !getDayIsCompleted(d.id)).slice(0, 4);
-  // Fallback if all days are completed
-  const displayCarouselDays = carouselDays.length > 0 ? carouselDays : days.slice(88);
-
-  // 5. Problems table: Problems of the active day
-  // If the active day has no problems (e.g. a review day), look for the next day with incomplete problems
-  let activeProblemsDay = currentActiveDay;
-  if (activeProblemsDay && (activeProblemsDay.problems?.length || 0) === 0) {
-    const nextWithProbs = days.find((d: Day) => (d.problems?.length || 0) > 0 && !getDayIsCompleted(d.id));
-    if (nextWithProbs) {
-      activeProblemsDay = nextWithProbs;
-    }
-  }
-
-  const tableProblems: DashboardProblem[] = activeProblemsDay ? activeProblemsDay.problems.map((prob: Problem, idx: number) => ({
-    ...prob,
-    dayId: activeProblemsDay.id,
-    pattern: activeProblemsDay.pattern,
-    problemIndex: idx,
-    done: !!planProgress[`${activeProblemsDay.id}_${idx}`],
-    difficulty: prob.difficulty as "Easy" | "Medium" | "Hard",
-  })) : [];
+  const criticalGapsCount = gaps.filter((g) => g.severity === "critical").length;
+  const masteredCount = gaps.filter((g) => g.deltaGap === 0).length;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-10 pb-20">
-      {/* Hero Greeting */}
-      <section className="bg-[#FAF7F0] border border-border text-[#1B1917] rounded-2xl p-8 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">{getGreeting()}, {profileName} 🔥</h1>
-          <p className="text-[#6B655B] font-medium">
-            Day {currentDayId} of 92 · {streak}-day streak. {completedDaysCount === 92 ? "Incredible work! You have completed the curriculum!" : "You're doing great."}
-          </p>
-        </div>
-        <button 
-          onClick={() => router.push(`/day/${currentDayId}`)}
-          className="bg-[#1B1917] text-white px-6 py-3 rounded-full font-medium shadow-sm hover:opacity-90 transition-opacity flex items-center gap-2 self-start md:self-auto text-sm cursor-pointer"
-        >
-          Continue where you left off
-          <ArrowRight weight="bold" />
-        </button>
-      </section>
+    <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto pb-12">
+      {/* Top Banner */}
+      <div className="relative overflow-hidden p-6 sm:p-8 rounded-3xl border border-zinc-800 bg-gradient-to-r from-zinc-900 via-zinc-900/90 to-emerald-950/40 backdrop-blur-xl shadow-2xl">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="flex flex-col gap-2 max-w-2xl">
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                <Sparkle className="w-3.5 h-3.5" />
+                Active Career Acceleration
+              </span>
+              <span className="text-xs text-zinc-500">•</span>
+              <span className="text-xs text-zinc-400 font-medium">{profile.targetRoleTitle}</span>
+            </div>
 
-      {/* Stats & Heatmap */}
-      <section className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-surface p-6 rounded-2xl shadow-sm border border-border space-y-1">
-          <p className="text-text-secondary text-sm font-medium">Total Days Completed</p>
-          <p className="text-3xl font-mono font-bold">{completedDaysCount}<span className="text-gray-400 text-lg">/92</span></p>
-        </div>
-        <div className="bg-surface p-6 rounded-2xl shadow-sm border border-border space-y-1">
-          <p className="text-text-secondary text-sm font-medium">Problems Solved</p>
-          <p className="text-3xl font-mono font-bold">{solvedProblemsCount}<span className="text-gray-400 text-lg">/{totalProblemsCount}</span></p>
-        </div>
-        <div className="bg-surface p-6 rounded-2xl shadow-sm border border-border space-y-1">
-          <p className="text-text-secondary text-sm font-medium">Current Streak</p>
-          <p className="text-3xl font-mono font-bold flex items-center gap-2">
-            {streak} <Fire weight="fill" className="text-orange-500 w-6 h-6" />
-          </p>
-        </div>
-        
-        {/* Heatmap Widget */}
-        <div className="bg-surface p-6 rounded-2xl shadow-sm border border-border flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-1">
-            <p className="text-text-secondary text-sm font-medium">Activity Map</p>
-            <span className="text-[10px] text-gray-400 font-medium">92 Days</span>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-100">
+              Welcome back, <span className="text-emerald-400">{profile.name}</span>
+            </h1>
+            <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed line-clamp-2">
+              Goal: &ldquo;{profile.goalPrompt}&rdquo;
+            </p>
           </div>
-          <div className="grid grid-cols-23 gap-1 mt-2">
-            {days.map((day: Day) => {
-              const percentage = getDayProgressPercentage(day.id);
-              const bgColor = percentage === 100 
-                ? "bg-signal" 
-                : percentage > 0 
-                  ? "bg-signal/40" 
-                  : "bg-gray-100 dark:bg-sidebar";
-              return (
-                <Link
-                  key={day.id}
-                  href={`/day/${day.id}`}
-                  title={`Day ${day.id}: ${day.topic} (${percentage}% done)`}
-                  className={`w-2.5 h-2.5 rounded-sm ${bgColor} transition-opacity hover:opacity-80`}
-                />
-              );
-            })}
+
+          {/* Quick Metrics Header Pill */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 p-3 rounded-2xl bg-zinc-950/80 border border-zinc-800">
+              <Fire className="w-5 h-5 text-amber-400" weight="fill" />
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-zinc-100">{profile.currentStreak || 5} Days</span>
+                <span className="text-[10px] text-zinc-500">Streak</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 p-3 rounded-2xl bg-zinc-950/80 border border-zinc-800">
+              <Clock className="w-5 h-5 text-cyan-400" />
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-zinc-100">{path.weeklyHours}h / wk</span>
+                <span className="text-[10px] text-zinc-500">Pacing</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 p-3 rounded-2xl bg-zinc-950/80 border border-zinc-800">
+              <Trophy className="w-5 h-5 text-emerald-400" weight="fill" />
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-zinc-100">{path.completionPercentage}%</span>
+                <span className="text-[10px] text-zinc-500">Ready</span>
+              </div>
+            </div>
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* Continue Studying Carousel */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold">Continue Studying</h2>
-          <button 
-            onClick={() => router.push("/plan")}
-            className="text-sm font-medium text-focus hover:underline bg-transparent border-0 cursor-pointer"
+      {/* Main Grid: Next Recommended Action & Quick Stats */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Next Recommended Action Card (7 Cols) */}
+        <div className="lg:col-span-7 flex flex-col gap-4 p-6 rounded-3xl border border-emerald-500/30 bg-zinc-900/50 backdrop-blur-xl shadow-xl">
+          <div className="flex items-center justify-between">
+            <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 font-mono">
+              <Play className="w-3 h-3" weight="fill" />
+              NEXT RECOMMENDED ACTION
+            </span>
+            <span className="text-xs text-zinc-400 font-medium">Level {activeLevel.displayLevel}</span>
+          </div>
+
+          <div>
+            <h2 className="text-xl font-bold text-zinc-100">{activeLevel.title}</h2>
+            <p className="text-xs text-zinc-400 mt-0.5">
+              Week {activeLevel.targetWeek} • {activeLevel.phase} • {activeLevel.estimatedMinutes} mins
+            </p>
+          </div>
+
+          {/* Explainable AI snippet */}
+          <div className="p-3.5 rounded-2xl bg-emerald-950/20 border border-emerald-500/20 text-xs text-zinc-300">
+            <strong className="text-emerald-400">💡 Why this step now: </strong>
+            {activeLevel.whyRecommended}
+          </div>
+
+          <div className="flex items-center gap-3 pt-2">
+            <Link
+              href={`/learn/${activeLevel.id}`}
+              className="flex-1 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20"
+            >
+              <Play className="w-4 h-4" weight="fill" />
+              <span>Launch Learning Canvas (Level {activeLevel.displayLevel})</span>
+            </Link>
+
+            <Link
+              href="/roadmap"
+              className="py-3 px-4 rounded-2xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+            >
+              <GameController className="w-4 h-4" />
+              <span>View Map</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Quick Launch Cards (5 Cols) */}
+        <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Link
+            href="/roadmap"
+            className="p-5 rounded-3xl border border-zinc-800 bg-zinc-900/40 hover:border-emerald-500/40 hover:bg-zinc-900/80 transition-all flex flex-col justify-between group shadow-lg"
           >
-            View full plan
-          </button>
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mb-3">
+              <GameController className="w-6 h-6" weight="fill" />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-zinc-100 group-hover:text-emerald-300 transition-colors">
+                Candy Crush RPG Map
+              </h4>
+              <p className="text-xs text-zinc-400 mt-1">
+                {path.completedLevelsCount}/{path.totalLevelsCount} Levels Mastered
+              </p>
+            </div>
+            <span className="text-[11px] font-bold text-emerald-400 mt-3 flex items-center gap-1">
+              Explore S-Curve <ArrowRight className="w-3 h-3" />
+            </span>
+          </Link>
+
+          <Link
+            href="/assessments/cat"
+            className="p-5 rounded-3xl border border-zinc-800 bg-zinc-900/40 hover:border-amber-500/40 hover:bg-zinc-900/80 transition-all flex flex-col justify-between group shadow-lg"
+          >
+            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mb-3">
+              <Brain className="w-6 h-6" weight="fill" />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-zinc-100 group-hover:text-amber-300 transition-colors">
+                CAT Adaptive Checkpoint
+              </h4>
+              <p className="text-xs text-zinc-400 mt-1">1-PL Rasch Item Response Theory</p>
+            </div>
+            <span className="text-[11px] font-bold text-amber-400 mt-3 flex items-center gap-1">
+              Test Out <ArrowRight className="w-3 h-3" />
+            </span>
+          </Link>
+
+          <Link
+            href="/notes"
+            className="p-5 rounded-3xl border border-zinc-800 bg-zinc-900/40 hover:border-cyan-500/40 hover:bg-zinc-900/80 transition-all flex flex-col justify-between group shadow-lg"
+          >
+            <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center mb-3">
+              <Note className="w-6 h-6" weight="fill" />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-zinc-100 group-hover:text-cyan-300 transition-colors">
+                Study Notes Scratchpad
+              </h4>
+              <p className="text-xs text-zinc-400 mt-1">Auto-saved Markdown notes</p>
+            </div>
+            <span className="text-[11px] font-bold text-cyan-400 mt-3 flex items-center gap-1">
+              Open Notes <ArrowRight className="w-3 h-3" />
+            </span>
+          </Link>
+
+          <Link
+            href="/onboarding"
+            className="p-5 rounded-3xl border border-zinc-800 bg-zinc-900/40 hover:border-purple-500/40 hover:bg-zinc-900/80 transition-all flex flex-col justify-between group shadow-lg"
+          >
+            <div className="w-10 h-10 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center mb-3">
+              <Sliders className="w-6 h-6" />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-zinc-100 group-hover:text-purple-300 transition-colors">
+                Recalibrate Target Role
+              </h4>
+              <p className="text-xs text-zinc-400 mt-1">Resume & GitHub syncing</p>
+            </div>
+            <span className="text-[11px] font-bold text-purple-400 mt-3 flex items-center gap-1">
+              Re-analyze <ArrowRight className="w-3 h-3" />
+            </span>
+          </Link>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {displayCarouselDays.map((item) => {
-            const pct = getDayProgressPercentage(item.id);
+      </div>
+
+      {/* Fine-Grained Skill Gap Delta Matrix (Mathematical Foundation) */}
+      <div className="flex flex-col gap-4 p-6 sm:p-8 rounded-3xl border border-zinc-800 bg-zinc-900/40 backdrop-blur-xl shadow-xl">
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-zinc-800">
+          <div>
+            <h3 className="text-lg font-bold text-zinc-100 flex items-center gap-2">
+              <Target className="w-5 h-5 text-emerald-400" />
+              Role Skill Gap Delta Analysis (Delta = max(0, Required - Current))
+            </h3>
+            <p className="text-xs text-zinc-400 mt-0.5">
+              The curriculum is synthesized from the mathematical gap rather than a generic linear syllabus.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 text-xs">
+            <span className="px-2.5 py-1 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 font-medium">
+              {criticalGapsCount} Critical Gaps
+            </span>
+            <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-medium">
+              {masteredCount} Mastered (Skipped)
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-2">
+          {gaps.map((gap) => {
+            const isNone = gap.deltaGap === 0;
+            const isCritical = gap.severity === "critical";
+            const isModerate = gap.severity === "moderate";
+
             return (
-              <div key={item.id} className="w-full bg-surface border border-border rounded-2xl p-5 shadow-sm space-y-4 flex flex-col justify-between">
-                <div>
-                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${getPatternBadgeStyle(item.pattern)}`}>
-                    {item.pattern}
+              <div
+                key={gap.skillName}
+                className={`flex flex-col gap-2 p-4 rounded-2xl border transition-all ${
+                  isNone
+                    ? "border-zinc-900 bg-zinc-950/30 opacity-70"
+                    : isCritical
+                    ? "border-rose-500/30 bg-rose-950/10"
+                    : isModerate
+                    ? "border-amber-500/30 bg-amber-950/10"
+                    : "border-zinc-800 bg-zinc-900/60"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-zinc-100">{gap.skillName}</span>
+                    <span className="text-[10px] text-zinc-500 font-mono">[{gap.category}]</span>
+                  </div>
+
+                  <span
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono ${
+                      isNone
+                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                        : isCritical
+                        ? "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                        : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                    }`}
+                  >
+                    {isNone ? "✅ NO GAP (SKIPPED)" : `🔴 GAP: ${gap.deltaGap}%`}
                   </span>
-                  <h3 className="font-bold mt-3">Day {item.id}</h3>
-                  <p className="text-text-secondary text-sm line-clamp-1">{item.topic}</p>
                 </div>
-                <div className="space-y-2">
-                  <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                    <div className="bg-signal h-full rounded-full" style={{ width: `${pct}%` }}></div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-text-secondary font-mono">{pct}%</span>
-                    <button 
-                      onClick={() => router.push(`/day/${item.id}`)}
-                      className="text-focus hover:text-focus/80 transition-colors border-0 bg-transparent cursor-pointer"
-                    >
-                      <PlayCircle weight="fill" className="w-8 h-8" />
-                    </button>
+
+                {/* Progress Comparison Track */}
+                <div className="flex items-center gap-3 text-xs pt-1">
+                  <div className="flex-1 flex flex-col gap-1">
+                    <div className="flex items-center justify-between text-[11px] text-zinc-400">
+                      <span>Current: <strong className="text-zinc-200">{gap.currentProficiency}%</strong></span>
+                      <span>Required: <strong className="text-emerald-400">{gap.requiredProficiency}%</strong></span>
+                    </div>
+                    <div className="w-full h-2 bg-zinc-950 rounded-full overflow-hidden flex border border-zinc-800">
+                      <div
+                        style={{ width: `${gap.currentProficiency}%` }}
+                        className={`h-full ${isNone ? "bg-emerald-500" : "bg-cyan-500"}`}
+                      />
+                      {!isNone && (
+                        <div
+                          style={{ width: `${gap.deltaGap}%` }}
+                          className="h-full bg-rose-500/60"
+                        />
+                      )}
+                    </div>
                   </div>
                 </div>
+
+                {!isNone && (
+                  <span className="text-[11px] text-zinc-500">
+                    ⏱️ Estimated time to close gap: <strong>{gap.estimatedHoursToClose} hours</strong>
+                  </span>
+                )}
               </div>
             );
           })}
         </div>
-      </section>
-
-      {/* Your Problems Table */}
-      <section className="space-y-4">
-        <h2 className="text-xl font-bold">Problems for Day {activeProblemsDay.id} ({activeProblemsDay.topic})</h2>
-        <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-border bg-gray-50/50">
-                  <th className="px-6 py-4 text-sm font-medium text-text-secondary w-12"></th>
-                  <th className="px-6 py-4 text-sm font-medium text-text-secondary">Problem</th>
-                  <th className="px-6 py-4 text-sm font-medium text-text-secondary">Pattern</th>
-                  <th className="px-6 py-4 text-sm font-medium text-text-secondary">Difficulty</th>
-                  <th className="px-6 py-4 text-sm font-medium text-text-secondary text-right">Link</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {tableProblems.map((prob, i) => (
-                  <tr key={i} className="hover:bg-gray-50/50 transition-colors group">
-                    <td className="px-6 py-4">
-                      <button 
-                        onClick={() => toggleProblem(prob.dayId, prob.problemIndex)}
-                        className="text-text-secondary hover:text-signal transition-colors focus:outline-none"
-                      >
-                        {prob.done ? <CheckCircle weight="fill" className="w-6 h-6 text-signal" /> : <Circle className="w-6 h-6" />}
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 font-mono text-sm">{prob.name}</td>
-                    <td className="px-6 py-4">
-                      <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${getPatternBadgeStyle(prob.pattern)}`}>
-                        {prob.pattern}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-md ${getDifficultyStyle(prob.difficulty)}`}>
-                        {prob.difficulty}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <a 
-                        href={prob.leetcodeUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="inline-flex text-gray-400 hover:text-focus transition-colors"
-                      >
-                        <ArrowUpRight className="w-5 h-5" />
-                      </a>
-                    </td>
-                  </tr>
-                ))}
-                {tableProblems.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-text-secondary text-sm">
-                      No problems assigned for this day. Revise today&apos;s materials.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
+      </div>
     </div>
   );
 }
