@@ -17,7 +17,7 @@ import {
 const XAI_QUESTIONS = [
   {
     q: "Why was this specific learning path generated instead of a generic syllabus?",
-    a: "Unlike traditional 40-week static courses, CogniPath AI calculates your exact Skill Delta (Δ = max(0, Required% - Current%)) using data extracted from your Resume and GitHub code activity. Mastered topics (like Excel at 80%) are completely skipped, while critical gaps (like Power BI DAX at 20%) receive dedicated sequenced modules.",
+    a: "Unlike traditional 40-week static courses, LearnPath AI calculates your exact Skill Delta (Δ = max(0, Required% - Current%)) using data extracted from your Resume and GitHub code activity. Mastered topics (like Excel at 80%) are completely skipped, while critical gaps (like Power BI DAX at 20%) receive dedicated sequenced modules.",
   },
   {
     q: "Why are YouTube playlists pruned rather than embedded completely?",
@@ -41,119 +41,120 @@ export default function CoachPage() {
   const [expandedIdx, setExpandedIdx] = useState<number | null>(0);
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-5xl mx-auto pb-12">
+    <div className="flex flex-col gap-6 w-full max-w-5xl mx-auto pb-12 text-text-primary">
       {/* Header */}
-      <div className="flex flex-col gap-2 p-6 sm:p-8 rounded-3xl border border-zinc-800 bg-zinc-900/40 backdrop-blur-xl shadow-xl">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 w-fit">
+      <div className="flex flex-col gap-2 p-6 sm:p-8 rounded-3xl border border-border bg-surface shadow-xl">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-focus/10 text-focus border border-focus/20 w-fit">
           <Sparkle className="w-4 h-4" />
           <span>Explainable AI (XAI) Architecture Hub</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-100">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text-primary">
           Algorithmic Transparency & Pedagogical Reasoning
         </h1>
-        <p className="text-xs sm:text-sm text-zinc-400 max-w-2xl leading-relaxed">
-          CogniPath AI operates on transparent, mathematical principles rather than black-box recommendations. Review the foundational reasoning behind your personalized curriculum.
+        <p className="text-xs sm:text-sm text-text-secondary max-w-2xl leading-relaxed">
+          LearnPath AI operates on transparent, mathematical principles rather than black-box recommendations. Review the foundational reasoning behind your personalized curriculum.
         </p>
       </div>
 
       {/* 4 Architectural Pillars Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="p-5 rounded-3xl border border-zinc-800 bg-zinc-950/80 flex flex-col gap-2.5 shadow-lg">
-          <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-mono font-bold text-xs">
-            01
+        <div className="p-5 rounded-3xl border border-border bg-surface shadow-lg flex flex-col gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-focus/10 text-focus flex items-center justify-center">
+            <Target className="w-4 h-4" weight="bold" />
           </div>
-          <h3 className="text-sm font-bold text-zinc-100">Delta Gap Formulation</h3>
-          <p className="text-xs text-zinc-400 leading-relaxed font-mono">
-            Δ_i = max(0, RequiredProficiency_i - CurrentProficiency_i)
+          <h2 className="text-sm font-bold text-text-primary">1. Skill Delta Formulation</h2>
+          <p className="text-xs text-text-secondary leading-relaxed font-mono">
+            Delta = max(0, Target_Required - Ingested_Baseline)
           </p>
-          <span className="text-[11px] text-zinc-500">
-            Roadmap length and intensity are strictly proportional to the verified skill delta.
-          </span>
+          <p className="text-xs text-text-secondary">
+            Ground-truth calibration prevents wasteful repetition of known skills.
+          </p>
         </div>
 
-        <div className="p-5 rounded-3xl border border-zinc-800 bg-zinc-950/80 flex flex-col gap-2.5 shadow-lg">
-          <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center font-mono font-bold text-xs">
-            02
+        <div className="p-5 rounded-3xl border border-border bg-surface shadow-lg flex flex-col gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-focus/10 text-focus flex items-center justify-center">
+            <GameController className="w-4 h-4" weight="bold" />
           </div>
-          <h3 className="text-sm font-bold text-zinc-100">Topological Kahn&apos;s DAG</h3>
-          <p className="text-xs text-zinc-400 leading-relaxed font-mono">
-            Time: O(|V| + |E|) • Space: O(|V|)
+          <h2 className="text-sm font-bold text-text-primary">2. Kahn&apos;s Topological DAG</h2>
+          <p className="text-xs text-text-secondary leading-relaxed font-mono">
+            Time Complexity: O(|V| + |E|)
           </p>
-          <span className="text-[11px] text-zinc-500">
-            Guarantees prerequisite compliance and allocates nodes into weekly workload buckets.
-          </span>
+          <p className="text-xs text-text-secondary">
+            Guarantees strict acyclic dependency resolution for prerequisite ordering.
+          </p>
         </div>
 
-        <div className="p-5 rounded-3xl border border-zinc-800 bg-zinc-950/80 flex flex-col gap-2.5 shadow-lg">
-          <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center font-mono font-bold text-xs">
-            03
+        <div className="p-5 rounded-3xl border border-border bg-surface shadow-lg flex flex-col gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-focus/10 text-focus flex items-center justify-center">
+            <Brain className="w-4 h-4" weight="bold" />
           </div>
-          <h3 className="text-sm font-bold text-zinc-100">1-PL Rasch Psychometrics</h3>
-          <p className="text-xs text-zinc-400 leading-relaxed font-mono">
-            P(correct | θ, D) = 1 / (1 + e^(-3.0 * (θ - D)))
+          <h2 className="text-sm font-bold text-text-primary">3. 1-PL Rasch IRT Testing</h2>
+          <p className="text-xs text-text-secondary leading-relaxed font-mono">
+            P(Correct) = 1 / (1 + e^(-(theta - D_i)))
           </p>
-          <span className="text-[11px] text-zinc-500">
-            Stochastically updates latent ability θ with learning rate α = 0.20 on each answer.
-          </span>
+          <p className="text-xs text-text-secondary">
+            Dynamically adapts item difficulty to learner latent competency theta.
+          </p>
         </div>
 
-        <div className="p-5 rounded-3xl border border-zinc-800 bg-zinc-950/80 flex flex-col gap-2.5 shadow-lg">
-          <div className="w-8 h-8 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center font-mono font-bold text-xs">
-            04
+        <div className="p-5 rounded-3xl border border-border bg-surface shadow-lg flex flex-col gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-focus/10 text-focus flex items-center justify-center">
+            <ShieldCheck className="w-4 h-4" weight="bold" />
           </div>
-          <h3 className="text-sm font-bold text-zinc-100">4-Factor Resource Blending</h3>
-          <p className="text-xs text-zinc-400 leading-relaxed font-mono">
-            S = 0.45*S_rel + 0.25*S_rat + 0.15*S_diff + 0.15*S_fresh
+          <h2 className="text-sm font-bold text-text-primary">4. 4-Factor Resource Blending</h2>
+          <p className="text-xs text-text-secondary leading-relaxed font-mono">
+            Score = 0.40(R) + 0.30(Q) + 0.15(A) + 0.15(P)
           </p>
-          <span className="text-[11px] text-zinc-500">
-            Weighted ranking combining YouTube videos, official docs, and GitHub boilerplates.
-          </span>
+          <p className="text-xs text-text-secondary">
+            Ranks video chapters, documentation, and GitHub labs for each module.
+          </p>
         </div>
       </div>
 
       {/* Interactive FAQ Accordion */}
-      <div className="flex flex-col gap-3 p-6 sm:p-8 rounded-3xl border border-zinc-800 bg-zinc-900/40 backdrop-blur-xl shadow-xl">
-        <h3 className="text-base font-bold text-zinc-100 mb-2 flex items-center gap-2">
-          <Question className="w-5 h-5 text-emerald-400" />
-          Frequently Asked Architectural Questions
-        </h3>
+      <div className="p-6 sm:p-8 rounded-3xl border border-border bg-surface shadow-xl space-y-4">
+        <h2 className="text-base font-bold text-text-primary flex items-center gap-2">
+          <Lightbulb className="w-5 h-5 text-warning" weight="fill" />
+          Frequently Asked Questions & Explanations
+        </h2>
 
-        {XAI_QUESTIONS.map((item, idx) => {
-          const isExpanded = expandedIdx === idx;
-          return (
-            <div
-              key={idx}
-              className={`flex flex-col rounded-2xl border transition-all overflow-hidden ${
-                isExpanded ? "border-emerald-500/40 bg-zinc-950/80" : "border-zinc-800 bg-zinc-900/40"
-              }`}
-            >
-              <button
-                type="button"
-                onClick={() => setExpandedIdx(isExpanded ? null : idx)}
-                className="flex items-center justify-between p-4 text-left cursor-pointer hover:text-emerald-300 transition-colors"
+        <div className="space-y-3">
+          {XAI_QUESTIONS.map((item, idx) => {
+            const isExpanded = expandedIdx === idx;
+            return (
+              <div
+                key={idx}
+                className="rounded-2xl border border-border bg-paper overflow-hidden transition-all"
               >
-                <span className="text-xs sm:text-sm font-bold text-zinc-100 pr-4">{item.q}</span>
-                <span className="text-xs font-mono text-emerald-400">{isExpanded ? "−" : "+"}</span>
-              </button>
-
-              {isExpanded && (
-                <div className="p-4 pt-0 text-xs text-zinc-300 leading-relaxed border-t border-zinc-800/60 mt-1">
-                  {item.a}
-                </div>
-              )}
-            </div>
-          );
-        })}
+                <button
+                  type="button"
+                  onClick={() => setExpandedIdx(isExpanded ? null : idx)}
+                  className="w-full p-4 text-left flex items-center justify-between gap-3 text-xs sm:text-sm font-bold text-text-primary hover:text-focus transition-colors cursor-pointer"
+                >
+                  <span className="flex items-center gap-2">
+                    <Question className="w-4 h-4 text-focus shrink-0" />
+                    <span>{item.q}</span>
+                  </span>
+                  <span className="font-mono text-xs text-text-secondary">{isExpanded ? "−" : "+"}</span>
+                </button>
+                {isExpanded && (
+                  <div className="p-4 pt-0 text-xs text-text-secondary leading-relaxed border-t border-border/40 mt-1">
+                    {item.a}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Quick Return to Map */}
-      <div className="flex justify-center pt-2">
+      {/* Back to Map CTA */}
+      <div className="flex justify-end">
         <Link
           href="/roadmap"
-          className="px-6 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs sm:text-sm flex items-center gap-2 shadow-xl shadow-emerald-500/20 transition-all"
+          className="px-6 py-3 rounded-2xl bg-focus hover:bg-focus/90 text-white text-xs sm:text-sm font-bold flex items-center gap-2 shadow-lg shadow-focus/25 transition-all"
         >
-          <GameController className="w-4 h-4" weight="fill" />
-          <span>Return to Candy Crush Level Map</span>
+          <span>Return to Candy Crush DAG Map</span>
           <ArrowRight className="w-4 h-4" weight="bold" />
         </Link>
       </div>

@@ -51,9 +51,9 @@ export default function LearningCanvasPage() {
 
   if (!level || !path) {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center text-zinc-400">
+      <div className="min-h-[70vh] flex items-center justify-center text-text-secondary">
         <div className="flex items-center gap-2">
-          <ArrowsClockwise className="w-5 h-5 animate-spin text-emerald-400" />
+          <ArrowsClockwise className="w-5 h-5 animate-spin text-focus" />
           <span>Loading CourseOs Learning Canvas...</span>
         </div>
       </div>
@@ -78,13 +78,13 @@ export default function LearningCanvasPage() {
   const nextLevel = currentIdx !== -1 && currentIdx + 1 < path.levels.length ? path.levels[currentIdx + 1] : null;
 
   return (
-    <div className="flex flex-col gap-5 w-full max-w-7xl mx-auto pb-12">
+    <div className="flex flex-col gap-5 w-full max-w-7xl mx-auto pb-12 text-text-primary">
       {/* Top Action Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl border border-zinc-800 bg-zinc-900/60 backdrop-blur-xl">
+      <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl border border-border bg-surface shadow-xl">
         <div className="flex items-center gap-3">
           <Link
             href="/roadmap"
-            className="p-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-zinc-100 flex items-center gap-1.5 text-xs font-semibold transition-colors"
+            className="p-2 rounded-xl bg-paper hover:bg-border border border-border text-text-secondary hover:text-text-primary flex items-center gap-1.5 text-xs font-semibold transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             <span className="hidden sm:inline">Level Map</span>
@@ -92,24 +92,24 @@ export default function LearningCanvasPage() {
 
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded text-[11px] font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
+              <span className="px-2 py-0.5 rounded text-[11px] font-black bg-focus/10 text-focus border border-focus/20 font-mono">
                 LVL {level.displayLevel}
               </span>
               {isBoss && (
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1">
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-warning/15 text-warning border border-warning/30 flex items-center gap-1">
                   <Crown className="w-3 h-3" weight="fill" />
                   Boss Checkpoint
                 </span>
               )}
               {isRemediation && (
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-500/10 text-orange-400 border border-orange-500/20 flex items-center gap-1">
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-alert/15 text-alert border border-alert/30 flex items-center gap-1">
                   <WarningCircle className="w-3 h-3" weight="bold" />
                   Remediation Lab
                 </span>
               )}
-              <h2 className="text-sm sm:text-base font-bold text-zinc-100">{level.title}</h2>
+              <h2 className="text-sm sm:text-base font-bold text-text-primary">{level.title}</h2>
             </div>
-            <p className="text-[11px] text-zinc-400">
+            <p className="text-[11px] text-text-secondary">
               Week {level.targetWeek} • {level.phase}
             </p>
           </div>
@@ -118,12 +118,12 @@ export default function LearningCanvasPage() {
         {/* Completion Action */}
         <div className="flex items-center gap-3">
           {isCompleted ? (
-            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-signal/10 border border-signal/30 text-signal text-xs font-semibold">
               <CheckCircle className="w-4 h-4" weight="fill" />
               <span>Milestone Mastered</span>
-              <div className="flex items-center text-amber-400 ml-1">
+              <div className="flex items-center text-warning ml-1">
                 {[1, 2, 3].map((s) => (
-                  <Star key={s} className="w-3 h-3 fill-amber-400" weight="fill" />
+                  <Star key={s} className="w-3 h-3 fill-warning text-warning" weight="fill" />
                 ))}
               </div>
             </div>
@@ -131,7 +131,7 @@ export default function LearningCanvasPage() {
             <button
               type="button"
               onClick={handleMarkComplete}
-              className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs flex items-center gap-1.5 transition-all shadow-lg shadow-emerald-500/20 cursor-pointer"
+              className="px-4 py-2 rounded-xl bg-focus hover:bg-focus/90 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-lg shadow-focus/25 cursor-pointer"
             >
               <CheckCircle className="w-4 h-4" weight="bold" />
               <span>Mark Milestone Complete</span>
@@ -141,7 +141,7 @@ export default function LearningCanvasPage() {
           {nextLevel && (
             <Link
               href={`/learn/${nextLevel.id}`}
-              className="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+              className="px-3.5 py-2 rounded-xl bg-paper hover:bg-border border border-border text-text-primary text-xs font-semibold flex items-center gap-1.5 transition-colors"
             >
               <span>Next</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -154,7 +154,6 @@ export default function LearningCanvasPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* LEFT COLUMN (7 Cols): Flashcards + Video & Documentation */}
         <div className="lg:col-span-7 flex flex-col gap-4">
-          {/* Interactive Flashcard Deck (Rendered prominently for remediation and core levels) */}
           {level.flashcards && level.flashcards.length > 0 && (
             <FlashcardDeck
               flashcards={level.flashcards}
@@ -172,27 +171,28 @@ export default function LearningCanvasPage() {
             onSeekRequested={(s) => setSeekSeconds(s)}
           />
 
-          {/* Official Documentation & GitHub Repository Cards */}
+          {/* Documentation & GitHub Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {level.doc && (
               <a
                 href={level.doc.url}
                 target="_blank"
-                rel="noopener noreferrer"
-                className="p-4 rounded-2xl border border-zinc-800 bg-zinc-900/60 hover:border-zinc-700 hover:bg-zinc-900 transition-all flex flex-col justify-between group"
+                rel="noreferrer"
+                className="p-4 rounded-2xl bg-surface border border-border hover:border-focus/50 flex flex-col gap-2 transition-all group shadow-md"
               >
-                <div className="flex items-start gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-cyan-400 flex-shrink-0 mt-0.5">
-                    <BookOpen className="w-4 h-4" weight="fill" />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-focus/15 text-focus flex items-center justify-center">
+                      <BookOpen className="w-3.5 h-3.5" weight="fill" />
+                    </div>
+                    <span className="text-xs font-bold text-text-primary group-hover:text-focus transition-colors">
+                      Interactive Docs
+                    </span>
                   </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-zinc-100 group-hover:text-cyan-300 transition-colors line-clamp-1">
-                      {level.doc.title}
-                    </h4>
-                    <p className="text-[11px] text-zinc-400 mt-1 line-clamp-2">{level.doc.summary}</p>
-                  </div>
+                  <span className="text-[10px] text-text-secondary font-mono">{level.doc.provider}</span>
                 </div>
-                <span className="text-[10px] text-zinc-500 font-medium mt-3">{level.doc.provider} ↗</span>
+                <h4 className="text-xs font-bold text-text-primary line-clamp-1">{level.doc.title}</h4>
+                <p className="text-[11px] text-text-secondary leading-snug line-clamp-2">{level.doc.summary}</p>
               </a>
             )}
 
@@ -200,64 +200,62 @@ export default function LearningCanvasPage() {
               <a
                 href={level.githubRepo.repoUrl}
                 target="_blank"
-                rel="noopener noreferrer"
-                className="p-4 rounded-2xl border border-zinc-800 bg-zinc-900/60 hover:border-zinc-700 hover:bg-zinc-900 transition-all flex flex-col justify-between group"
+                rel="noreferrer"
+                className="p-4 rounded-2xl bg-surface border border-border hover:border-border/80 flex flex-col gap-2 transition-all group shadow-md"
               >
-                <div className="flex items-start gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-200 flex-shrink-0 mt-0.5">
-                    <GithubLogo className="w-4 h-4" weight="fill" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <h4 className="text-xs font-bold text-zinc-100 group-hover:text-emerald-300 transition-colors font-mono line-clamp-1">
-                        {level.githubRepo.repoName}
-                      </h4>
-                      <span className="text-[10px] font-bold text-amber-400">⭐ {level.githubRepo.starsCount}</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-paper text-text-primary flex items-center justify-center border border-border">
+                      <GithubLogo className="w-3.5 h-3.5" weight="fill" />
                     </div>
-                    <p className="text-[11px] text-zinc-400 mt-1 line-clamp-2">{level.githubRepo.description}</p>
+                    <span className="text-xs font-bold text-text-primary">Hands-on Lab Repo</span>
                   </div>
+                  <span className="text-[10px] font-mono text-warning font-bold">★ {level.githubRepo.starsCount}</span>
                 </div>
-                <span className="text-[10px] text-zinc-500 font-medium mt-3">Clone Starter Repo ↗</span>
+                <h4 className="text-xs font-bold text-text-primary line-clamp-1">{level.githubRepo.repoName}</h4>
+                <p className="text-[11px] text-text-secondary leading-snug line-clamp-2">{level.githubRepo.description}</p>
               </a>
             )}
           </div>
         </div>
 
-        {/* RIGHT COLUMN (5 Cols): Split Notes & 24/7 AI Copilot */}
-        <div className="lg:col-span-5 flex flex-col gap-3 min-h-[580px]">
-          {/* View Tab Switcher */}
-          <div className="flex items-center p-1 rounded-xl bg-zinc-900 border border-zinc-800 self-start">
+        {/* RIGHT COLUMN (5 Cols): Sidecar Tabs (Socratic Copilot & Markdown Notes) */}
+        <div className="lg:col-span-5 flex flex-col gap-3 sticky top-20">
+          {/* Sidecar Tab Switcher */}
+          <div className="flex items-center p-1 rounded-2xl bg-surface border border-border shadow-sm">
             <button
               type="button"
               onClick={() => setActiveTab("copilot")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
                 activeTab === "copilot"
-                  ? "bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20"
-                  : "text-zinc-400 hover:text-zinc-200"
+                  ? "bg-focus text-white shadow-md shadow-focus/25"
+                  : "text-text-secondary hover:text-text-primary"
               }`}
             >
-              <Sparkle className="w-3.5 h-3.5" weight="fill" />
-              <span>24/7 AI Copilot & RAG</span>
+              <Sparkle className="w-4 h-4" weight="fill" />
+              <span>Socratic AI Copilot</span>
             </button>
+
             <button
               type="button"
               onClick={() => setActiveTab("notes")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
                 activeTab === "notes"
-                  ? "bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20"
-                  : "text-zinc-400 hover:text-zinc-200"
+                  ? "bg-focus text-white shadow-md shadow-focus/25"
+                  : "text-text-secondary hover:text-text-primary"
               }`}
             >
-              <span>Personal Study Notes</span>
+              <span>Markdown Notes</span>
             </button>
           </div>
 
-          <div className="flex-1">
+          {/* Active Tab Content */}
+          <div className="min-h-[560px]">
             {activeTab === "copilot" ? (
               <SocraticCopilotSidecar
                 level={level}
-                onSeekRequested={(s) => setSeekSeconds(s)}
-                onInsertToNotes={(snippet) => {
+                onSeekRequested={(sec: number) => setSeekSeconds(sec)}
+                onInsertToNotes={(snippet: string) => {
                   setInjectedSnippet(snippet);
                   setActiveTab("notes");
                 }}
@@ -272,57 +270,53 @@ export default function LearningCanvasPage() {
         </div>
       </div>
 
-      {/* Milestone Completion Celebration Modal */}
+      {/* Completion Modal */}
       {showCompletionModal && (
-        <div
-          onClick={() => setShowCompletionModal(false)}
-          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md p-6 rounded-3xl border border-emerald-500/30 bg-zinc-950 text-center shadow-2xl flex flex-col items-center gap-4 animate-in zoom-in-95 duration-200"
-          >
-            <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-zinc-950 shadow-xl shadow-emerald-500/30">
-              <Trophy className="w-8 h-8" weight="fill" />
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-surface border border-border rounded-3xl p-6 sm:p-8 text-center space-y-5 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 rounded-3xl bg-focus/15 border border-focus/30 text-focus flex items-center justify-center mx-auto shadow-xl shadow-focus/20">
+              <Trophy className="w-8 h-8 text-warning" weight="fill" />
             </div>
 
-            <div>
-              <div className="flex items-center justify-center gap-1 text-amber-400 mb-1">
-                {[1, 2, 3].map((s) => (
-                  <Star key={s} className="w-5 h-5 fill-amber-400" weight="fill" />
-                ))}
-              </div>
-              <h3 className="text-xl font-bold text-zinc-100">Milestone Mastered!</h3>
-              <p className="text-xs text-zinc-400 mt-1">
-                You earned 3 Stars for completing <strong className="text-zinc-200">{level.title}</strong>. Your next DAG node is unlocked!
+            <div className="space-y-1">
+              <span className="text-xs font-mono text-focus font-bold uppercase tracking-wider">
+                Level {level.displayLevel} Conquered
+              </span>
+              <h3 className="text-xl font-bold text-text-primary">Milestone Successfully Mastered!</h3>
+              <p className="text-xs text-text-secondary">
+                You closed the skill gap for <strong>{level.skillName}</strong>. Your competency score has updated.
               </p>
             </div>
 
-            <div className="flex items-center gap-3 w-full pt-2">
+            <div className="flex items-center justify-center gap-1.5 py-2">
+              {[1, 2, 3].map((star) => (
+                <Star key={star} className="w-7 h-7 text-warning fill-warning" weight="fill" />
+              ))}
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowCompletionModal(false)}
+                className="flex-1 py-3 rounded-2xl bg-paper hover:bg-border border border-border text-text-secondary font-semibold text-xs transition-colors cursor-pointer"
+              >
+                Stay on Canvas
+              </button>
+
               <button
                 type="button"
                 onClick={() => {
                   setShowCompletionModal(false);
-                  router.push("/roadmap");
-                }}
-                className="flex-1 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold transition-colors cursor-pointer"
-              >
-                Back to Level Map
-              </button>
-
-              {nextLevel && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowCompletionModal(false);
+                  if (nextLevel) {
                     router.push(`/learn/${nextLevel.id}`);
-                  }}
-                  className="flex-1 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
-                >
-                  <span>Next Level ({nextLevel.displayLevel})</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              )}
+                  } else {
+                    router.push("/roadmap");
+                  }
+                }}
+                className="flex-1 py-3 rounded-2xl bg-focus hover:bg-focus/90 text-white font-bold text-xs shadow-lg shadow-focus/25 transition-all cursor-pointer"
+              >
+                {nextLevel ? `Go to Level ${nextLevel.displayLevel}` : "View Level Map"}
+              </button>
             </div>
           </div>
         </div>

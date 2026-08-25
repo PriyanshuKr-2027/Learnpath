@@ -153,33 +153,32 @@ export default function LeaderboardPage() {
   }, [user, currentUserName, profile]);
 
   const topThree = leaderboard.slice(0, 3);
-  const remaining = leaderboard.slice(3);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-20">
+    <div className="max-w-6xl mx-auto space-y-8 pb-20 text-text-primary">
       {/* Top Banner */}
-      <div className="flex flex-wrap items-center justify-between gap-4 p-6 sm:p-8 rounded-3xl border border-zinc-800 bg-zinc-900/40 backdrop-blur-xl">
+      <div className="flex flex-wrap items-center justify-between gap-4 p-6 sm:p-8 rounded-3xl border border-border bg-surface shadow-xl">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-warning/10 text-warning border border-warning/20 flex items-center gap-1">
               <Trophy className="w-3.5 h-3.5" />
               Global Cohort Rankings
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-zinc-100">
+          <h1 className="text-2xl sm:text-3xl font-bold text-text-primary">
             Career Readiness Leaderboard
           </h1>
-          <p className="text-xs sm:text-sm text-zinc-400 mt-1">
+          <p className="text-xs sm:text-sm text-text-secondary mt-1">
             Learners ranked by levels conquered, Rasch item-response theta proficiency, and continuous study streaks.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-zinc-950 border border-zinc-800">
+        <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-paper border border-border">
           <button
             type="button"
             onClick={() => setTimeframe("all")}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              timeframe === "all" ? "bg-emerald-500 text-zinc-950" : "text-zinc-400 hover:text-zinc-100"
+              timeframe === "all" ? "bg-focus text-white shadow-md shadow-focus/25" : "text-text-secondary hover:text-text-primary"
             }`}
           >
             All-Time
@@ -188,7 +187,7 @@ export default function LeaderboardPage() {
             type="button"
             onClick={() => setTimeframe("weekly")}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              timeframe === "weekly" ? "bg-emerald-500 text-zinc-950" : "text-zinc-400 hover:text-zinc-100"
+              timeframe === "weekly" ? "bg-focus text-white shadow-md shadow-focus/25" : "text-text-secondary hover:text-text-primary"
             }`}
           >
             This Week
@@ -200,52 +199,52 @@ export default function LeaderboardPage() {
       {topThree.length >= 3 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end pt-4">
           {/* #2 Rank (Silver) */}
-          <div className="order-2 md:order-1 p-6 rounded-3xl border border-zinc-800 bg-zinc-900/40 flex flex-col items-center text-center relative group hover:border-zinc-700 transition-all">
-            <div className="w-8 h-8 rounded-full bg-zinc-800 text-zinc-300 font-bold flex items-center justify-center text-sm absolute -top-3 shadow-lg border border-zinc-700">
+          <div className="order-2 md:order-1 p-6 rounded-3xl border border-border bg-surface flex flex-col items-center text-center relative group shadow-lg">
+            <div className="w-8 h-8 rounded-full bg-paper text-text-secondary font-bold flex items-center justify-center text-sm absolute -top-3 shadow-lg border border-border">
               2
             </div>
             <img
               src={topThree[1].avatarUrl}
               alt={topThree[1].name}
-              className="w-16 h-16 rounded-full border-2 border-zinc-700 mb-3"
+              className="w-16 h-16 rounded-full border-2 border-border mb-3"
             />
-            <h3 className="text-sm font-bold text-zinc-100">{topThree[1].name}</h3>
-            <span className="text-[11px] text-zinc-400">{topThree[1].roleTitle}</span>
-            <div className="mt-4 px-3 py-1.5 rounded-xl bg-zinc-950 border border-zinc-800 font-mono font-bold text-xs text-zinc-200">
+            <h3 className="text-sm font-bold text-text-primary">{topThree[1].name}</h3>
+            <span className="text-[11px] text-text-secondary">{topThree[1].roleTitle}</span>
+            <div className="mt-4 px-3 py-1.5 rounded-xl bg-paper border border-border font-mono font-bold text-xs text-text-primary">
               {topThree[1].totalPoints} XP
             </div>
           </div>
 
           {/* #1 Rank (Gold) */}
-          <div className="order-1 md:order-2 p-7 rounded-3xl border border-amber-500/40 bg-gradient-to-b from-amber-500/10 via-zinc-900/60 to-zinc-900/40 flex flex-col items-center text-center relative group shadow-2xl shadow-amber-500/10">
-            <div className="w-10 h-10 rounded-full bg-amber-500 text-zinc-950 font-black flex items-center justify-center text-base absolute -top-4 shadow-xl border-2 border-amber-400">
+          <div className="order-1 md:order-2 p-7 rounded-3xl border border-warning/40 bg-surface flex flex-col items-center text-center relative group shadow-2xl shadow-warning/10">
+            <div className="w-10 h-10 rounded-full bg-warning text-paper font-black flex items-center justify-center text-base absolute -top-4 shadow-xl border-2 border-warning">
               <Crown className="w-5 h-5" weight="fill" />
             </div>
             <img
               src={topThree[0].avatarUrl}
               alt={topThree[0].name}
-              className="w-20 h-20 rounded-full border-2 border-amber-400 mb-3 shadow-lg"
+              className="w-20 h-20 rounded-full border-2 border-warning mb-3 shadow-lg"
             />
-            <h3 className="text-base font-bold text-zinc-100">{topThree[0].name}</h3>
-            <span className="text-xs text-amber-400 font-medium">{topThree[0].roleTitle}</span>
-            <div className="mt-4 px-4 py-2 rounded-xl bg-amber-500/20 border border-amber-500/30 font-mono font-bold text-sm text-amber-300">
+            <h3 className="text-base font-bold text-text-primary">{topThree[0].name}</h3>
+            <span className="text-xs text-warning font-medium">{topThree[0].roleTitle}</span>
+            <div className="mt-4 px-4 py-2 rounded-xl bg-warning/20 border border-warning/30 font-mono font-bold text-sm text-warning">
               {topThree[0].totalPoints} XP
             </div>
           </div>
 
           {/* #3 Rank (Bronze) */}
-          <div className="order-3 md:order-3 p-6 rounded-3xl border border-zinc-800 bg-zinc-900/40 flex flex-col items-center text-center relative group hover:border-zinc-700 transition-all">
-            <div className="w-8 h-8 rounded-full bg-amber-900/40 text-amber-500 font-bold flex items-center justify-center text-sm absolute -top-3 shadow-lg border border-amber-800/40">
+          <div className="order-3 md:order-3 p-6 rounded-3xl border border-border bg-surface flex flex-col items-center text-center relative group shadow-lg">
+            <div className="w-8 h-8 rounded-full bg-paper text-alert font-bold flex items-center justify-center text-sm absolute -top-3 shadow-lg border border-border">
               3
             </div>
             <img
               src={topThree[2].avatarUrl}
               alt={topThree[2].name}
-              className="w-16 h-16 rounded-full border-2 border-amber-800/50 mb-3"
+              className="w-16 h-16 rounded-full border-2 border-border mb-3"
             />
-            <h3 className="text-sm font-bold text-zinc-100">{topThree[2].name}</h3>
-            <span className="text-[11px] text-zinc-400">{topThree[2].roleTitle}</span>
-            <div className="mt-4 px-3 py-1.5 rounded-xl bg-zinc-950 border border-zinc-800 font-mono font-bold text-xs text-zinc-200">
+            <h3 className="text-sm font-bold text-text-primary">{topThree[2].name}</h3>
+            <span className="text-[11px] text-text-secondary">{topThree[2].roleTitle}</span>
+            <div className="mt-4 px-3 py-1.5 rounded-xl bg-paper border border-border font-mono font-bold text-xs text-text-primary">
               {topThree[2].totalPoints} XP
             </div>
           </div>
@@ -255,9 +254,9 @@ export default function LeaderboardPage() {
       {/* Main Split: Leaderboard Table & Live Cohort Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Full Roster (8 Cols) */}
-        <div className="lg:col-span-8 p-6 rounded-3xl border border-zinc-800 bg-zinc-900/40 backdrop-blur-xl shadow-xl space-y-4">
-          <h2 className="text-base font-bold text-zinc-100 flex items-center gap-2">
-            <Medal className="w-5 h-5 text-emerald-400" />
+        <div className="lg:col-span-8 p-6 rounded-3xl border border-border bg-surface shadow-xl space-y-4">
+          <h2 className="text-base font-bold text-text-primary flex items-center gap-2">
+            <Medal className="w-5 h-5 text-focus" />
             Rankings & Competency Metrics
           </h2>
 
@@ -267,42 +266,42 @@ export default function LeaderboardPage() {
                 key={u.id}
                 className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${
                   u.isCurrentUser
-                    ? "border-emerald-500/40 bg-emerald-950/20 shadow-md"
-                    : "border-zinc-800/70 bg-zinc-950/60 hover:border-zinc-700"
+                    ? "border-focus/40 bg-focus/5 shadow-md"
+                    : "border-border bg-paper hover:border-border/80"
                 }`}
               >
                 <div className="flex items-center gap-3.5">
-                  <span className="w-6 text-center font-mono font-bold text-xs text-zinc-400">
+                  <span className="w-6 text-center font-mono font-bold text-xs text-text-secondary">
                     #{idx + 1}
                   </span>
-                  <img src={u.avatarUrl} alt={u.name} className="w-9 h-9 rounded-full border border-zinc-800" />
+                  <img src={u.avatarUrl} alt={u.name} className="w-9 h-9 rounded-full border border-border" />
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className={`text-xs sm:text-sm font-bold ${u.isCurrentUser ? "text-emerald-300" : "text-zinc-200"}`}>
+                      <span className={`text-xs sm:text-sm font-bold ${u.isCurrentUser ? "text-focus" : "text-text-primary"}`}>
                         {u.name}
                       </span>
                       {u.isCurrentUser && (
-                        <span className="px-1.5 py-0.2 rounded text-[10px] bg-emerald-500/20 text-emerald-300 font-bold">
+                        <span className="px-1.5 py-0.2 rounded text-[10px] bg-focus/20 text-focus font-bold">
                           YOU
                         </span>
                       )}
                     </div>
-                    <span className="text-[11px] text-zinc-400 block">{u.roleTitle}</span>
+                    <span className="text-[11px] text-text-secondary block">{u.roleTitle}</span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-4 text-xs font-mono">
-                  <div className="hidden sm:flex items-center gap-1 text-amber-400">
+                  <div className="hidden sm:flex items-center gap-1 text-warning">
                     <Fire className="w-4 h-4" weight="fill" />
                     <span>{u.streak}d</span>
                   </div>
 
-                  <div className="hidden sm:flex items-center gap-1 text-cyan-400">
+                  <div className="hidden sm:flex items-center gap-1 text-focus">
                     <GameController className="w-4 h-4" weight="fill" />
                     <span>{u.levelsMastered} Lvls</span>
                   </div>
 
-                  <span className="px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-100 font-bold">
+                  <span className="px-3 py-1.5 rounded-xl bg-surface border border-border text-text-primary font-bold">
                     {u.totalPoints} XP
                   </span>
                 </div>
@@ -312,23 +311,23 @@ export default function LeaderboardPage() {
         </div>
 
         {/* Live Cohort Activity (4 Cols) */}
-        <div className="lg:col-span-4 p-6 rounded-3xl border border-zinc-800 bg-zinc-900/40 backdrop-blur-xl shadow-xl space-y-4">
-          <h2 className="text-base font-bold text-zinc-100 flex items-center gap-2">
-            <Sparkle className="w-5 h-5 text-teal-400" />
+        <div className="lg:col-span-4 p-6 rounded-3xl border border-border bg-surface shadow-xl space-y-4">
+          <h2 className="text-base font-bold text-text-primary flex items-center gap-2">
+            <Sparkle className="w-5 h-5 text-focus" />
             Live Cohort Activity
           </h2>
 
           <div className="space-y-3">
             {activities.map((act) => (
-              <div key={act.id} className="p-3.5 rounded-2xl bg-zinc-950 border border-zinc-850 space-y-1">
+              <div key={act.id} className="p-3.5 rounded-2xl bg-paper border border-border space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-zinc-200">{act.userName}</span>
-                  <span className="text-[10px] text-zinc-500">{act.solvedAt}</span>
+                  <span className="text-xs font-bold text-text-primary">{act.userName}</span>
+                  <span className="text-[10px] text-text-secondary">{act.solvedAt}</span>
                 </div>
-                <p className="text-xs text-zinc-400 leading-snug">{act.activityTitle}</p>
+                <p className="text-xs text-text-secondary leading-snug">{act.activityTitle}</p>
                 <div className="flex items-center justify-between pt-1">
-                  <span className="text-[10px] font-mono text-emerald-400 font-medium">+{act.points} XP</span>
-                  <span className="text-[10px] text-zinc-500 font-mono">[{act.category}]</span>
+                  <span className="text-[10px] font-mono text-signal font-medium">+{act.points} XP</span>
+                  <span className="text-[10px] text-text-secondary font-mono">[{act.category}]</span>
                 </div>
               </div>
             ))}
@@ -336,7 +335,7 @@ export default function LeaderboardPage() {
 
           <Link
             href="/social"
-            className="w-full py-3 rounded-2xl bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/30 text-teal-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+            className="w-full py-3 rounded-2xl bg-focus/10 hover:bg-focus/20 border border-focus/30 text-focus text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
           >
             <span>Join Peer Study Room</span>
           </Link>

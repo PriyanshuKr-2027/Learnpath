@@ -68,7 +68,6 @@ function UnifiedOnboardingModalContent({
   const [skills, setSkills] = useState<SkillEntry[]>([]);
   const [isGeneratingPath, setIsGeneratingPath] = useState(false);
 
-  // Prefill profile data if available
   useEffect(() => {
     if (profile?.name) setName(profile.name);
     if (profile?.mobileNo) setMobileNo(profile.mobileNo);
@@ -178,12 +177,10 @@ function UnifiedOnboardingModalContent({
       darkMode: true,
     };
 
-    // Save to local mock store
     mockStore.saveProfile(finalProfile);
     const newPath = generateLearningPathFromProfile(finalProfile);
     mockStore.saveLearningPath(newPath);
 
-    // Save to Supabase
     try {
       await updateProfile({
         name,
@@ -203,18 +200,18 @@ function UnifiedOnboardingModalContent({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
-      <div className="w-full max-w-4xl bg-zinc-950 border border-zinc-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92vh]">
+      <div className="w-full max-w-4xl bg-surface border border-border rounded-3xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92vh]">
         {/* Modal Top Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-900/60">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-sidebar">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-zinc-950 font-bold shadow-md shadow-emerald-500/20">
+            <div className="w-8 h-8 rounded-xl bg-focus flex items-center justify-center text-white font-bold shadow-md shadow-focus/25">
               <Sparkle className="w-4 h-4" weight="fill" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-zinc-100 flex items-center gap-2">
+              <h2 className="text-sm font-bold text-text-primary flex items-center gap-2">
                 LearnPath AI 2.0 • Autonomous Onboarding
               </h2>
-              <span className="text-[11px] text-zinc-400">Step {currentStep} of 4</span>
+              <span className="text-[11px] text-text-secondary">Step {currentStep} of 4</span>
             </div>
           </div>
 
@@ -225,10 +222,10 @@ function UnifiedOnboardingModalContent({
                 key={step}
                 className={`w-2.5 h-2.5 rounded-full transition-all ${
                   step === currentStep
-                    ? "w-7 bg-emerald-500"
+                    ? "w-7 bg-focus"
                     : step < currentStep
-                    ? "bg-emerald-500/60"
-                    : "bg-zinc-800"
+                    ? "bg-focus/50"
+                    : "bg-border"
                 }`}
               />
             ))}
@@ -241,31 +238,31 @@ function UnifiedOnboardingModalContent({
           {currentStep === 1 && (
             <form onSubmit={handleAnalyzeGoal} className="flex flex-col gap-5 max-w-2xl mx-auto">
               <div className="text-center space-y-1">
-                <h3 className="text-xl font-bold text-zinc-100">Welcome! Let&apos;s Build Your Learning Path</h3>
-                <p className="text-xs text-zinc-400">
+                <h3 className="text-xl font-bold text-text-primary">Welcome! Let&apos;s Build Your Learning Path</h3>
+                <p className="text-xs text-text-secondary">
                   Tell us your career goal, weekly time budget, and baseline details.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-zinc-300">Your Full Name</label>
+                  <label className="text-xs font-semibold text-text-secondary">Your Full Name</label>
                   <input
                     type="text"
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. Alex Kumar"
-                    className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-100 focus:outline-none focus:border-emerald-500/50"
+                    className="p-3 rounded-xl bg-paper border border-border text-xs text-text-primary focus:outline-none focus:border-focus/50"
                   />
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-zinc-300">Target Career Role</label>
+                  <label className="text-xs font-semibold text-text-secondary">Target Career Role</label>
                   <select
                     value={targetRoleId}
                     onChange={(e) => setTargetRoleId(e.target.value)}
-                    className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-100 focus:outline-none focus:border-emerald-500/50"
+                    className="p-3 rounded-xl bg-paper border border-border text-xs text-text-primary focus:outline-none focus:border-focus/50"
                   >
                     {PRESEEDED_CAREER_ROLES.map((role) => (
                       <option key={role.id} value={role.id}>
@@ -277,9 +274,9 @@ function UnifiedOnboardingModalContent({
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-zinc-300 flex items-center justify-between">
+                <label className="text-xs font-semibold text-text-secondary flex items-center justify-between">
                   <span>Describe Your Career Goal or Transition</span>
-                  <span className="text-[10px] text-zinc-500">AI will extract required competencies</span>
+                  <span className="text-[10px] text-text-secondary">AI will extract required competencies</span>
                 </label>
                 <textarea
                   rows={3}
@@ -287,14 +284,14 @@ function UnifiedOnboardingModalContent({
                   value={goalPrompt}
                   onChange={(e) => setGoalPrompt(e.target.value)}
                   placeholder="e.g. I want to transition from Junior Developer to Senior Data Analyst in 10 weeks..."
-                  className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-100 focus:outline-none focus:border-emerald-500/50 resize-none leading-relaxed"
+                  className="p-3 rounded-xl bg-paper border border-border text-xs text-text-primary focus:outline-none focus:border-focus/50 resize-none leading-relaxed"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-zinc-300 flex items-center justify-between">
+                <label className="text-xs font-semibold text-text-secondary flex items-center justify-between">
                   <span>Weekly Study Commitment</span>
-                  <span className="font-mono text-emerald-400 text-xs font-bold">{weeklyHours}h / week</span>
+                  <span className="font-mono text-focus text-xs font-bold">{weeklyHours}h / week</span>
                 </label>
                 <input
                   type="range"
@@ -303,7 +300,7 @@ function UnifiedOnboardingModalContent({
                   step={2}
                   value={weeklyHours}
                   onChange={(e) => setWeeklyHours(Number(e.target.value))}
-                  className="accent-emerald-500 w-full cursor-pointer mt-2"
+                  className="accent-focus w-full cursor-pointer mt-2"
                 />
               </div>
 
@@ -311,7 +308,7 @@ function UnifiedOnboardingModalContent({
                 <button
                   type="submit"
                   disabled={isAnalyzingGoal}
-                  className="px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20 cursor-pointer"
+                  className="px-6 py-3 rounded-xl bg-focus hover:bg-focus/90 text-white font-bold text-xs flex items-center gap-2 transition-all shadow-lg shadow-focus/25 cursor-pointer"
                 >
                   {isAnalyzingGoal ? (
                     <>
@@ -333,20 +330,20 @@ function UnifiedOnboardingModalContent({
           {currentStep === 2 && extractedInfo && (
             <div className="flex flex-col gap-5 max-w-2xl mx-auto">
               <div className="text-center space-y-1">
-                <span className="text-[11px] font-mono text-emerald-400 uppercase tracking-wider font-bold">
+                <span className="text-[11px] font-mono text-focus uppercase tracking-wider font-bold">
                   AI Goal Extraction Complete
                 </span>
-                <h3 className="text-xl font-bold text-zinc-100">{extractedInfo.targetRoleTitle}</h3>
-                <p className="text-xs text-zinc-400">{extractedInfo.reasoning}</p>
+                <h3 className="text-xl font-bold text-text-primary">{extractedInfo.targetRoleTitle}</h3>
+                <p className="text-xs text-text-secondary">{extractedInfo.reasoning}</p>
               </div>
 
-              <div className="p-4 rounded-2xl border border-emerald-500/20 bg-emerald-950/10 space-y-2">
-                <span className="text-xs font-bold text-emerald-400">Identified Key Competencies:</span>
+              <div className="p-4 rounded-2xl border border-focus/20 bg-focus/5 space-y-2">
+                <span className="text-xs font-bold text-focus">Identified Key Competencies:</span>
                 <div className="flex flex-wrap gap-2">
                   {extractedInfo.identifiedSkills.map((skill) => (
                     <span
                       key={skill}
-                      className="px-3 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-xs font-medium text-zinc-200"
+                      className="px-3 py-1 rounded-lg bg-surface border border-border text-xs font-medium text-text-primary"
                     >
                       ✓ {skill}
                     </span>
@@ -358,7 +355,7 @@ function UnifiedOnboardingModalContent({
                 <button
                   type="button"
                   onClick={() => setCurrentStep(1)}
-                  className="px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl bg-paper hover:bg-border border border-border text-text-secondary text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   <span>Back</span>
@@ -367,7 +364,7 @@ function UnifiedOnboardingModalContent({
                 <button
                   type="button"
                   onClick={() => setCurrentStep(3)}
-                  className="px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
+                  className="px-6 py-3 rounded-xl bg-focus hover:bg-focus/90 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-focus/25 transition-all cursor-pointer"
                 >
                   <span>Next: Ingest Resume & GitHub</span>
                   <ArrowRight className="w-4 h-4" weight="bold" />
@@ -380,17 +377,14 @@ function UnifiedOnboardingModalContent({
           {currentStep === 3 && (
             <div className="flex flex-col gap-6 max-w-3xl mx-auto">
               <div className="text-center space-y-1">
-                <h3 className="text-xl font-bold text-zinc-100">Multi-Modal Baseline Ingestion</h3>
-                <p className="text-xs text-zinc-400">
+                <h3 className="text-xl font-bold text-text-primary">Multi-Modal Baseline Ingestion</h3>
+                <p className="text-xs text-text-secondary">
                   Upload your Resume PDF and enter your GitHub profile to calibrate your demonstrated baseline.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Resume Dropzone */}
                 <ResumeDropzone onParsed={handleResumeParsed} />
-
-                {/* GitHub Telemetry Card */}
                 <GitHubTelemetryCard onSynced={handleGithubSynced} />
               </div>
 
@@ -398,7 +392,7 @@ function UnifiedOnboardingModalContent({
                 <button
                   type="button"
                   onClick={() => setCurrentStep(2)}
-                  className="px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl bg-paper hover:bg-border border border-border text-text-secondary text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   <span>Back</span>
@@ -407,7 +401,7 @@ function UnifiedOnboardingModalContent({
                 <button
                   type="button"
                   onClick={handleProceedToMatrix}
-                  className="px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
+                  className="px-6 py-3 rounded-xl bg-focus hover:bg-focus/90 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-focus/25 transition-all cursor-pointer"
                 >
                   <span>Next: Review Skill Matrix</span>
                   <ArrowRight className="w-4 h-4" weight="bold" />
@@ -420,11 +414,11 @@ function UnifiedOnboardingModalContent({
           {currentStep === 4 && (
             <div className="flex flex-col gap-6 max-w-3xl mx-auto">
               <div className="text-center space-y-1">
-                <span className="text-[11px] font-mono text-emerald-400 uppercase tracking-wider font-bold">
+                <span className="text-[11px] font-mono text-focus uppercase tracking-wider font-bold">
                   Final Calibration
                 </span>
-                <h3 className="text-xl font-bold text-zinc-100">Review Your Skill Proficiency Matrix</h3>
-                <p className="text-xs text-zinc-400">
+                <h3 className="text-xl font-bold text-text-primary">Review Your Skill Proficiency Matrix</h3>
+                <p className="text-xs text-text-secondary">
                   Fine-tune your verified baseline. Topics at &gt;75% will be skipped, while gaps will generate your Candy Crush DAG.
                 </p>
               </div>
@@ -438,7 +432,7 @@ function UnifiedOnboardingModalContent({
                 <button
                   type="button"
                   onClick={() => setCurrentStep(3)}
-                  className="px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl bg-paper hover:bg-border border border-border text-text-secondary text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   <span>Back</span>
@@ -448,7 +442,7 @@ function UnifiedOnboardingModalContent({
                   type="button"
                   disabled={isGeneratingPath}
                   onClick={handleGenerateFinalPath}
-                  className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:opacity-90 text-zinc-950 font-bold text-xs sm:text-sm flex items-center gap-2.5 shadow-xl shadow-emerald-500/25 transition-all cursor-pointer"
+                  className="px-8 py-3.5 rounded-xl bg-focus hover:bg-focus/90 text-white font-bold text-xs sm:text-sm flex items-center gap-2.5 shadow-xl shadow-focus/30 transition-all cursor-pointer"
                 >
                   {isGeneratingPath ? (
                     <>
