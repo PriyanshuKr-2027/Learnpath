@@ -21,12 +21,12 @@ interface SupabaseContextType {
   isMockMode: boolean;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | Error | null }>;
   signUp: (email: string, password: string, name: string) => Promise<{ data: { user: User | null; session: Session | null } | null; error: AuthError | Error | null }>;
+  signInWithGoogle: () => Promise<{ error: AuthError | Error | null }>;
   signOut: () => Promise<void>;
   updateProfile: (profileData: Partial<Profile>) => Promise<void>;
   refreshProgress: () => Promise<void>;
   createPortalUser: (email: string, password: string, name: string) => Promise<void>;
   deletePortalUser: (userId: string) => Promise<void>;
-  getChatHistory?: any;
 }
 
 const SupabaseContext = createContext<SupabaseContextType | undefined>(undefined);
@@ -55,7 +55,6 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     hasCompletedSetup: false,
     dob: "2000-01-01",
     mobileNo: "9876543210",
-    groqApiKey: "",
   });
 
   const [days, setDays] = useState<Day[]>([]);
@@ -107,7 +106,6 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
             hasCompletedSetup: profData.has_completed_setup ?? false,
             dob: profData.dob || "",
             mobileNo: profData.mobile_no || "",
-            groqApiKey: profData.groq_api_key || "",
           });
           setStreak(profData.current_streak || 5);
           if (profData.dark_mode) {
@@ -143,7 +141,6 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       if (profileData.hasCompletedSetup !== undefined) updatePayload.has_completed_setup = profileData.hasCompletedSetup;
       if (profileData.dob !== undefined) updatePayload.dob = profileData.dob;
       if (profileData.mobileNo !== undefined) updatePayload.mobile_no = profileData.mobileNo;
-      if (profileData.groqApiKey !== undefined) updatePayload.groq_api_key = profileData.groqApiKey;
 
       await supabase!
         .from("profiles")
@@ -214,16 +211,40 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     return res;
   };
 
+  const signInWithGoogle = async () => {
+    if (isMockMode) {
+      const mockEmail = "alex.google@example.com";
+      const mockP = { ...profile, email: mockEmail, name: "Alex (Google)" };
+      setProfile(mockP);
+      saveMockProfile(mockP);
+      setUser({ id: "mock-google-user-id", email: mockEmail } as User);
+      return { error: null };
+    }
+
+    const { error } = await supabase!.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : undefined,
+        queryParams: {
+          access_type: "offline",
+          prompt: "consent",
+        },
+      },
+    });
+
+    return { error };
+  };
+
   const signOut = async () => {
     if (isMockMode) {
       setUser(null);
-      router.push("/auth/login");
+      router.push("/login");
       return;
     }
 
     await supabase!.auth.signOut();
     setUser(null);
-    router.push("/auth/login");
+    router.push("/login");
   };
 
   return (
@@ -242,6 +263,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         isMockMode,
         signIn,
         signUp,
+        signInWithGoogle,
         signOut,
         updateProfile,
         refreshProgress,
