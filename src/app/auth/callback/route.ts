@@ -7,12 +7,17 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code");
   const next = searchParams.get("next") || "/dashboard";
 
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!url || !key || url.includes("deblsqilknaxulxqbmmm") || url.includes("your-project-id")) {
+    return NextResponse.redirect(`${origin}/dashboard`);
+  }
+
   if (code) {
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
+    try {
+      const cookieStore = await cookies();
+      const supabase = createServerClient(url, key, {
         cookies: {
           getAll() {
             return cookieStore.getAll();
@@ -47,6 +52,9 @@ export async function GET(request: NextRequest) {
       }
 
       return NextResponse.redirect(`${origin}${next}`);
+    }
+    } catch {
+      return NextResponse.redirect(`${origin}/dashboard`);
     }
   }
 

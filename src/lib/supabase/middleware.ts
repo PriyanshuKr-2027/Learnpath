@@ -9,7 +9,12 @@ export async function updateSession(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!supabaseUrl || !supabaseKey || supabaseUrl.includes("your-project-id")) {
+  if (
+    !supabaseUrl ||
+    !supabaseKey ||
+    supabaseUrl.includes("your-project-id") ||
+    supabaseUrl.includes("deblsqilknaxulxqbmmm")
+  ) {
     return { supabaseResponse, user: null, role: "learner" };
   }
 

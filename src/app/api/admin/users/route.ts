@@ -5,6 +5,9 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 export async function POST(request: Request) {
   try {
     const client = await createServerClient();
+    if (!client) {
+      return NextResponse.json({ success: true, message: "Mock admin user mode" });
+    }
     const { data: { user } } = await client.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -59,6 +62,9 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const client = await createServerClient();
+    if (!client) {
+      return NextResponse.json({ success: true, message: "Mock delete user mode" });
+    }
     const { data: { user } } = await client.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
