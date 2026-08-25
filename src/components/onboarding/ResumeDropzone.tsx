@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { FileText, UploadSimple, CheckCircle, SpinnerGap, Sparkle } from "@phosphor-icons/react";
+import { UploadCloud, CheckCircle2, Loader2, Sparkles, FileText } from "lucide-react";
 import { ProjectEntry, SkillEntry } from "@/types";
 
 interface ResumeDropzoneProps {
@@ -53,7 +53,6 @@ export function ResumeDropzone({ onParsed, apiKey }: ResumeDropzoneProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Read text from file
     const reader = new FileReader();
     reader.onload = (event) => {
       const content = event.target?.result as string;
@@ -67,7 +66,7 @@ export function ResumeDropzone({ onParsed, apiKey }: ResumeDropzoneProps) {
   };
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 h-full justify-between">
       <div
         onDragOver={(e) => {
           e.preventDefault();
@@ -88,12 +87,12 @@ export function ResumeDropzone({ onParsed, apiKey }: ResumeDropzoneProps) {
           }
         }}
         onClick={() => fileInputRef.current?.click()}
-        className={`relative border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all ${
+        className={`relative border-2 border-dashed rounded-2xl p-6 min-h-[220px] flex flex-col items-center justify-center text-center cursor-pointer transition-all ${
           isDragging
-            ? "border-emerald-500 bg-emerald-500/10 scale-[1.01]"
+            ? "border-focus bg-focus/10 scale-[1.01]"
             : parsedFileName
-            ? "border-emerald-500/50 bg-emerald-950/20"
-            : "border-zinc-800 hover:border-zinc-700 bg-zinc-900/50 hover:bg-zinc-900"
+            ? "border-signal/50 bg-signal/5"
+            : "border-border hover:border-focus/40 bg-paper hover:bg-surface"
         }`}
       >
         <input
@@ -106,45 +105,46 @@ export function ResumeDropzone({ onParsed, apiKey }: ResumeDropzoneProps) {
 
         {isParsing ? (
           <div className="flex flex-col items-center gap-2 py-4">
-            <SpinnerGap className="w-8 h-8 text-emerald-400 animate-spin" />
-            <p className="text-sm text-zinc-300 font-medium">Extracting technical skills with AI...</p>
-            <span className="text-xs text-zinc-500">Reading entities & project stacks</span>
+            <Loader2 className="w-8 h-8 text-focus animate-spin" />
+            <p className="text-sm text-text-primary font-medium">Extracting technical skills with AI...</p>
+            <span className="text-xs text-text-secondary">Reading entities & project stacks</span>
           </div>
         ) : parsedFileName ? (
           <div className="flex flex-col items-center gap-2 py-2">
-            <CheckCircle className="w-9 h-9 text-emerald-400" weight="fill" />
-            <p className="text-sm font-semibold text-zinc-100">{parsedFileName}</p>
-            <span className="text-xs text-emerald-400/90 font-medium">
-              ✅ Successfully parsed skills & projects
+            <CheckCircle2 className="w-9 h-9 text-signal" />
+            <p className="text-sm font-semibold text-text-primary">{parsedFileName}</p>
+            <span className="text-xs text-signal font-medium flex items-center gap-1">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              Successfully parsed skills and projects
             </span>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2 py-3">
-            <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400">
-              <UploadSimple className="w-6 h-6" />
+            <div className="w-12 h-12 rounded-2xl bg-surface border border-border flex items-center justify-center text-text-secondary shadow-sm">
+              <UploadCloud className="w-6 h-6 text-focus" />
             </div>
             <div>
-              <p className="text-sm font-medium text-zinc-200">
-                Click to upload or drag & drop your <span className="text-emerald-400">Resume PDF</span>
+              <p className="text-sm font-medium text-text-primary">
+                Click to upload or drag & drop your <span className="text-focus font-semibold">Resume PDF</span>
               </p>
-              <p className="text-xs text-zinc-500 mt-0.5">Supports PDF, TXT, Markdown (Max 10MB)</p>
+              <p className="text-xs text-text-secondary mt-0.5">Supports PDF, TXT, Markdown (Max 10MB)</p>
             </div>
           </div>
         )}
       </div>
 
-      {/* Quick Sample Button for Hackathon Judges */}
+      {/* Quick Sample Button */}
       <div className="flex items-center justify-between px-1">
-        <span className="text-xs text-zinc-500">Don't have a PDF ready?</span>
+        <span className="text-xs text-text-secondary">Don&apos;t have a PDF ready?</span>
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
             handleSampleResume();
           }}
-          className="text-xs font-medium text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 py-1 px-2.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors"
+          className="text-xs font-medium text-focus hover:text-focus/80 flex items-center gap-1.5 py-1 px-2.5 rounded-lg bg-focus/10 hover:bg-focus/20 border border-focus/20 transition-colors cursor-pointer"
         >
-          <Sparkle className="w-3.5 h-3.5" />
+          <Sparkles className="w-3.5 h-3.5" />
           Use 1-Click Sample Resume
         </button>
       </div>

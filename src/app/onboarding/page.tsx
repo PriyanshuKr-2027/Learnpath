@@ -3,19 +3,19 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Sparkle,
+  Sparkles,
   ArrowRight,
   ArrowLeft,
-  CheckCircle,
+  CheckCircle2,
+  Check,
   FileText,
-  GithubLogo,
   Sliders,
   Clock,
   Target,
-  RocketLaunch,
-  SpinnerGap,
-  Lightning,
-} from "@phosphor-icons/react";
+  Rocket,
+  Loader2,
+  Zap,
+} from "lucide-react";
 import { LearnerProfile, ProjectEntry, SkillEntry } from "@/types";
 import { PRESEEDED_CAREER_ROLES } from "@/lib/data/roleTaxonomy";
 import { ResumeDropzone } from "@/components/onboarding/ResumeDropzone";
@@ -80,63 +80,56 @@ export default function OnboardingPage() {
     setIsAnalyzingGoal(true);
 
     try {
-      const res = await fetch("/api/ai/goal-extract", {
+      const res = await fetch("/api/ai/analyze-goal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          goalPrompt,
-          timeBudgetWeeks: totalWeeks,
-          weeklyHours,
-        }),
+        body: JSON.stringify({ prompt: goalPrompt }),
       });
 
       if (res.ok) {
         const data = await res.json();
-        setExtractedRole(data.targetRoleId || "data-analyst");
-        if (data.relevantTech) setExtractedTech(data.relevantTech);
-        if (data.timeframeWeeks) setTotalWeeks(data.timeframeWeeks);
-        if (data.weeklyHoursBudget) setWeeklyHours(data.weeklyHoursBudget);
+        if (data.matchedRoleId) setExtractedRole(data.matchedRoleId);
+        if (data.targetSkills) setExtractedTech(data.targetSkills);
+        if (data.recommendedWeeklyHours) setWeeklyHours(data.recommendedWeeklyHours);
+        if (data.recommendedTotalWeeks) setTotalWeeks(data.recommendedTotalWeeks);
       }
     } catch (e) {
-      console.error("Goal analysis error:", e);
+      console.error("AI goal analysis error:", e);
     } finally {
       setIsAnalyzingGoal(false);
     }
   };
 
-  // Resume Handler
+  // Resume Ingestion Handler
   const handleResumeParsed = (data: { skills: SkillEntry[]; certifications: string[]; projects: ProjectEntry[] }) => {
-    const merged = [...skills];
-    for (const newSkill of data.skills) {
-      const existingIdx = merged.findIndex((s) => s.name.toLowerCase() === newSkill.name.toLowerCase());
-      if (existingIdx !== -1) {
-        merged[existingIdx] = {
-          ...merged[existingIdx],
-          source: "resume",
-          currentProficiency: Math.max(merged[existingIdx].currentProficiency, newSkill.currentProficiency),
-          evidence: newSkill.evidence,
-        };
-      } else {
-        merged.push(newSkill);
-      }
+    if (data.skills && data.skills.length > 0) {
+      mergeSkills(data.skills);
     }
-    setSkills(merged);
     if (data.certifications) setCertifications((prev) => Array.from(new Set([...prev, ...data.certifications])));
     if (data.projects) setProjects((prev) => [...prev, ...data.projects]);
   };
 
-  // GitHub Handler
+  // GitHub Telemetry Handler
   const handleGithubSynced = (data: { telemetry: any; skills: SkillEntry[] }) => {
     setGithubTelemetry(data.telemetry);
+    if (data.skills && data.skills.length > 0) {
+      mergeSkills(data.skills);
+    }
+  };
+
+  const mergeSkills = (incoming: SkillEntry[]) => {
+    const map = new Map<string, SkillEntry>();
+    skills.forEach((s) => map.set(s.name.toLowerCase(), s));
+
     const merged = [...skills];
-    for (const newSkill of data.skills) {
-      const existingIdx = merged.findIndex((s) => s.name.toLowerCase() === newSkill.name.toLowerCase());
+    for (const newSkill of incoming) {
+      const key = newSkill.name.toLowerCase();
+      const existingIdx = merged.findIndex((s) => s.name.toLowerCase() === key);
       if (existingIdx !== -1) {
         merged[existingIdx] = {
           ...merged[existingIdx],
-          source: "github",
           currentProficiency: Math.max(merged[existingIdx].currentProficiency, newSkill.currentProficiency),
+          source: newSkill.source,
           evidence: newSkill.evidence,
         };
       } else {
@@ -183,56 +176,95 @@ export default function OnboardingPage() {
     <div className="min-h-screen bg-paper text-text-primary flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 selection:bg-focus/30 selection:text-focus">
       {/* Header Badge */}
       <div className="w-full max-w-3xl flex flex-col items-center text-center gap-2 mb-6">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-focus/10 text-focus border border-focus/20">
-          <Sparkle className="w-4 h-4" />
-          <span>LearnPath AI 2.0 • Autonomous Career Architect</span>
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-focus/10 text-focus border border-focus/20 shadow-sm">
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>LearnPath AI • Autonomous Career Architect</span>
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text-primary">
           Personalized Learning Path Onboarding
         </h1>
         <p className="text-sm text-text-secondary max-w-xl">
-          We synthesize an adaptive, DAG-sequenced roadmap based on the delta between what your target role requires and what you already know.
+          Synthesize an adaptive, DAG-sequenced roadmap based on the delta between what your target role requires and what you already know.
         </p>
 
         {/* Stepper Indicator */}
-        <div className="flex items-center gap-3 mt-4">
+        <div className="flex items-center gap-2 sm:gap-3 mt-4">
+          {/* Step 1 */}
           <div
-            className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all ${
+            className={`flex items-center gap-2 text-xs font-semibold px-3.5 py-2 rounded-xl border transition-all ${
               step === 1
                 ? "bg-focus text-white border-focus shadow-lg shadow-focus/25"
+                : step > 1
+                ? "bg-surface text-signal border-signal/30 shadow-sm"
                 : "bg-surface text-text-secondary border-border"
             }`}
           >
-            <span className="w-5 h-5 rounded-full bg-paper/30 flex items-center justify-center text-[11px]">1</span>
+            <span
+              className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold ${
+                step === 1
+                  ? "bg-white/20 text-white"
+                  : step > 1
+                  ? "bg-signal/15 text-signal"
+                  : "bg-paper text-text-secondary"
+              }`}
+            >
+              {step > 1 ? <Check className="w-3 h-3" /> : "1"}
+            </span>
             <span>Goal & Budget</span>
           </div>
-          <div className="w-6 h-[1px] bg-border" />
+
+          <div className="w-6 sm:w-8 h-[1px] bg-border" />
+
+          {/* Step 2 */}
           <div
-            className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all ${
+            className={`flex items-center gap-2 text-xs font-semibold px-3.5 py-2 rounded-xl border transition-all ${
               step === 2
                 ? "bg-focus text-white border-focus shadow-lg shadow-focus/25"
+                : step > 2
+                ? "bg-surface text-signal border-signal/30 shadow-sm"
                 : "bg-surface text-text-secondary border-border"
             }`}
           >
-            <span className="w-5 h-5 rounded-full bg-paper/30 flex items-center justify-center text-[11px]">2</span>
+            <span
+              className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold ${
+                step === 2
+                  ? "bg-white/20 text-white"
+                  : step > 2
+                  ? "bg-signal/15 text-signal"
+                  : "bg-paper text-text-secondary"
+              }`}
+            >
+              {step > 2 ? <Check className="w-3 h-3" /> : "2"}
+            </span>
             <span>Resume & GitHub</span>
           </div>
-          <div className="w-6 h-[1px] bg-border" />
+
+          <div className="w-6 sm:w-8 h-[1px] bg-border" />
+
+          {/* Step 3 */}
           <div
-            className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all ${
+            className={`flex items-center gap-2 text-xs font-semibold px-3.5 py-2 rounded-xl border transition-all ${
               step === 3
                 ? "bg-focus text-white border-focus shadow-lg shadow-focus/25"
                 : "bg-surface text-text-secondary border-border"
             }`}
           >
-            <span className="w-5 h-5 rounded-full bg-paper/30 flex items-center justify-center text-[11px]">3</span>
+            <span
+              className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold ${
+                step === 3
+                  ? "bg-white/20 text-white"
+                  : "bg-paper text-text-secondary"
+              }`}
+            >
+              3
+            </span>
             <span>Skill Delta Matrix</span>
           </div>
         </div>
       </div>
 
       {/* Main Wizard Container */}
-      <div className="w-full max-w-3xl rounded-3xl border border-border bg-surface p-6 sm:p-8 shadow-2xl">
+      <div className="w-full max-w-3xl rounded-3xl border border-border bg-surface p-6 sm:p-8 shadow-xl">
         {/* STEP 1: Basic Info & AI Goal Analysis */}
         {step === 1 && (
           <div className="flex flex-col gap-5">
@@ -243,7 +275,7 @@ export default function OnboardingPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Your Name"
-                className="w-full mt-1.5 bg-paper border border-border rounded-xl px-4 py-2.5 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-focus/50"
+                className="w-full mt-1.5 bg-paper border border-border rounded-xl px-4 py-2.5 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-focus/50 shadow-sm"
               />
             </div>
 
@@ -256,9 +288,9 @@ export default function OnboardingPage() {
                   type="button"
                   onClick={handleAnalyzeGoal}
                   disabled={isAnalyzingGoal || !goalPrompt.trim()}
-                  className="text-xs font-semibold text-focus hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                  className="text-xs font-semibold text-focus hover:underline flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
-                  {isAnalyzingGoal ? <SpinnerGap className="w-3.5 h-3.5 animate-spin" /> : <Sparkle className="w-3.5 h-3.5" />}
+                  {isAnalyzingGoal ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
                   <span>AI Semantic Role Extraction</span>
                 </button>
               </div>
@@ -268,12 +300,12 @@ export default function OnboardingPage() {
                 value={goalPrompt}
                 onChange={(e) => setGoalPrompt(e.target.value)}
                 placeholder="e.g. I want to transition into an AI Engineer role specializing in RAG architectures..."
-                className="w-full mt-1.5 bg-paper border border-border rounded-xl p-3.5 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-focus/50 resize-none leading-relaxed"
+                className="w-full mt-1.5 bg-paper border border-border rounded-xl p-3.5 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-focus/50 resize-none leading-relaxed shadow-sm"
               />
 
               {/* Quick Presets */}
               <div className="flex flex-wrap gap-2 mt-2.5">
-                <span className="text-[11px] text-text-secondary py-1">Quick Presets:</span>
+                <span className="text-[11px] text-text-secondary py-1 font-medium">Quick Presets:</span>
                 {QUICK_GOAL_PRESETS.map((preset) => (
                   <button
                     key={preset.roleId}
@@ -282,7 +314,7 @@ export default function OnboardingPage() {
                       setGoalPrompt(preset.prompt);
                       setExtractedRole(preset.roleId);
                     }}
-                    className="px-2.5 py-1 rounded-lg text-xs bg-paper hover:bg-border border border-border text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg text-xs bg-paper hover:bg-surface border border-border text-text-secondary hover:text-text-primary transition-colors cursor-pointer shadow-sm"
                   >
                     {preset.title}
                   </button>
@@ -297,13 +329,13 @@ export default function OnboardingPage() {
                   <Target className="w-4 h-4" />
                   Target Role Curriculum Identified:
                 </span>
-                <span className="text-xs font-bold text-text-primary bg-surface px-2 py-0.5 rounded border border-border">
+                <span className="text-xs font-bold text-text-primary bg-surface px-2.5 py-1 rounded-lg border border-border shadow-sm">
                   {PRESEEDED_CAREER_ROLES.find((r) => r.id === extractedRole)?.title || "Data Analyst"}
                 </span>
               </div>
               <div className="flex flex-wrap gap-1.5 mt-1">
                 {extractedTech.map((t) => (
-                  <span key={t} className="px-2 py-0.5 rounded-md text-[11px] bg-surface text-text-primary border border-border font-medium">
+                  <span key={t} className="px-2.5 py-0.5 rounded-md text-[11px] bg-surface text-text-primary border border-border font-medium shadow-sm">
                     {t}
                   </span>
                 ))}
@@ -314,7 +346,7 @@ export default function OnboardingPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
               <div className="p-4 rounded-2xl border border-border bg-paper flex flex-col gap-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-text-secondary flex items-center gap-1">
+                  <span className="font-semibold text-text-secondary flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5 text-focus" />
                     Weekly Study Budget
                   </span>
@@ -334,8 +366,8 @@ export default function OnboardingPage() {
 
               <div className="p-4 rounded-2xl border border-border bg-paper flex flex-col gap-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-text-secondary flex items-center gap-1">
-                    <Lightning className="w-3.5 h-3.5 text-warning" />
+                  <span className="font-semibold text-text-secondary flex items-center gap-1.5">
+                    <Zap className="w-3.5 h-3.5 text-warning" />
                     Target Timeline
                   </span>
                   <span className="font-mono text-warning font-bold text-sm">{totalWeeks} Weeks</span>
@@ -361,7 +393,7 @@ export default function OnboardingPage() {
                 className="px-6 py-3 rounded-2xl bg-focus hover:bg-focus/90 text-white font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-focus/25 cursor-pointer"
               >
                 <span>Next: Ingest Multi-Modal Telemetry</span>
-                <ArrowRight className="w-4 h-4" weight="bold" />
+                <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -399,9 +431,9 @@ export default function OnboardingPage() {
                 {skills.map((s) => (
                   <span
                     key={s.name}
-                    className="px-2.5 py-1 rounded-lg text-xs bg-surface border border-border flex items-center gap-1.5 text-text-primary"
+                    className="px-2.5 py-1 rounded-lg text-xs bg-surface border border-border flex items-center gap-1.5 text-text-primary shadow-sm"
                   >
-                    <CheckCircle className="w-3.5 h-3.5 text-signal" weight="fill" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-signal" />
                     <span>{s.name}</span>
                     <span className="font-mono text-[10px] text-text-secondary">({s.currentProficiency}%)</span>
                   </span>
@@ -414,7 +446,7 @@ export default function OnboardingPage() {
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="px-4 py-2.5 rounded-xl bg-paper hover:bg-border border border-border text-text-secondary text-sm font-medium flex items-center gap-2 transition-colors cursor-pointer"
+                className="px-4 py-2.5 rounded-xl bg-paper hover:bg-surface border border-border text-text-secondary text-sm font-medium flex items-center gap-2 transition-colors cursor-pointer shadow-sm"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>Back</span>
@@ -426,7 +458,7 @@ export default function OnboardingPage() {
                 className="px-6 py-3 rounded-2xl bg-focus hover:bg-focus/90 text-white font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-focus/25 cursor-pointer"
               >
                 <span>Review & Calibrate Skills ({skills.length} Detected)</span>
-                <ArrowRight className="w-4 h-4" weight="bold" />
+                <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -454,11 +486,11 @@ export default function OnboardingPage() {
               <select
                 value={extractedRole}
                 onChange={(e) => setExtractedRole(e.target.value)}
-                className="w-full bg-paper border border-border rounded-xl px-3.5 py-2.5 text-sm text-text-primary font-medium focus:outline-none focus:border-focus/50 cursor-pointer"
+                className="w-full bg-surface border border-border rounded-xl px-3.5 py-2.5 text-sm text-text-primary font-medium focus:outline-none focus:border-focus/50 cursor-pointer shadow-sm"
               >
                 {PRESEEDED_CAREER_ROLES.map((role) => (
                   <option key={role.id} value={role.id}>
-                    {role.icon} {role.title} ({role.category})
+                    {role.title} ({role.category})
                   </option>
                 ))}
               </select>
@@ -472,7 +504,7 @@ export default function OnboardingPage() {
               <button
                 type="button"
                 onClick={() => setStep(2)}
-                className="px-4 py-2.5 rounded-xl bg-paper hover:bg-border border border-border text-text-secondary text-sm font-medium flex items-center gap-2 transition-colors cursor-pointer"
+                className="px-4 py-2.5 rounded-xl bg-paper hover:bg-surface border border-border text-text-secondary text-sm font-medium flex items-center gap-2 transition-colors cursor-pointer shadow-sm"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>Back</span>
@@ -486,12 +518,12 @@ export default function OnboardingPage() {
               >
                 {isGeneratingPath ? (
                   <>
-                    <SpinnerGap className="w-5 h-5 animate-spin" />
+                    <Loader2 className="w-5 h-5 animate-spin" />
                     <span>Synthesizing Kahn&apos;s Topological DAG...</span>
                   </>
                 ) : (
                   <>
-                    <RocketLaunch className="w-5 h-5" weight="fill" />
+                    <Rocket className="w-5 h-5" />
                     <span>Generate My Personalized Dynamic Roadmap</span>
                   </>
                 )}

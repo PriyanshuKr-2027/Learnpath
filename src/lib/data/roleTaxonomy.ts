@@ -5,7 +5,7 @@ export const PRESEEDED_CAREER_ROLES: CareerRole[] = [
     id: "data-analyst",
     title: "Data Analyst & Business Intelligence Specialist",
     category: "Data & Analytics",
-    icon: "📊",
+    icon: "chart",
     description: "Transform complex raw data into actionable dashboards, executive reports, and business insights.",
     skills: [
       {
@@ -70,7 +70,7 @@ export const PRESEEDED_CAREER_ROLES: CareerRole[] = [
     id: "ai-engineer",
     title: "Generative AI & LLM Systems Engineer",
     category: "Artificial Intelligence",
-    icon: "🧠",
+    icon: "cpu",
     description: "Design, build, and orchestrate production-grade RAG systems, AI agents, fine-tuned models, and LLM APIs.",
     skills: [
       {
@@ -135,7 +135,7 @@ export const PRESEEDED_CAREER_ROLES: CareerRole[] = [
     id: "fullstack-ai-dev",
     title: "Full-Stack AI Application Developer",
     category: "Full-Stack Web",
-    icon: "⚡",
+    icon: "code",
     description: "Develop responsive, reactive web applications with Next.js 16, TypeScript, Supabase, and real-time AI streams.",
     skills: [
       {
@@ -193,7 +193,7 @@ export const PRESEEDED_CAREER_ROLES: CareerRole[] = [
     id: "cloud-devops-architect",
     title: "Cloud & DevOps Infrastructure Engineer",
     category: "Infrastructure & Cloud",
-    icon: "☁️",
+    icon: "cloud",
     description: "Architect scalable cloud platforms, automated CI/CD pipelines, container orchestration, and monitoring systems.",
     skills: [
       {
@@ -244,7 +244,7 @@ export const PRESEEDED_CAREER_ROLES: CareerRole[] = [
     id: "system-design-backend",
     title: "Backend & Distributed Systems Architect",
     category: "Backend Systems",
-    icon: "🏛️",
+    icon: "server",
     description: "Scale high-throughput microservices, caching topologies, distributed queues, and resilient database architectures.",
     skills: [
       {
@@ -288,7 +288,7 @@ export const PRESEEDED_CAREER_ROLES: CareerRole[] = [
     id: "dsa-faang",
     title: "Data Structures & Algorithms (FAANG Level)",
     category: "Computer Science",
-    icon: "💻",
+    icon: "terminal",
     description: "Master pattern-based problem solving, time-space optimization, and competitive interview algorithmic skills.",
     skills: [
       {
