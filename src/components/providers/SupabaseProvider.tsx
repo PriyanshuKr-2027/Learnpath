@@ -172,8 +172,8 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     if (isMockMode) {
-      const role = email.toLowerCase().includes("admin") ? "admin" : "learner";
-      const updated = { ...profile, email, role, hasCompletedSetup: true };
+      const role: "learner" | "admin" = email.toLowerCase().includes("admin") ? "admin" : "learner";
+      const updated: Profile = { ...profile, email, role, hasCompletedSetup: true };
       setProfile(updated);
       setUser({ ...MOCK_ACTIVE_USER, email });
       saveMockProfile(updated);

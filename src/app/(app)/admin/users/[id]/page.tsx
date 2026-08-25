@@ -30,7 +30,7 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
 
   React.useEffect(() => {
     const userList = getUserProgressList();
-    const foundUser = userList.find((u) => u.id === userId) || userList[0];
+    const foundUser = userList.find((u: any) => u.id === userId) || userList[0];
     setUser(foundUser);
     setLoading(false);
   }, [userId]);

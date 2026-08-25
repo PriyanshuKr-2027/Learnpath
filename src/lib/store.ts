@@ -7,10 +7,11 @@ export interface Profile {
   reminders: boolean;
   role?: "learner" | "admin";
   current_streak?: number;
-  last_active_date?: string;
+  last_active_date?: string | null;
   hasCompletedSetup?: boolean;
   dob?: string;
   mobileNo?: string;
+  [key: string]: any;
 }
 
 export interface StreakInfo {
@@ -40,7 +41,7 @@ export function getProfile(): Profile {
   try {
     const parsed = JSON.parse(data);
     const email = parsed.email || "";
-    const role = email.toLowerCase().includes("admin") ? "admin" : (parsed.role || "learner");
+    const role: "learner" | "admin" = email.toLowerCase().includes("admin") ? "admin" : (parsed.role || "learner");
     return { ...DEFAULT_PROFILE, ...parsed, role, hasCompletedSetup: true };
   } catch {
     return DEFAULT_PROFILE;
@@ -50,7 +51,7 @@ export function getProfile(): Profile {
 export function saveProfile(profile: Profile): void {
   if (!isBrowser()) return;
   const email = profile.email || "";
-  const role = email.toLowerCase().includes("admin") ? "admin" : (profile.role || "learner");
+  const role: "learner" | "admin" = email.toLowerCase().includes("admin") ? "admin" : (profile.role || "learner");
   const updatedProfile = { ...profile, role, hasCompletedSetup: true };
   localStorage.setItem("learnpath_user_profile", JSON.stringify(updatedProfile));
   window.dispatchEvent(new Event("storage"));
@@ -71,4 +72,42 @@ export function saveStreakInfo(info: StreakInfo): void {
   if (!isBrowser()) return;
   localStorage.setItem("learnpath_streak_info", JSON.stringify(info));
   window.dispatchEvent(new Event("storage"));
+}
+
+export function getUserProgressList(): any[] {
+  return [
+    {
+      id: "user-1",
+      name: "Alex Dev",
+      email: "alex@example.com",
+      role: "learner",
+      completedDaysCount: 4,
+      totalDaysCount: 6,
+      progressPercentage: 67,
+      currentStreak: 6,
+      lastActiveDate: new Date().toISOString().split("T")[0],
+    },
+    {
+      id: "user-2",
+      name: "Priyanshu Kumar",
+      email: "priyanshu@example.com",
+      role: "learner",
+      completedDaysCount: 6,
+      totalDaysCount: 6,
+      progressPercentage: 100,
+      currentStreak: 14,
+      lastActiveDate: new Date().toISOString().split("T")[0],
+    },
+    {
+      id: "user-3",
+      name: "Elena Rostova",
+      email: "elena@example.com",
+      role: "learner",
+      completedDaysCount: 5,
+      totalDaysCount: 6,
+      progressPercentage: 83,
+      currentStreak: 9,
+      lastActiveDate: new Date().toISOString().split("T")[0],
+    },
+  ];
 }
