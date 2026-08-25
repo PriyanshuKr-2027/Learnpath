@@ -8,9 +8,9 @@ import {
   Play,
   Check,
   Crown,
-  WarningCircle,
-  Sparkle,
-} from "@phosphor-icons/react";
+  AlertCircle,
+  Sparkles,
+} from "lucide-react";
 import { LevelNode } from "@/types";
 
 export interface LevelMapNodeData extends LevelNode {
@@ -47,7 +47,7 @@ export const LevelMapNode = memo(({ data }: { data: any }) => {
       {/* Boss Checkpoint Header Pill */}
       {isBoss && (
         <div className="absolute -top-6 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-warning text-paper flex items-center gap-1 shadow-lg shadow-warning/30 animate-bounce">
-          <Crown className="w-3.5 h-3.5" weight="fill" />
+          <Crown className="w-3 h-3" />
           <span>BOSS CHECKPOINT</span>
         </div>
       )}
@@ -55,7 +55,7 @@ export const LevelMapNode = memo(({ data }: { data: any }) => {
       {/* Remediation Header Pill */}
       {isRemediation && (
         <div className="absolute -top-6 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-alert text-white flex items-center gap-1 shadow-lg shadow-alert/30">
-          <WarningCircle className="w-3.5 h-3.5" weight="bold" />
+          <AlertCircle className="w-3 h-3" />
           <span>REMEDIATION LAB</span>
         </div>
       )}
@@ -78,15 +78,15 @@ export const LevelMapNode = memo(({ data }: { data: any }) => {
       >
         {/* Node Center Icon / Level Number */}
         {isCompleted ? (
-          <Check className="w-8 h-8 text-signal" weight="bold" />
+          <Check className="w-7 h-7 text-signal stroke-[3]" />
         ) : isLocked ? (
-          <Lock className="w-6 h-6 text-text-secondary" weight="fill" />
+          <Lock className="w-5 h-5 text-text-secondary" />
         ) : isBoss ? (
-          <Crown className="w-7 h-7 text-warning" weight="fill" />
+          <Crown className="w-6 h-6 text-warning" />
         ) : isRemediation ? (
-          <Sparkle className="w-7 h-7 text-alert" weight="fill" />
+          <Sparkles className="w-6 h-6 text-alert" />
         ) : (
-          <Play className="w-6 h-6 ml-0.5 text-focus" weight="fill" />
+          <Play className="w-6 h-6 ml-0.5 text-focus fill-focus" />
         )}
 
         <span className="text-[11px] font-black tracking-wider uppercase font-mono mt-0.5">
@@ -99,29 +99,28 @@ export const LevelMapNode = memo(({ data }: { data: any }) => {
         )}
       </div>
 
-      {/* Star Rating Badge for Completed Nodes */}
+      {/* Star Mastery Tier for completed levels */}
       {isCompleted && (
-        <div className="flex items-center gap-0.5 -mt-2 bg-paper px-2 py-0.5 rounded-full border border-signal/30 z-10">
+        <div className="flex items-center gap-0.5 mt-1 bg-surface px-2 py-0.5 rounded-full border border-border shadow-sm">
           {[1, 2, 3].map((star) => (
             <Star
               key={star}
-              className={`w-3 h-3 ${
+              className={`w-2.5 h-2.5 ${
                 star <= (node.starsEarned || 3)
                   ? "text-warning fill-warning"
-                  : "text-border"
+                  : "text-text-secondary/40"
               }`}
-              weight="fill"
             />
           ))}
         </div>
       )}
 
-      {/* Node Description Label */}
-      <div className="mt-2 flex flex-col items-center text-center max-w-[150px]">
-        <span className="text-xs font-bold text-text-primary line-clamp-1 group-hover:text-focus transition-colors">
+      {/* Level Title & Estimated Time */}
+      <div className="mt-1.5 flex flex-col items-center max-w-[140px] text-center">
+        <span className="text-xs font-semibold text-text-primary group-hover:text-focus transition-colors line-clamp-1">
           {node.title}
         </span>
-        <span className="text-[10px] text-text-secondary font-medium">
+        <span className="text-[10px] text-text-secondary font-mono">
           Week {node.targetWeek} • {node.estimatedMinutes}m
         </span>
       </div>

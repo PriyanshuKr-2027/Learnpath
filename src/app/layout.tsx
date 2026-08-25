@@ -16,8 +16,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DSA Dashboard",
-  description: "92-Day DSA Study Tracker",
+  title: "LearnPath AI — Personalized Autonomous Career Architect",
+  description: "AI-powered DAG learning roadmap and adaptive mastery engine.",
 };
 
 export default function RootLayout({
@@ -26,8 +26,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable} no-scrollbar`}>
-      <body className="antialiased text-text-primary bg-paper no-scrollbar">
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${jetbrainsMono.variable} no-scrollbar`}>
+      <body suppressHydrationWarning className="antialiased text-text-primary bg-paper no-scrollbar">
         <SupabaseProvider>
           {children}
         </SupabaseProvider>

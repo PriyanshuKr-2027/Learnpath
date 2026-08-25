@@ -5,38 +5,39 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
-  SquaresFour,
-  GameController,
+  LayoutDashboard,
+  GitFork,
   Target,
-  Note,
-  Gear,
-  SignOut,
-  MagnifyingGlass,
+  FileText,
+  Settings,
+  LogOut,
+  Search,
   Bell,
-  List,
+  Menu,
   Trophy,
-  Sparkle,
+  Sparkles,
   Shield,
   Database,
   PlusCircle,
-  UsersThree,
+  Users,
   Brain,
-} from "@phosphor-icons/react";
+  Video,
+} from "lucide-react";
 
 import { useSupabase } from "@/components/providers/SupabaseProvider";
 import { SetupModal } from "@/components/layout/SetupModal";
 
 const AI_RECOMMENDER_NAV = [
-  { label: "Dashboard", href: "/dashboard", icon: SquaresFour },
-  { label: "Level Map (DAG)", href: "/roadmap", icon: GameController },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Level Map (DAG)", href: "/roadmap", icon: GitFork },
   { label: "CAT Assessments", href: "/assessments/cat", icon: Target },
   { label: "Goal & Resume Wizard", href: "/onboarding", icon: PlusCircle },
   { label: "XAI Architecture Hub", href: "/coach", icon: Brain },
 ];
 
 const COLLABORATION_NAV = [
-  { label: "Social Study Room", href: "/social", icon: UsersThree },
-  { label: "Study Notes", href: "/notes", icon: Note },
+  { label: "Social Study Room", href: "/social", icon: Users },
+  { label: "Study Notes", href: "/notes", icon: FileText },
   { label: "Leaderboard", href: "/leaderboard", icon: Trophy },
 ];
 
@@ -79,7 +80,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {!isCollapsed && (
             <Link href="/dashboard" className="flex items-center gap-2.5 group">
               <div className="w-8 h-8 rounded-xl bg-focus flex items-center justify-center shadow-lg shadow-focus/25 group-hover:scale-105 transition-transform text-white">
-                <Sparkle className="w-4 h-4" weight="fill" />
+                <Sparkles className="w-4 h-4" />
               </div>
               <div className="flex flex-col">
                 <span className="font-bold text-base tracking-tight text-text-primary flex items-center gap-1.5">
@@ -93,7 +94,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             className="p-2 hover:bg-surface rounded-xl transition-colors text-text-secondary hover:text-text-primary cursor-pointer"
             title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            <List className="w-5 h-5" />
+            <Menu className="w-5 h-5" />
           </button>
         </div>
 
@@ -152,7 +153,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       )}
                     >
                       <item.icon
-                        weight={isActive ? "fill" : "bold"}
                         className={cn("w-5 h-5 shrink-0 transition-transform group-hover:scale-110", isActive ? "text-white" : "text-text-secondary group-hover:text-focus")}
                       />
                       {!isCollapsed && <span>{item.label}</span>}
@@ -187,7 +187,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       )}
                     >
                       <item.icon
-                        weight={isActive ? "fill" : "bold"}
                         className={cn("w-5 h-5 shrink-0 transition-transform group-hover:scale-110", isActive ? "text-focus" : "text-text-secondary group-hover:text-text-primary")}
                       />
                       {!isCollapsed && <span>{item.label}</span>}
@@ -220,7 +219,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               pathname === "/settings" && "bg-surface text-text-primary font-semibold border border-border"
             )}
           >
-            <Gear weight={pathname === "/settings" ? "fill" : "bold"} className="w-5 h-5 shrink-0" />
+            <Settings className="w-5 h-5 shrink-0" />
             {!isCollapsed && <span>Settings</span>}
             {isCollapsed && (
               <span className="absolute left-full ml-4 px-2.5 py-1.5 bg-surface border border-border text-text-primary text-xs font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50 pointer-events-none shadow-2xl">
@@ -235,7 +234,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               isCollapsed ? "justify-center p-3" : "gap-3 px-3.5 py-2"
             )}
           >
-            <SignOut weight="bold" className="w-5 h-5 shrink-0" />
+            <LogOut className="w-5 h-5 shrink-0" />
             {!isCollapsed && <span>Logout</span>}
             {isCollapsed && (
               <span className="absolute left-full ml-4 px-2.5 py-1.5 bg-surface border border-border text-text-primary text-xs font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50 pointer-events-none shadow-2xl">
@@ -256,7 +255,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {/* Topbar */}
         <header className="sticky top-0 z-40 flex h-16 items-center justify-between px-8 bg-paper/80 backdrop-blur-xl border-b border-border">
           <div className="flex items-center max-w-md w-full relative">
-            <MagnifyingGlass className="absolute left-3.5 w-4 h-4 text-text-secondary" />
+            <Search className="absolute left-3.5 w-4 h-4 text-text-secondary" />
             <input
               type="text"
               placeholder="Search skills, topics, or documentation..."
@@ -269,7 +268,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               href="/social"
               className="hidden md:flex items-center gap-1.5 text-xs font-bold text-focus bg-focus/10 hover:bg-focus/20 border border-focus/20 px-3 py-1.5 rounded-xl transition-colors"
             >
-              <UsersThree className="w-4 h-4" />
+              <Video className="w-4 h-4" />
               <span>Live Study Room</span>
               <span className="w-1.5 h-1.5 rounded-full bg-signal animate-pulse" />
             </Link>
@@ -278,7 +277,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               href="/onboarding"
               className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-text-primary bg-surface hover:bg-surface/80 border border-border px-3 py-1.5 rounded-xl transition-colors"
             >
-              <Sparkle className="w-3.5 h-3.5 text-focus" />
+              <Sparkles className="w-3.5 h-3.5 text-focus" />
               <span>Customize Path</span>
             </Link>
 
