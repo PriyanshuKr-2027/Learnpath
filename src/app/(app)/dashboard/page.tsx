@@ -17,6 +17,8 @@ import {
   Brain,
   RocketLaunch,
   Note,
+  UsersThree,
+  VideoCamera,
 } from "@phosphor-icons/react";
 import { LearnerProfile, LearningPath, LevelNode, SkillGap } from "@/types";
 import { mockStore, computeSkillGaps } from "@/lib/services/mockStore";
@@ -171,6 +173,28 @@ export default function DashboardPage() {
             </span>
           </Link>
 
+          {/* Live Social Study Room & Peer Calls */}
+          <Link
+            href="/social"
+            className="p-5 rounded-3xl border border-teal-500/30 bg-teal-950/10 hover:border-teal-400/50 hover:bg-teal-950/20 transition-all flex flex-col justify-between group shadow-lg"
+          >
+            <div className="w-10 h-10 rounded-2xl bg-teal-500/10 border border-teal-500/20 text-teal-400 flex items-center justify-center mb-3">
+              <UsersThree className="w-6 h-6" weight="fill" />
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <h4 className="text-sm font-bold text-zinc-100 group-hover:text-teal-300 transition-colors">
+                  Social Study Room
+                </h4>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              </div>
+              <p className="text-xs text-zinc-400 mt-1">Real-time chat & video study calls</p>
+            </div>
+            <span className="text-[11px] font-bold text-teal-400 mt-3 flex items-center gap-1">
+              Join Live Room <ArrowRight className="w-3 h-3" />
+            </span>
+          </Link>
+
           <Link
             href="/assessments/cat"
             className="p-5 rounded-3xl border border-zinc-800 bg-zinc-900/40 hover:border-amber-500/40 hover:bg-zinc-900/80 transition-all flex flex-col justify-between group shadow-lg"
@@ -198,30 +222,12 @@ export default function DashboardPage() {
             </div>
             <div>
               <h4 className="text-sm font-bold text-zinc-100 group-hover:text-cyan-300 transition-colors">
-                Study Notes Scratchpad
+                Study Notes & Insights
               </h4>
-              <p className="text-xs text-zinc-400 mt-1">Auto-saved Markdown notes</p>
+              <p className="text-xs text-zinc-400 mt-1">Level canvas & DSA scratchpad</p>
             </div>
             <span className="text-[11px] font-bold text-cyan-400 mt-3 flex items-center gap-1">
               Open Notes <ArrowRight className="w-3 h-3" />
-            </span>
-          </Link>
-
-          <Link
-            href="/onboarding"
-            className="p-5 rounded-3xl border border-zinc-800 bg-zinc-900/40 hover:border-purple-500/40 hover:bg-zinc-900/80 transition-all flex flex-col justify-between group shadow-lg"
-          >
-            <div className="w-10 h-10 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center mb-3">
-              <Sliders className="w-6 h-6" />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-zinc-100 group-hover:text-purple-300 transition-colors">
-                Recalibrate Target Role
-              </h4>
-              <p className="text-xs text-zinc-400 mt-1">Resume & GitHub syncing</p>
-            </div>
-            <span className="text-[11px] font-bold text-purple-400 mt-3 flex items-center gap-1">
-              Re-analyze <ArrowRight className="w-3 h-3" />
             </span>
           </Link>
         </div>

@@ -23,6 +23,7 @@ import {
   CalendarCheck,
   UsersThree,
   Brain,
+  VideoCamera,
 } from "@phosphor-icons/react";
 
 import { useSupabase } from "@/components/providers/SupabaseProvider";
@@ -37,10 +38,10 @@ const AI_RECOMMENDER_NAV = [
 ];
 
 const CLASSIC_DSA_NAV = [
+  { label: "Social Study Room", href: "/social", icon: UsersThree },
   { label: "75-Day DSA Plan", href: "/plan", icon: CalendarCheck },
   { label: "Problems Bank", href: "/problems", icon: Code },
   { label: "Coding Patterns", href: "/patterns", icon: SquaresFour },
-  { label: "Social Study Room", href: "/social", icon: UsersThree },
   { label: "Leaderboard", href: "/leaderboard", icon: Trophy },
   { label: "Study Notes", href: "/notes", icon: Note },
 ];
@@ -173,10 +174,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 })}
               </div>
 
-              {/* SECTION 2: CLASSIC DSA & PRACTICE HUB */}
+              {/* SECTION 2: CLASSIC PRACTICE & SOCIAL HUB */}
               <div className="space-y-1 pt-2 border-t border-zinc-850">
                 <div className={cn("px-3 py-1 text-[10px] font-bold text-zinc-500 uppercase tracking-wider", isCollapsed && "hidden")}>
-                  DSA & Practice Hub
+                  Practice & Social Hub
                 </div>
                 {CLASSIC_DSA_NAV.map((item) => {
                   const isActive = pathname === item.href || pathname?.startsWith(item.href);
@@ -270,7 +271,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             />
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <Link
+              href="/social"
+              className="hidden md:flex items-center gap-1.5 text-xs font-bold text-teal-300 bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/30 px-3 py-1.5 rounded-xl transition-colors"
+            >
+              <UsersThree className="w-4 h-4" />
+              <span>Live Study Room</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            </Link>
+
             <Link
               href="/onboarding"
               className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 px-3 py-1.5 rounded-xl transition-colors"

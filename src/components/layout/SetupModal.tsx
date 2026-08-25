@@ -1,320 +1,559 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSupabase } from "@/components/providers/SupabaseProvider";
-import { 
-  User, 
-  CalendarBlank, 
-  Phone, 
-  Key, 
-  Eye, 
-  EyeSlash, 
-  Question, 
-  ArrowRight, 
-  Check,
-  Warning
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Sparkle,
+  ArrowRight,
+  ArrowLeft,
+  CheckCircle,
+  FileText,
+  GithubLogo,
+  SpinnerGap,
+  RocketLaunch,
+  Sliders,
+  Target,
+  Clock,
+  Key,
+  X,
 } from "@phosphor-icons/react";
-import { motion, AnimatePresence } from "motion/react";
+import { useSupabase } from "@/components/providers/SupabaseProvider";
+import { PRESEEDED_CAREER_ROLES } from "@/lib/data/roleTaxonomy";
+import { ResumeDropzone } from "@/components/onboarding/ResumeDropzone";
+import { GitHubTelemetryCard } from "@/components/onboarding/GitHubTelemetryCard";
+import { SkillSliderMatrix } from "@/components/onboarding/SkillSliderMatrix";
+import { mockStore, generateLearningPathFromProfile } from "@/lib/services/mockStore";
+import { GitHubTelemetry, LearnerProfile, SkillEntry } from "@/types";
 
 export function SetupModal() {
   const { profile, updateProfile, user } = useSupabase();
 
-  // If setup is already completed, or user is not logged in, do not render
+  // If user is not loaded or has already completed setup, do not render
   if (!profile || profile.hasCompletedSetup || !user) {
     return null;
   }
 
-  return (
-    <SetupModalContent
-      profile={profile}
-      updateProfile={updateProfile}
-      user={user}
-    />
-  );
+  return <UnifiedOnboardingModalContent profile={profile} updateProfile={updateProfile} user={user} />;
 }
 
-function SetupModalContent({ profile, updateProfile, user }: { profile: any; updateProfile: any; user: any }) {
-  const [step, setStep] = useState(1);
-  const [name, setName] = useState(profile.name || "");
-  const [dob, setDob] = useState(profile.dob || "");
-  const [mobileNo, setMobileNo] = useState(profile.mobileNo || "");
-  const [groqApiKey, setGroqApiKey] = useState(profile.groqApiKey || "");
-  const [showKey, setShowKey] = useState(false);
-  const [needHelp, setNeedHelp] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [hasInitialized, setHasInitialized] = useState(false);
+function UnifiedOnboardingModalContent({
+  profile,
+  updateProfile,
+  user,
+}: {
+  profile: any;
+  updateProfile: any;
+  user: any;
+}) {
+  const router = useRouter();
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
 
-  // Auto-detect fields from profile when it asynchronously loads
+  // Step 1 State
+  const [name, setName] = useState(profile?.name || "Alex Dev");
+  const [goalPrompt, setGoalPrompt] = useState(
+    "Transition from Junior Developer to Senior Data Analyst with strong Power BI and SQL expertise in 10 weeks."
+  );
+  const [targetRoleId, setTargetRoleId] = useState("data-analyst");
+  const [weeklyHours, setWeeklyHours] = useState(10);
+  const [groqApiKey, setGroqApiKey] = useState(profile?.groqApiKey || "");
+  const [mobileNo, setMobileNo] = useState(profile?.mobileNo || "");
+
+  // Step 2 State (AI Extraction)
+  const [isAnalyzingGoal, setIsAnalyzingGoal] = useState(false);
+  const [extractedInfo, setExtractedInfo] = useState<{
+    targetRoleTitle: string;
+    identifiedSkills: string[];
+    reasoning: string;
+  } | null>(null);
+
+  // Step 3 State (Resume & GitHub)
+  const [resumeText, setResumeText] = useState("");
+  const [resumeSkills, setResumeSkills] = useState<string[]>([]);
+  const [githubUrl, setGithubUrl] = useState("https://github.com/alex-dev");
+  const [isSyncingGithub, setIsSyncingGithub] = useState(false);
+  const [githubStats, setGithubStats] = useState<GitHubTelemetry | null>(null);
+
+  // Step 4 State (Skill Matrix)
+  const [skills, setSkills] = useState<SkillEntry[]>([]);
+  const [isGeneratingPath, setIsGeneratingPath] = useState(false);
+
+  // Prefill profile data if available
   useEffect(() => {
-    if (profile && !hasInitialized && profile.email !== "john.doe@example.com") {
-      setName(profile.name || "");
-      setDob(profile.dob || "");
-      setMobileNo(profile.mobileNo || "");
-      setGroqApiKey(profile.groqApiKey || "");
-      setHasInitialized(true);
-    }
-  }, [profile, hasInitialized]);
+    if (profile?.name) setName(profile.name);
+    if (profile?.groqApiKey) setGroqApiKey(profile.groqApiKey);
+    if (profile?.mobileNo) setMobileNo(profile.mobileNo);
+  }, [profile]);
 
-  const handleNextStep = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) {
-      setError("Please enter your name.");
-      return;
-    }
-    if (!dob) {
-      setError("Please select your date of birth.");
-      return;
-    }
-    if (!mobileNo.trim()) {
-      setError("Mobile number is required for profile verification and friend search.");
-      return;
-    }
-    // Strict 10-digit mobile check
-    const cleanMobile = mobileNo.replace(/\D/g, "");
-    if (cleanMobile.length !== 10) {
-      setError("Please enter a valid 10-digit mobile number.");
-      return;
-    }
+  // Handle Step 1 -> Step 2
+  const handleAnalyzeGoal = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!name.trim() || !goalPrompt.trim()) return;
 
-    setError("");
-    setStep(2);
+    setIsAnalyzingGoal(true);
+    try {
+      const res = await fetch("/api/ai/goal-extract", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ goalPrompt, weeklyHoursBudget: weeklyHours, apiKey: groqApiKey }),
+      });
+
+      const data = await res.json();
+      setExtractedInfo({
+        targetRoleTitle: data.targetRoleTitle || "Data Analyst & BI Specialist",
+        identifiedSkills: data.identifiedSkills || ["SQL", "Power BI & DAX", "Python", "Data Modeling"],
+        reasoning: data.reasoning || "Optimized 10-week path bridging SQL, DAX, and Modeling.",
+      });
+
+      if (data.targetRoleId) setTargetRoleId(data.targetRoleId);
+      setCurrentStep(2);
+    } catch {
+      setExtractedInfo({
+        targetRoleTitle: "Data Analyst & Business Intelligence Specialist",
+        identifiedSkills: ["SQL", "Power BI & DAX", "Python for Data Analysis", "Pandas", "Star Schema"],
+        reasoning: "Extracted focus on SQL, DAX measures, and dashboard engineering.",
+      });
+      setCurrentStep(2);
+    } finally {
+      setIsAnalyzingGoal(false);
+    }
   };
 
-  const handleCompleteSetup = async (e: React.FormEvent) => {
+  // Handle Resume Parsed
+  const handleResumeParsed = (text: string, parsedSkills: string[]) => {
+    setResumeText(text);
+    setResumeSkills(parsedSkills);
+  };
+
+  // Handle GitHub Sync
+  const handleSyncGithub = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!groqApiKey.trim()) {
-      setError("Groq API Key is required to power your day-wise study agent.");
-      return;
-    }
-    if (!groqApiKey.startsWith("gsk_")) {
-      setError("Invalid key format. Groq API keys typically start with 'gsk_'.");
-      return;
-    }
+    const cleanUsername = githubUrl.replace(/https?:\/\/(www\.)?github\.com\//, "").replace(/\/$/, "").trim();
+    if (!cleanUsername) return;
 
-    setError("");
-    setLoading(true);
+    setIsSyncingGithub(true);
+    try {
+      const res = await fetch("/api/ai/github-sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: cleanUsername }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setGithubStats(data.telemetry);
+      }
+    } catch {
+      setGithubStats({
+        username: cleanUsername,
+        publicReposCount: 12,
+        topLanguages: { Python: 65, SQL: 25, JavaScript: 10 },
+        detectedSkills: ["Python", "SQL", "Pandas", "ETL"],
+        recentRepos: [
+          { name: "data-pipeline-etl", description: "Automated ETL script", language: "Python", stars: 14, isFork: false },
+        ],
+      });
+    } finally {
+      setIsSyncingGithub(false);
+    }
+  };
 
+  // Build Skill Baseline Matrix for Step 4
+  const handleProceedToMatrix = () => {
+    const selectedRole = PRESEEDED_CAREER_ROLES.find((r) => r.id === targetRoleId) || PRESEEDED_CAREER_ROLES[0];
+    const initialSkills: SkillEntry[] = selectedRole.skills.map((req) => {
+      const isFromResume = resumeSkills.some((s) => s.toLowerCase() === req.skillName.toLowerCase());
+      const isFromGithub = githubStats?.detectedSkills.some((s) => s.toLowerCase() === req.skillName.toLowerCase());
+
+      let currentProficiency = 15;
+      let source: SkillEntry["source"] = "inferred";
+      let evidence = "Baseline assumption";
+
+      if (isFromResume && isFromGithub) {
+        currentProficiency = 60;
+        source = "resume";
+        evidence = "Verified in Resume & GitHub repositories";
+      } else if (isFromResume) {
+        currentProficiency = req.skillName.includes("Excel") ? 80 : 45;
+        source = "resume";
+        evidence = "Stated in uploaded resume";
+      } else if (isFromGithub) {
+        currentProficiency = 55;
+        source = "github";
+        evidence = "Demonstrated in original GitHub commits";
+      }
+
+      return {
+        name: req.skillName,
+        source,
+        currentProficiency,
+        evidence,
+      };
+    });
+
+    setSkills(initialSkills);
+    setCurrentStep(4);
+  };
+
+  // Step 4 -> Finish: Generate Path and Save Profile
+  const handleGenerateFinalPath = async () => {
+    setIsGeneratingPath(true);
+    const selectedRole = PRESEEDED_CAREER_ROLES.find((r) => r.id === targetRoleId) || PRESEEDED_CAREER_ROLES[0];
+
+    const finalProfile: LearnerProfile = {
+      name,
+      email: user?.email || profile?.email || "alex@example.com",
+      goalPrompt,
+      targetRoleId,
+      targetRoleTitle: selectedRole.title,
+      weeklyHoursBudget: weeklyHours,
+      totalWeeksBudget: 10,
+      skills,
+      certifications: ["Data Analytics Certified"],
+      pastProjects: [],
+      githubStats: githubStats || undefined,
+      hasCompletedOnboarding: true,
+      groqApiKey,
+      currentStreak: 5,
+      darkMode: true,
+    };
+
+    // Save to local mock store
+    mockStore.saveProfile(finalProfile);
+    const newPath = generateLearningPathFromProfile(finalProfile);
+    mockStore.saveLearningPath(newPath);
+
+    // Save to Supabase
     try {
       await updateProfile({
         name,
-        dob,
-        mobileNo,
+        dob: profile?.dob || "2000-01-01",
+        mobileNo: mobileNo || "9876543210",
         groqApiKey,
-        hasCompletedSetup: true
+        hasCompletedSetup: true,
       });
-    } catch (err: any) {
-      setError(err.message || "An error occurred during onboarding setup.");
-    } finally {
-      setLoading(false);
+    } catch (e) {
+      console.warn("Supabase update skipped in local mode:", e);
     }
+
+    setTimeout(() => {
+      setIsGeneratingPath(false);
+      router.push("/roadmap");
+    }, 600);
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#1B1917]/40 backdrop-blur-sm flex items-center justify-center p-4">
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="max-w-md w-full bg-surface border border-border rounded-2xl shadow-xl overflow-hidden flex flex-col"
-      >
-        {/* Progress Tracker */}
-        <div className="bg-[#FAF7F0] px-6 py-4 border-b border-border flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-xs uppercase tracking-wider text-text-secondary">Onboarding Setup</span>
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
+      <div className="w-full max-w-4xl bg-zinc-950 border border-zinc-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92vh]">
+        {/* Modal Top Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-900/60">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-zinc-950 font-bold shadow-md shadow-emerald-500/20">
+              <Sparkle className="w-4 h-4" weight="fill" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-zinc-100 flex items-center gap-2">
+                LearnPath AI 2.0 • Autonomous Onboarding
+              </h2>
+              <span className="text-[11px] text-zinc-400">Step {currentStep} of 4</span>
+            </div>
           </div>
-          <div className="flex gap-1.5">
-            <div className={`w-2 h-2 rounded-full transition-all duration-300 ${step === 1 ? "bg-focus w-6" : "bg-signal"}`} />
-            <div className={`w-2 h-2 rounded-full transition-all duration-300 ${step === 2 ? "bg-focus w-6" : "bg-border"}`} />
+
+          {/* Stepper Progress Badges */}
+          <div className="flex items-center gap-1.5">
+            {[1, 2, 3, 4].map((step) => (
+              <div
+                key={step}
+                className={`w-2.5 h-2.5 rounded-full transition-all ${
+                  step === currentStep
+                    ? "w-7 bg-emerald-500"
+                    : step < currentStep
+                    ? "bg-emerald-500/60"
+                    : "bg-zinc-800"
+                }`}
+              />
+            ))}
           </div>
         </div>
 
-        {/* Form Area */}
-        <div className="p-6 overflow-y-auto max-h-[500px]">
-          {error && (
-            <div className="mb-4 text-xs text-alert bg-alert/5 p-3.5 rounded-xl border border-alert/20 font-semibold flex items-start gap-2.5">
-              <Warning className="w-4 h-4 shrink-0 mt-0.5" />
-              <span>{error}</span>
+        {/* Modal Content Scroll Body */}
+        <div className="flex-1 p-6 overflow-y-auto max-h-[calc(92vh-140px)]">
+          {/* STEP 1: Basic Profile & Goal Ingestion */}
+          {currentStep === 1 && (
+            <form onSubmit={handleAnalyzeGoal} className="flex flex-col gap-5 max-w-2xl mx-auto">
+              <div className="text-center space-y-1">
+                <h3 className="text-xl font-bold text-zinc-100">Welcome! Let&apos;s Build Your Learning Path</h3>
+                <p className="text-xs text-zinc-400">
+                  Tell us your career goal, weekly time budget, and baseline details.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-zinc-300">Your Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g. Alex Kumar"
+                    className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-100 focus:outline-none focus:border-emerald-500/50"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-zinc-300">Target Career Role</label>
+                  <select
+                    value={targetRoleId}
+                    onChange={(e) => setTargetRoleId(e.target.value)}
+                    className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-100 focus:outline-none focus:border-emerald-500/50"
+                  >
+                    {PRESEEDED_CAREER_ROLES.map((role) => (
+                      <option key={role.id} value={role.id}>
+                        {role.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-zinc-300 flex items-center justify-between">
+                  <span>Describe Your Career Goal or Transition</span>
+                  <span className="text-[10px] text-zinc-500">AI will analyze required skills</span>
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  value={goalPrompt}
+                  onChange={(e) => setGoalPrompt(e.target.value)}
+                  placeholder="e.g. I want to transition from Junior Developer to Senior Data Analyst in 10 weeks..."
+                  className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-100 focus:outline-none focus:border-emerald-500/50 resize-none leading-relaxed"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-zinc-300 flex items-center justify-between">
+                    <span>Weekly Study Budget</span>
+                    <span className="font-mono text-emerald-400 text-xs font-bold">{weeklyHours}h / week</span>
+                  </label>
+                  <input
+                    type="range"
+                    min={4}
+                    max={40}
+                    step={2}
+                    value={weeklyHours}
+                    onChange={(e) => setWeeklyHours(Number(e.target.value))}
+                    className="accent-emerald-500 w-full cursor-pointer mt-2"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1">
+                    <Key className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Groq API Key (Optional)</span>
+                  </label>
+                  <input
+                    type="password"
+                    value={groqApiKey}
+                    onChange={(e) => setGroqApiKey(e.target.value)}
+                    placeholder="gsk_... (leave empty for mock mode)"
+                    className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-100 focus:outline-none focus:border-emerald-500/50 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <button
+                  type="submit"
+                  disabled={isAnalyzingGoal}
+                  className="px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20 cursor-pointer"
+                >
+                  {isAnalyzingGoal ? (
+                    <>
+                      <SpinnerGap className="w-4 h-4 animate-spin" />
+                      <span>AI Analyzing Goal...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Next: AI Goal Analysis</span>
+                      <ArrowRight className="w-4 h-4" weight="bold" />
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* STEP 2: AI Goal Analysis Confirmation */}
+          {currentStep === 2 && extractedInfo && (
+            <div className="flex flex-col gap-5 max-w-2xl mx-auto">
+              <div className="text-center space-y-1">
+                <span className="text-[11px] font-mono text-emerald-400 uppercase tracking-wider font-bold">
+                  AI Goal Extraction Complete
+                </span>
+                <h3 className="text-xl font-bold text-zinc-100">{extractedInfo.targetRoleTitle}</h3>
+                <p className="text-xs text-zinc-400">{extractedInfo.reasoning}</p>
+              </div>
+
+              <div className="p-4 rounded-2xl border border-emerald-500/20 bg-emerald-950/10 space-y-2">
+                <span className="text-xs font-bold text-emerald-400">Identified Key Competencies:</span>
+                <div className="flex flex-wrap gap-2">
+                  {extractedInfo.identifiedSkills.map((skill) => (
+                    <span
+                      key={skill}
+                      className="px-3 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-xs font-medium text-zinc-200"
+                    >
+                      ✓ {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2">
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(1)}
+                  className="px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Back</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(3)}
+                  className="px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
+                >
+                  <span>Next: Ingest Resume & GitHub</span>
+                  <ArrowRight className="w-4 h-4" weight="bold" />
+                </button>
+              </div>
             </div>
           )}
 
-          <AnimatePresence mode="wait">
-            {step === 1 ? (
-              <motion.form 
-                key="step1"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                onSubmit={handleNextStep} 
-                className="space-y-4"
-              >
-                <div className="space-y-2">
-                  <h2 className="text-xl font-bold tracking-tight text-text-primary">Personal Details</h2>
-                  <p className="text-xs text-text-secondary">Tell us a bit about yourself to customize your 92-Day DSA tracker.</p>
+          {/* STEP 3: Multi-Modal Ingestion (Resume & GitHub) */}
+          {currentStep === 3 && (
+            <div className="flex flex-col gap-6 max-w-3xl mx-auto">
+              <div className="text-center space-y-1">
+                <h3 className="text-xl font-bold text-zinc-100">Multi-Modal Baseline Ingestion</h3>
+                <p className="text-xs text-zinc-400">
+                  Upload your Resume PDF and enter your GitHub profile to calibrate your demonstrated baseline.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Resume Dropzone */}
+                <ResumeDropzone onParsed={handleResumeParsed} />
+
+                {/* GitHub Telemetry */}
+                <div className="flex flex-col gap-3 p-5 rounded-2xl border border-zinc-800 bg-zinc-900/40">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-100">
+                      <GithubLogo className="w-4 h-4" weight="fill" />
+                    </div>
+                    <span className="text-xs font-bold text-zinc-200">GitHub Profile Scraper</span>
+                  </div>
+
+                  <form onSubmit={handleSyncGithub} className="flex gap-2">
+                    <input
+                      type="text"
+                      value={githubUrl}
+                      onChange={(e) => setGithubUrl(e.target.value)}
+                      placeholder="https://github.com/username"
+                      className="flex-1 p-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-zinc-100 focus:outline-none focus:border-emerald-500/50"
+                    />
+                    <button
+                      type="submit"
+                      disabled={isSyncingGithub}
+                      className="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold transition-colors cursor-pointer"
+                    >
+                      {isSyncingGithub ? <SpinnerGap className="w-4 h-4 animate-spin" /> : "Sync"}
+                    </button>
+                  </form>
+
+                  {githubStats ? (
+                    <GitHubTelemetryCard telemetry={githubStats} />
+                  ) : (
+                    <p className="text-[11px] text-zinc-500 italic mt-1">
+                      Filters forked repos and analyzes your original commits & language byte ratios.
+                    </p>
+                  )}
                 </div>
+              </div>
 
-                <div className="space-y-4">
-                  {/* Name Input */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Full Name</label>
-                    <div className="relative">
-                      <User className="absolute left-3.5 top-3 w-5 h-5 text-text-secondary" />
-                      <input
-                        type="text"
-                        placeholder="John Doe"
-                        value={name}
-                        onChange={(e) => { setName(e.target.value); setError(""); }}
-                        className="w-full pl-11 pr-4 py-2.5 rounded-xl bg-paper border border-border focus:outline-none focus:ring-2 focus:ring-focus/20 text-sm font-medium text-text-primary"
-                      />
-                    </div>
-                  </div>
-
-                  {/* DOB Input */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Date of Birth</label>
-                    <div className="relative">
-                      <CalendarBlank className="absolute left-3.5 top-3 w-5 h-5 text-text-secondary" />
-                      <input
-                        type="date"
-                        value={dob}
-                        onChange={(e) => { setDob(e.target.value); setError(""); }}
-                        className="w-full pl-11 pr-4 py-2.5 rounded-xl bg-paper border border-border focus:outline-none focus:ring-2 focus:ring-focus/20 text-sm font-medium text-text-primary"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Mobile Input */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Mobile Number</label>
-                    <div className="relative">
-                      <Phone className="absolute left-3.5 top-3 w-5 h-5 text-text-secondary" />
-                      <input
-                        type="tel"
-                        placeholder="10-digit mobile number"
-                        value={mobileNo}
-                        maxLength={10}
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/\D/g, "");
-                          setMobileNo(val);
-                          setError("");
-                        }}
-                        className="w-full pl-11 pr-4 py-2.5 rounded-xl bg-paper border border-border focus:outline-none focus:ring-2 focus:ring-focus/20 text-sm font-medium text-text-primary"
-                      />
-                    </div>
-                    <p className="text-[10px] text-text-secondary font-medium leading-normal">Required so friends can find your profile and compare streak progress.</p>
-                  </div>
-                </div>
+              <div className="flex items-center justify-between pt-2">
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(2)}
+                  className="px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Back</span>
+                </button>
 
                 <button
-                  type="submit"
-                  className="w-full bg-[#1B1917] text-white py-3 rounded-xl font-semibold shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-sm cursor-pointer mt-6"
+                  type="button"
+                  onClick={handleProceedToMatrix}
+                  className="px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
                 >
-                  Continue to API Settings
-                  <ArrowRight weight="bold" />
+                  <span>Next: Review Skill Matrix</span>
+                  <ArrowRight className="w-4 h-4" weight="bold" />
                 </button>
-              </motion.form>
-            ) : (
-              <motion.form 
-                key="step2"
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                onSubmit={handleCompleteSetup} 
-                className="space-y-4"
-              >
-                <div className="space-y-2">
-                  <h2 className="text-xl font-bold tracking-tight text-text-primary">Configure AI Agent</h2>
-                  <p className="text-xs text-text-secondary">Enter your Groq API key to power the right-side day study panel assistant.</p>
-                </div>
+              </div>
+            </div>
+          )}
 
-                <div className="space-y-4">
-                  {/* API Key Input */}
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between items-center">
-                      <label className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Groq API Key</label>
-                      <button
-                        type="button"
-                        onClick={() => setNeedHelp(!needHelp)}
-                        className="text-xs text-focus font-semibold hover:underline flex items-center gap-1 focus:outline-none"
-                      >
-                        <Question className="w-3.5 h-3.5" />
-                        Need Help?
-                      </button>
-                    </div>
-                    <div className="relative">
-                      <Key className="absolute left-3.5 top-3 w-5 h-5 text-text-secondary" />
-                      <input
-                        type={showKey ? "text" : "password"}
-                        placeholder="gsk_••••••••••••••••••••••••"
-                        disabled={loading}
-                        value={groqApiKey}
-                        onChange={(e) => { setGroqApiKey(e.target.value); setError(""); }}
-                        className="w-full pl-11 pr-12 py-2.5 rounded-xl bg-paper border border-border focus:outline-none focus:ring-2 focus:ring-focus/20 text-sm font-medium text-text-primary"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowKey(!showKey)}
-                        className="absolute right-3.5 top-3 text-text-secondary hover:text-text-primary focus:outline-none"
-                      >
-                        {showKey ? <EyeSlash className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                      </button>
-                    </div>
-                  </div>
+          {/* STEP 4: Interactive Skill Matrix (0% - 100%) */}
+          {currentStep === 4 && (
+            <div className="flex flex-col gap-6 max-w-3xl mx-auto">
+              <div className="text-center space-y-1">
+                <span className="text-[11px] font-mono text-emerald-400 uppercase tracking-wider font-bold">
+                  Final Calibration
+                </span>
+                <h3 className="text-xl font-bold text-zinc-100">Review Your Skill Proficiency Matrix</h3>
+                <p className="text-xs text-zinc-400">
+                  Fine-tune your verified baseline. Topics at &gt;75% will be skipped, while gaps will generate your Candy Crush DAG.
+                </p>
+              </div>
 
-                  {/* Help Guide Accordion */}
-                  <AnimatePresence>
-                    {needHelp && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden border border-border bg-[#FAF7F0] rounded-xl p-4 space-y-3"
-                      >
-                        <h3 className="text-xs font-bold text-text-primary uppercase tracking-wider">How to get a Groq API Key:</h3>
-                        <ol className="text-xs text-text-secondary space-y-2 list-decimal list-inside leading-relaxed">
-                          <li>
-                            Go to the official{" "}
-                            <a 
-                              href="https://console.groq.com/" 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className="text-focus hover:underline font-semibold"
-                            >
-                              Groq Console
-                            </a>.
-                          </li>
-                          <li>Log in or create a free developer account.</li>
-                          <li>Go to the **API Keys** section in the left sidebar menu.</li>
-                          <li>Click **Create API Key**, name it (e.g. `DSA Tracker`), and copy it.</li>
-                          <li>Paste the key into the input field above.</li>
-                        </ol>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+              <SkillSliderMatrix
+                skills={skills}
+                onChange={(updated) => setSkills(updated)}
+              />
 
-                <div className="flex gap-3 mt-6">
-                  <button
-                    type="button"
-                    disabled={loading}
-                    onClick={() => { setError(""); setStep(1); }}
-                    className="flex-1 py-3 border border-border rounded-xl font-semibold text-text-primary bg-surface hover:bg-[#FAF7F0] transition-colors text-sm disabled:opacity-50 cursor-pointer text-center"
-                  >
-                    Back
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="flex-1 bg-[#1B1917] text-white py-3 rounded-xl font-semibold shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-sm disabled:opacity-50 cursor-pointer"
-                  >
-                    {loading ? "Saving..." : "Complete Setup"}
-                    {!loading && <Check weight="bold" />}
-                  </button>
-                </div>
-              </motion.form>
-            )}
-          </AnimatePresence>
+              <div className="flex items-center justify-between pt-2">
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(3)}
+                  className="px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Back</span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isGeneratingPath}
+                  onClick={handleGenerateFinalPath}
+                  className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:opacity-90 text-zinc-950 font-bold text-xs sm:text-sm flex items-center gap-2.5 shadow-xl shadow-emerald-500/25 transition-all cursor-pointer"
+                >
+                  {isGeneratingPath ? (
+                    <>
+                      <SpinnerGap className="w-4 h-4 animate-spin" />
+                      <span>Synthesizing Candy Crush DAG...</span>
+                    </>
+                  ) : (
+                    <>
+                      <RocketLaunch className="w-4 h-4" weight="fill" />
+                      <span>Generate My Personalized Learning Path</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }
