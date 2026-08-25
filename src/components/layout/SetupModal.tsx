@@ -6,15 +6,10 @@ import {
   Sparkle,
   ArrowRight,
   ArrowLeft,
-  CheckCircle,
-  FileText,
-  GithubLogo,
   SpinnerGap,
   RocketLaunch,
-  Sliders,
   Target,
   Clock,
-  Key,
 } from "@phosphor-icons/react";
 import { useSupabase } from "@/components/providers/SupabaseProvider";
 import { PRESEEDED_CAREER_ROLES } from "@/lib/data/roleTaxonomy";
@@ -54,7 +49,6 @@ function UnifiedOnboardingModalContent({
   );
   const [targetRoleId, setTargetRoleId] = useState("data-analyst");
   const [weeklyHours, setWeeklyHours] = useState(10);
-  const [groqApiKey, setGroqApiKey] = useState(profile?.groqApiKey || "");
   const [mobileNo, setMobileNo] = useState(profile?.mobileNo || "");
 
   // Step 2 State (AI Extraction)
@@ -77,7 +71,6 @@ function UnifiedOnboardingModalContent({
   // Prefill profile data if available
   useEffect(() => {
     if (profile?.name) setName(profile.name);
-    if (profile?.groqApiKey) setGroqApiKey(profile.groqApiKey);
     if (profile?.mobileNo) setMobileNo(profile.mobileNo);
   }, [profile]);
 
@@ -91,7 +84,7 @@ function UnifiedOnboardingModalContent({
       const res = await fetch("/api/ai/goal-extract", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ goalPrompt, weeklyHoursBudget: weeklyHours, apiKey: groqApiKey }),
+        body: JSON.stringify({ goalPrompt, weeklyHoursBudget: weeklyHours }),
       });
 
       const data = await res.json();
@@ -181,7 +174,6 @@ function UnifiedOnboardingModalContent({
       pastProjects: [],
       githubStats: githubTelemetry || undefined,
       hasCompletedOnboarding: true,
-      groqApiKey,
       currentStreak: 5,
       darkMode: true,
     };
@@ -197,7 +189,6 @@ function UnifiedOnboardingModalContent({
         name,
         dob: profile?.dob || "2000-01-01",
         mobileNo: mobileNo || "9876543210",
-        groqApiKey,
         hasCompletedSetup: true,
       });
     } catch (e) {
@@ -288,7 +279,7 @@ function UnifiedOnboardingModalContent({
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-zinc-300 flex items-center justify-between">
                   <span>Describe Your Career Goal or Transition</span>
-                  <span className="text-[10px] text-zinc-500">AI will analyze required skills</span>
+                  <span className="text-[10px] text-zinc-500">AI will extract required competencies</span>
                 </label>
                 <textarea
                   rows={3}
@@ -300,36 +291,20 @@ function UnifiedOnboardingModalContent({
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-zinc-300 flex items-center justify-between">
-                    <span>Weekly Study Budget</span>
-                    <span className="font-mono text-emerald-400 text-xs font-bold">{weeklyHours}h / week</span>
-                  </label>
-                  <input
-                    type="range"
-                    min={4}
-                    max={40}
-                    step={2}
-                    value={weeklyHours}
-                    onChange={(e) => setWeeklyHours(Number(e.target.value))}
-                    className="accent-emerald-500 w-full cursor-pointer mt-2"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1">
-                    <Key className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Groq API Key (Optional)</span>
-                  </label>
-                  <input
-                    type="password"
-                    value={groqApiKey}
-                    onChange={(e) => setGroqApiKey(e.target.value)}
-                    placeholder="gsk_... (leave empty for mock mode)"
-                    className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-100 focus:outline-none focus:border-emerald-500/50 font-mono"
-                  />
-                </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-zinc-300 flex items-center justify-between">
+                  <span>Weekly Study Commitment</span>
+                  <span className="font-mono text-emerald-400 text-xs font-bold">{weeklyHours}h / week</span>
+                </label>
+                <input
+                  type="range"
+                  min={4}
+                  max={40}
+                  step={2}
+                  value={weeklyHours}
+                  onChange={(e) => setWeeklyHours(Number(e.target.value))}
+                  className="accent-emerald-500 w-full cursor-pointer mt-2"
+                />
               </div>
 
               <div className="flex justify-end pt-2">
@@ -413,7 +388,7 @@ function UnifiedOnboardingModalContent({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Resume Dropzone */}
-                <ResumeDropzone onParsed={handleResumeParsed} apiKey={groqApiKey} />
+                <ResumeDropzone onParsed={handleResumeParsed} />
 
                 {/* GitHub Telemetry Card */}
                 <GitHubTelemetryCard onSynced={handleGithubSynced} />

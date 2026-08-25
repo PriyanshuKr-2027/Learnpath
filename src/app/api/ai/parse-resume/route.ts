@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SkillEntry, ProjectEntry } from "@/types";
+import { getNextGroqApiKey } from "@/lib/services/aiKeys";
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,7 +11,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Resume text content is required" }, { status: 400 });
     }
 
-    const groqKey = apiKey || process.env.GROQ_API_KEY;
+    const groqKey = getNextGroqApiKey(apiKey);
 
     // 1. If Groq API key is available, run LLM entity extraction
     if (groqKey) {
@@ -98,28 +99,26 @@ Return STRICT JSON matching:
     if (textLower.includes("google") || textLower.includes("analytics")) {
       detectedCerts.push("Google Data Analytics Certificate");
     }
-    if (textLower.includes("aws") || textLower.includes("cloud practitioner")) {
-      detectedCerts.push("AWS Certified Cloud Practitioner");
-    }
 
-    const detectedProjects: ProjectEntry[] = [
+    const fallbackProjects: ProjectEntry[] = [
       {
-        title: "E-Commerce Customer Analytics Pipeline",
+        title: "Analytical Data Pipeline",
         techStack: ["Python", "SQL", "Pandas"],
-        description: "Built automated reports and customer segmentation models extracted from resume experience.",
+        description: "Automated aggregation and cleaning of performance metrics.",
       },
     ];
 
     return NextResponse.json({
       skills: detectedSkills.length > 0 ? detectedSkills : [
-        { name: "Python", source: "resume", currentProficiency: 50, evidence: "Extracted from Resume" },
-        { name: "SQL", source: "resume", currentProficiency: 40, evidence: "Extracted from Resume" },
+        { name: "SQL", source: "resume", currentProficiency: 45, evidence: "Identified in resume" },
+        { name: "Python", source: "resume", currentProficiency: 55, evidence: "Identified in resume" },
+        { name: "Power BI & DAX", source: "inferred", currentProficiency: 20, evidence: "Target prerequisite" },
       ],
       certifications: detectedCerts,
-      projects: detectedProjects,
+      projects: fallbackProjects,
     });
   } catch (error: any) {
     console.error("Error in parse-resume route:", error);
-    return NextResponse.json({ error: error.message || "Failed to parse resume" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to parse resume" }, { status: 500 });
   }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PRESEEDED_CAREER_ROLES } from "@/lib/data/roleTaxonomy";
+import { getNextGroqApiKey } from "@/lib/services/aiKeys";
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,7 +11,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Goal prompt is required" }, { status: 400 });
     }
 
-    const groqKey = apiKey || process.env.GROQ_API_KEY;
+    const groqKey = getNextGroqApiKey(apiKey);
 
     // 1. If Groq API key is available, attempt real LLM extraction with JSON schema
     if (groqKey) {
@@ -98,6 +99,6 @@ Respond with STRICT JSON format matching this schema:
     });
   } catch (error: any) {
     console.error("Error in goal-extract route:", error);
-    return NextResponse.json({ error: error.message || "Failed to analyze goal" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to extract goal parameters" }, { status: 500 });
   }
 }

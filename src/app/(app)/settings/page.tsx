@@ -7,7 +7,6 @@ import {
   Envelope,
   Phone,
   CalendarBlank,
-  Key,
   Moon,
   Bell,
   Trash,
@@ -33,7 +32,6 @@ export default function SettingsPage() {
   const [email, setEmail] = useState("");
   const [dob, setDob] = useState("");
   const [mobileNo, setMobileNo] = useState("");
-  const [groqApiKey, setGroqApiKey] = useState("");
   const [darkMode, setDarkMode] = useState(true);
   const [reminders, setReminders] = useState(true);
 
@@ -44,14 +42,12 @@ export default function SettingsPage() {
   const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
-    // Load from local store profile if present
     const localProfile = mockStore.getProfile();
     if (localProfile) {
       setName(localProfile.name || "");
       setEmail(localProfile.email || user?.email || "");
       setTargetRoleId(localProfile.targetRoleId || "data-analyst");
       setWeeklyHours(localProfile.weeklyHoursBudget || 10);
-      setGroqApiKey(localProfile.groqApiKey || "");
       if (localProfile.githubStats?.username) {
         setGithubUsername(localProfile.githubStats.username);
       }
@@ -62,7 +58,6 @@ export default function SettingsPage() {
       if (supabaseProfile.email) setEmail(supabaseProfile.email);
       if (supabaseProfile.dob) setDob(supabaseProfile.dob);
       if (supabaseProfile.mobileNo) setMobileNo(supabaseProfile.mobileNo);
-      if (supabaseProfile.groqApiKey) setGroqApiKey(supabaseProfile.groqApiKey);
       if (supabaseProfile.darkMode !== undefined) setDarkMode(supabaseProfile.darkMode);
       if (supabaseProfile.reminders !== undefined) setReminders(supabaseProfile.reminders);
     }
@@ -83,10 +78,6 @@ export default function SettingsPage() {
 
   const handleSave = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (groqApiKey && !groqApiKey.startsWith("gsk_") && groqApiKey.trim() !== "") {
-      alert("Invalid Groq API key format. Groq keys typically begin with 'gsk_'.");
-      return;
-    }
 
     // Update Supabase
     try {
@@ -94,7 +85,6 @@ export default function SettingsPage() {
         name,
         dob,
         mobileNo,
-        groqApiKey,
         darkMode,
         reminders,
       });
@@ -110,7 +100,6 @@ export default function SettingsPage() {
       email,
       targetRoleId,
       weeklyHoursBudget: weeklyHours,
-      groqApiKey,
       darkMode,
     };
     mockStore.saveProfile(updatedLocal);
@@ -153,7 +142,7 @@ export default function SettingsPage() {
             Account & Recommender Settings
           </h1>
           <p className="text-xs text-zinc-400 mt-1">
-            Manage your personal profile, AI API credentials, study pace, and target engineering role.
+            Manage your personal profile, study pace, connected GitHub telemetry, and target engineering role.
           </p>
         </div>
 
@@ -252,7 +241,7 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between text-xs">
                 <span className="font-medium text-zinc-400 flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5 text-cyan-400" />
-                  Weekly Time Budget
+                  Weekly Time Commitment
                 </span>
                 <span className="font-mono text-emerald-400 font-bold">{weeklyHours}h / week</span>
               </div>
@@ -267,10 +256,10 @@ export default function SettingsPage() {
               />
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 sm:col-span-2">
               <label className="text-xs font-medium text-zinc-400 flex items-center gap-1">
                 <GithubLogo className="w-3.5 h-3.5 text-zinc-300" />
-                Connected GitHub Username
+                Connected GitHub Username (Non-Fork Code Telemetry)
               </label>
               <input
                 type="text"
@@ -278,20 +267,6 @@ export default function SettingsPage() {
                 onChange={(e) => setGithubUsername(e.target.value)}
                 placeholder="e.g. alex-dev"
                 className="w-full p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-zinc-100 focus:outline-none focus:border-emerald-500/50"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-400 flex items-center gap-1">
-                <Key className="w-3.5 h-3.5 text-amber-400" />
-                Groq LLaMA API Key (24/7 AI Copilot)
-              </label>
-              <input
-                type="password"
-                value={groqApiKey}
-                onChange={(e) => setGroqApiKey(e.target.value)}
-                placeholder="gsk_... (leave empty for default mock mode)"
-                className="w-full p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-zinc-100 focus:outline-none focus:border-emerald-500/50 font-mono"
               />
             </div>
           </div>

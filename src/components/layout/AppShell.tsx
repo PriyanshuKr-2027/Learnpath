@@ -19,8 +19,6 @@ import {
   Shield,
   Database,
   PlusCircle,
-  Code,
-  CalendarCheck,
   UsersThree,
   Brain,
   VideoCamera,
@@ -37,13 +35,10 @@ const AI_RECOMMENDER_NAV = [
   { label: "XAI Architecture Hub", href: "/coach", icon: Brain },
 ];
 
-const CLASSIC_DSA_NAV = [
+const COLLABORATION_NAV = [
   { label: "Social Study Room", href: "/social", icon: UsersThree },
-  { label: "75-Day DSA Plan", href: "/plan", icon: CalendarCheck },
-  { label: "Problems Bank", href: "/problems", icon: Code },
-  { label: "Coding Patterns", href: "/patterns", icon: SquaresFour },
-  { label: "Leaderboard", href: "/leaderboard", icon: Trophy },
   { label: "Study Notes", href: "/notes", icon: Note },
+  { label: "Leaderboard", href: "/leaderboard", icon: Trophy },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -65,7 +60,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       .slice(0, 2) || "LP";
   };
 
-  const isAdmin = profile.role === "admin";
+  const isAdmin = profile?.role === "admin";
 
   return (
     <div className="flex min-h-screen bg-zinc-950 text-zinc-100 w-full font-sans antialiased selection:bg-emerald-500/30 selection:text-emerald-200">
@@ -90,7 +85,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </div>
               <div className="flex flex-col">
                 <span className="font-bold text-base tracking-tight text-zinc-100 flex items-center gap-1">
-                  LearnPath <span className="text-emerald-400 text-xs px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">AI 2.0</span>
+                  LearnPath <span className="text-emerald-400 text-xs px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 font-mono">AI 2.0</span>
                 </span>
               </div>
             </Link>
@@ -118,7 +113,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </div>
               {[
                 { label: "Admin Overview", href: "/admin", icon: Shield },
-                { label: "Admin Content", href: "/admin/days", icon: Database },
+                { label: "User Management", href: "/admin/users", icon: Database },
               ].map((item) => {
                 const isActive = pathname === item.href;
                 return (
@@ -174,12 +169,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 })}
               </div>
 
-              {/* SECTION 2: CLASSIC PRACTICE & SOCIAL HUB */}
+              {/* SECTION 2: COLLABORATION & STUDY */}
               <div className="space-y-1 pt-2 border-t border-zinc-850">
                 <div className={cn("px-3 py-1 text-[10px] font-bold text-zinc-500 uppercase tracking-wider", isCollapsed && "hidden")}>
-                  Practice & Social Hub
+                  Collaboration & Notes
                 </div>
-                {CLASSIC_DSA_NAV.map((item) => {
+                {COLLABORATION_NAV.map((item) => {
                   const isActive = pathname === item.href || pathname?.startsWith(item.href);
                   return (
                     <Link
@@ -189,13 +184,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         "flex items-center rounded-xl text-xs sm:text-sm transition-all duration-200 group relative",
                         isCollapsed ? "justify-center p-3" : "gap-3 px-3 py-2",
                         isActive
-                          ? "bg-zinc-800 text-zinc-100 font-bold border border-zinc-700"
+                          ? "bg-emerald-500 text-zinc-950 font-bold shadow-md shadow-emerald-500/20"
                           : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900"
                       )}
                     >
                       <item.icon
                         weight={isActive ? "fill" : "bold"}
-                        className={cn("w-5 h-5 shrink-0 transition-transform group-hover:scale-110", isActive ? "text-emerald-400" : "text-zinc-400 group-hover:text-zinc-200")}
+                        className={cn("w-5 h-5 shrink-0 transition-transform group-hover:scale-110", isActive ? "text-zinc-950" : "text-zinc-400 group-hover:text-emerald-400")}
                       />
                       {!isCollapsed && <span>{item.label}</span>}
 
