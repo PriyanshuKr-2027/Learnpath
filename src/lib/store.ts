@@ -6,6 +6,11 @@ export interface Profile {
   darkMode: boolean;
   reminders: boolean;
   role?: "learner" | "admin";
+  current_streak?: number;
+  last_active_date?: string;
+  hasCompletedSetup?: boolean;
+  dob?: string;
+  mobileNo?: string;
 }
 
 export interface StreakInfo {
@@ -19,6 +24,11 @@ const DEFAULT_PROFILE: Profile = {
   darkMode: true,
   reminders: true,
   role: "learner",
+  current_streak: 6,
+  last_active_date: new Date().toISOString().split("T")[0],
+  hasCompletedSetup: true,
+  dob: "2000-01-01",
+  mobileNo: "9876543210",
 };
 
 const isBrowser = () => typeof window !== "undefined";
@@ -31,7 +41,7 @@ export function getProfile(): Profile {
     const parsed = JSON.parse(data);
     const email = parsed.email || "";
     const role = email.toLowerCase().includes("admin") ? "admin" : (parsed.role || "learner");
-    return { ...DEFAULT_PROFILE, ...parsed, role };
+    return { ...DEFAULT_PROFILE, ...parsed, role, hasCompletedSetup: true };
   } catch {
     return DEFAULT_PROFILE;
   }
@@ -41,19 +51,19 @@ export function saveProfile(profile: Profile): void {
   if (!isBrowser()) return;
   const email = profile.email || "";
   const role = email.toLowerCase().includes("admin") ? "admin" : (profile.role || "learner");
-  const updatedProfile = { ...profile, role };
+  const updatedProfile = { ...profile, role, hasCompletedSetup: true };
   localStorage.setItem("learnpath_user_profile", JSON.stringify(updatedProfile));
   window.dispatchEvent(new Event("storage"));
 }
 
 export function getStreakInfo(): StreakInfo {
-  if (!isBrowser()) return { currentStreak: 5, lastActiveDate: new Date().toISOString().split("T")[0] };
+  if (!isBrowser()) return { currentStreak: 6, lastActiveDate: new Date().toISOString().split("T")[0] };
   const data = localStorage.getItem("learnpath_streak_info");
-  if (!data) return { currentStreak: 5, lastActiveDate: new Date().toISOString().split("T")[0] };
+  if (!data) return { currentStreak: 6, lastActiveDate: new Date().toISOString().split("T")[0] };
   try {
     return JSON.parse(data);
   } catch {
-    return { currentStreak: 5, lastActiveDate: new Date().toISOString().split("T")[0] };
+    return { currentStreak: 6, lastActiveDate: new Date().toISOString().split("T")[0] };
   }
 }
 
@@ -61,36 +71,4 @@ export function saveStreakInfo(info: StreakInfo): void {
   if (!isBrowser()) return;
   localStorage.setItem("learnpath_streak_info", JSON.stringify(info));
   window.dispatchEvent(new Event("storage"));
-}
-
-export function getUserProgressList() {
-  const profile = getProfile();
-  const streak = getStreakInfo();
-
-  return [
-    {
-      id: "alex_dev",
-      name: profile.name,
-      email: profile.email,
-      role: profile.role || "learner",
-      joinedDate: "Aug 15, 2026",
-      lastActive: streak.lastActiveDate || new Date().toISOString().split("T")[0],
-      solvedCount: 18,
-      totalProblems: 24,
-      percentage: 75,
-      avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${profile.name}`,
-    },
-    {
-      id: "priyanshu_kr",
-      name: "Priyanshu Kumar",
-      email: "priyanshu@example.com",
-      role: "learner",
-      joinedDate: "Aug 10, 2026",
-      lastActive: "2026-08-25",
-      solvedCount: 22,
-      totalProblems: 24,
-      percentage: 92,
-      avatarUrl: "https://api.dicebear.com/7.x/bottts/svg?seed=Priyanshu",
-    },
-  ];
 }

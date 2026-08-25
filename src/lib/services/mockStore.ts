@@ -94,6 +94,9 @@ export function generateLearningPathFromProfile(profile: LearnerProfile): Learni
     const curated = getOrCreateCuratedResource(s.skillName);
     const isBoss = (idx + 1) % 5 === 0;
 
+    const isCompletedByDefault = idx < 2;
+    const isActiveByDefault = idx === 2;
+
     return {
       id: s.id,
       levelNumber: idx + 1,
@@ -103,8 +106,8 @@ export function generateLearningPathFromProfile(profile: LearnerProfile): Learni
       phase: s.phase,
       targetWeek: s.targetWeek,
       estimatedMinutes: s.estimatedMinutes,
-      status: idx === 0 ? "active" : "locked",
-      starsEarned: 0,
+      status: isCompletedByDefault ? "completed" : isActiveByDefault ? "active" : "locked",
+      starsEarned: isCompletedByDefault ? 3 : 0,
       isBossCheckpoint: isBoss,
       isRemediation: false,
       video: curated.video,
@@ -127,6 +130,8 @@ export function generateLearningPathFromProfile(profile: LearnerProfile): Learni
     });
   }
 
+  const completedCount = levels.filter((l) => l.status === "completed").length;
+
   const path: LearningPath = {
     id: `path-${Date.now()}`,
     version: 1,
@@ -136,8 +141,8 @@ export function generateLearningPathFromProfile(profile: LearnerProfile): Learni
     totalWeeks: scheduled[scheduled.length - 1]?.targetWeek || 6,
     weeklyHours: profile.weeklyHoursBudget || 10,
     totalLevelsCount: levels.length,
-    completedLevelsCount: 0,
-    completionPercentage: 0,
+    completedLevelsCount: completedCount,
+    completionPercentage: Math.round((completedCount / levels.length) * 100),
     levels,
     edges,
     createdAt: new Date().toISOString(),
@@ -412,14 +417,22 @@ export const mockStore = {
   },
 
   getNote(levelId: string): string {
-    if (typeof window === "undefined") return "";
+    if (typeof window === "undefined") {
+      if (levelId === "lvl-1") return `# SQL Window Functions & Analytics Notes\n\n### Key Concepts Mastered:\n1. **ROW_NUMBER() vs RANK() vs DENSE_RANK()**:\n   - ROW_NUMBER assigns sequential integers without ties.\n   - DENSE_RANK does not skip numbers after ties (1, 2, 2, 3).\n\n2. **Moving 7-Day Running Averages**:\n\`\`\`sql\nSELECT \n  transaction_date,\n  daily_revenue,\n  AVG(daily_revenue) OVER (\n    ORDER BY transaction_date \n    ROWS BETWEEN 6 PRECEDING AND CURRENT ROW\n  ) AS running_7d_avg\nFROM sales_records;\n\`\`\``;
+      if (levelId === "lvl-2") return `# Relational Data Modeling & Star Schema\n\n### Core Architecture:\n- **Fact Tables**: Contain numeric business metrics (order_amount, discount_rate, quantity) and foreign keys to dimension tables.\n- **Dimension Tables**: Contain contextual business attributes (DimCustomer, DimProduct, DimDate).\n- **Star vs Snowflake**: Star schema minimizes join overhead for columnar OLAP databases like Power BI VertiPaq.`;
+      return "";
+    }
     try {
       const stored = localStorage.getItem(NOTES_KEY);
       if (stored) {
         const notesMap = JSON.parse(stored);
-        return notesMap[levelId] || "";
+        if (notesMap[levelId]) return notesMap[levelId];
       }
     } catch {}
+
+    if (levelId === "lvl-1") return `# SQL Window Functions & Analytics Notes\n\n### Key Concepts Mastered:\n1. **ROW_NUMBER() vs RANK() vs DENSE_RANK()**:\n   - ROW_NUMBER assigns sequential integers without ties.\n   - DENSE_RANK does not skip numbers after ties (1, 2, 2, 3).\n\n2. **Moving 7-Day Running Averages**:\n\`\`\`sql\nSELECT \n  transaction_date,\n  daily_revenue,\n  AVG(daily_revenue) OVER (\n    ORDER BY transaction_date \n    ROWS BETWEEN 6 PRECEDING AND CURRENT ROW\n  ) AS running_7d_avg\nFROM sales_records;\n\`\`\``;
+    if (levelId === "lvl-2") return `# Relational Data Modeling & Star Schema\n\n### Core Architecture:\n- **Fact Tables**: Contain numeric business metrics (order_amount, discount_rate, quantity) and foreign keys to dimension tables.\n- **Dimension Tables**: Contain contextual business attributes (DimCustomer, DimProduct, DimDate).\n- **Star vs Snowflake**: Star schema minimizes join overhead for columnar OLAP databases like Power BI VertiPaq.`;
+
     return "";
   },
 

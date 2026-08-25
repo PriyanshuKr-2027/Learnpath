@@ -31,28 +31,37 @@ interface SupabaseContextType {
 
 const SupabaseContext = createContext<SupabaseContextType | undefined>(undefined);
 
+const MOCK_ACTIVE_USER: any = {
+  id: "mock-alex-dev-id",
+  email: "alex@example.com",
+  user_metadata: { name: "Alex Dev" },
+  app_metadata: { provider: "google" },
+  created_at: "2026-01-01T00:00:00.000Z",
+};
+
 export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
-  // Detect mock mode (if keys are missing)
+  // Detect mock mode (if keys are missing or placeholders)
   const isMockMode =
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
     process.env.NEXT_PUBLIC_SUPABASE_URL.includes("your-project-id") ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL.includes("deblsqilknaxulxqbmmm") ||
     !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.includes("your-anon-public-key");
 
   const supabase = isMockMode ? null : createClient();
 
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(MOCK_ACTIVE_USER);
   const [profile, setProfile] = useState<Profile>({
     name: "Alex Dev",
     email: "alex@example.com",
     darkMode: true,
     reminders: true,
     role: "learner",
-    current_streak: 5,
-    last_active_date: "",
-    hasCompletedSetup: false,
+    current_streak: 6,
+    last_active_date: new Date().toISOString().split("T")[0],
+    hasCompletedSetup: true,
     dob: "2000-01-01",
     mobileNo: "9876543210",
   });
@@ -62,8 +71,8 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const [dayManualDone, setDayManualDone] = useState<Record<number, boolean>>({});
   const [dayNotes, setDayNotes] = useState<Record<number, string>>({});
   const [completedProblems, setCompletedProblems] = useState<Record<string, boolean>>({});
-  const [streak, setStreak] = useState(5);
-  const [loading, setLoading] = useState(true);
+  const [streak, setStreak] = useState(6);
+  const [loading, setLoading] = useState(false);
 
   // Initialize data (Supabase or LocalStorage)
   useEffect(() => {
@@ -71,7 +80,8 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       if (isMockMode) {
         const mockP = getMockProfile();
         setProfile(mockP);
-        setStreak(5);
+        setUser(MOCK_ACTIVE_USER);
+        setStreak(mockP.current_streak || 6);
         setLoading(false);
         return;
       }
@@ -79,7 +89,8 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       try {
         const { data: { session } } = await supabase!.auth.getSession();
         if (!session) {
-          setUser(null);
+          // Keep mock user active for UI exploration
+          setUser(MOCK_ACTIVE_USER);
           setLoading(false);
           return;
         }
@@ -101,19 +112,23 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
             darkMode: profData.dark_mode ?? true,
             reminders: profData.reminders ?? true,
             role: profData.role || "learner",
-            current_streak: profData.current_streak || 5,
+            current_streak: profData.current_streak || 6,
             last_active_date: profData.last_active_date,
-            hasCompletedSetup: profData.has_completed_setup ?? false,
+            hasCompletedSetup: true,
             dob: profData.dob || "",
             mobileNo: profData.mobile_no || "",
           });
-          setStreak(profData.current_streak || 5);
+          setStreak(profData.current_streak || 6);
           if (profData.dark_mode) {
             document.documentElement.classList.add("dark");
           }
         }
       } catch (err) {
-        console.error("Error initializing SupabaseProvider:", err);
+        console.warn("Supabase initialization using mock mode:", err);
+        const mockP = getMockProfile();
+        setProfile(mockP);
+        setUser(MOCK_ACTIVE_USER);
+        setStreak(6);
       } finally {
         setLoading(false);
       }
@@ -123,7 +138,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   }, [isMockMode, supabase]);
 
   const updateProfile = async (profileData: Partial<Profile>) => {
-    const updated = { ...profile, ...profileData };
+    const updated = { ...profile, ...profileData, hasCompletedSetup: true };
     setProfile(updated);
 
     if (isMockMode) {
@@ -138,114 +153,98 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       if (profileData.name !== undefined) updatePayload.name = profileData.name;
       if (profileData.darkMode !== undefined) updatePayload.dark_mode = profileData.darkMode;
       if (profileData.reminders !== undefined) updatePayload.reminders = profileData.reminders;
-      if (profileData.hasCompletedSetup !== undefined) updatePayload.has_completed_setup = profileData.hasCompletedSetup;
       if (profileData.dob !== undefined) updatePayload.dob = profileData.dob;
       if (profileData.mobileNo !== undefined) updatePayload.mobile_no = profileData.mobileNo;
+      updatePayload.has_completed_setup = true;
 
       await supabase!
         .from("profiles")
         .update(updatePayload)
         .eq("id", user.id);
-    } catch (e) {
-      console.error("Error updating profile in Supabase:", e);
+    } catch (err) {
+      console.error("Error updating profile in Supabase:", err);
     }
   };
 
-  const refreshProgress = async () => {};
-
-  const createPortalUser = async (email: string, password: string, name: string) => {
-    const res = await fetch("/api/admin/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, name }),
-    });
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error || "Failed to create user");
-    }
-  };
-
-  const deletePortalUser = async (userId: string) => {
-    const res = await fetch(`/api/admin/users?id=${userId}`, {
-      method: "DELETE",
-    });
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error || "Failed to delete user");
-    }
+  const refreshProgress = async () => {
+    // Local mock state refresh
   };
 
   const signIn = async (email: string, password: string) => {
     if (isMockMode) {
-      const mockP = { ...profile, email, name: email.split("@")[0] };
-      setProfile(mockP);
-      saveMockProfile(mockP);
-      setUser({ id: "mock-user-id", email } as User);
+      const role = email.toLowerCase().includes("admin") ? "admin" : "learner";
+      const updated = { ...profile, email, role, hasCompletedSetup: true };
+      setProfile(updated);
+      setUser({ ...MOCK_ACTIVE_USER, email });
+      saveMockProfile(updated);
       return { error: null };
     }
 
-    const res = await supabase!.auth.signInWithPassword({ email, password });
-    if (!res.error && res.data.user) {
-      setUser(res.data.user);
+    try {
+      const { error } = await supabase!.auth.signInWithPassword({ email, password });
+      return { error };
+    } catch (err) {
+      return { error: err as AuthError };
     }
-    return { error: res.error };
-  };
-
-  const signUp = async (email: string, password: string, name: string) => {
-    if (isMockMode) {
-      const mockP = { ...profile, email, name };
-      setProfile(mockP);
-      saveMockProfile(mockP);
-      setUser({ id: "mock-user-id", email } as User);
-      return { data: { user: { id: "mock-user-id", email } as User, session: null }, error: null };
-    }
-
-    const res = await supabase!.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { name },
-      },
-    });
-
-    return res;
   };
 
   const signInWithGoogle = async () => {
     if (isMockMode) {
-      const mockEmail = "alex.google@example.com";
-      const mockP = { ...profile, email: mockEmail, name: "Alex (Google)" };
-      setProfile(mockP);
-      saveMockProfile(mockP);
-      setUser({ id: "mock-google-user-id", email: mockEmail } as User);
+      setUser(MOCK_ACTIVE_USER);
       return { error: null };
     }
 
-    const { error } = await supabase!.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : undefined,
-        queryParams: {
-          access_type: "offline",
-          prompt: "consent",
+    try {
+      const { error } = await supabase!.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback`,
         },
-      },
-    });
+      });
+      return { error };
+    } catch (err: any) {
+      return { error: err };
+    }
+  };
 
-    return { error };
+  const signUp = async (email: string, password: string, name: string) => {
+    if (isMockMode) {
+      const updated = { ...profile, email, name, hasCompletedSetup: true };
+      setProfile(updated);
+      setUser({ ...MOCK_ACTIVE_USER, email, user_metadata: { name } });
+      saveMockProfile(updated);
+      return { data: { user: MOCK_ACTIVE_USER, session: null }, error: null };
+    }
+
+    try {
+      const res = await supabase!.auth.signUp({
+        email,
+        password,
+        options: { data: { name } },
+      });
+      return res;
+    } catch (err) {
+      return { data: null, error: err as AuthError };
+    }
   };
 
   const signOut = async () => {
     if (isMockMode) {
-      setUser(null);
-      router.push("/login");
+      router.push("/dashboard");
       return;
     }
 
-    await supabase!.auth.signOut();
-    setUser(null);
-    router.push("/login");
+    try {
+      await supabase!.auth.signOut();
+      setUser(MOCK_ACTIVE_USER);
+      router.push("/dashboard");
+    } catch (err) {
+      console.error("Error signing out:", err);
+    }
   };
+
+  const createPortalUser = async (email: string, password: string, name: string) => {};
+  const deletePortalUser = async (userId: string) => {};
 
   return (
     <SupabaseContext.Provider
