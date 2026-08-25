@@ -2,16 +2,29 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { GoogleLogo, Envelope, Lock, ArrowRight, User, Sparkle, SpinnerGap } from "@phosphor-icons/react";
+import {
+  GoogleLogo,
+  Envelope,
+  Lock,
+  ArrowRight,
+  User,
+  Sparkle,
+  SpinnerGap,
+  Lightning,
+  RocketLaunch,
+  Shield,
+  CheckCircle,
+} from "@phosphor-icons/react";
 import { useSupabase } from "@/components/providers/SupabaseProvider";
+import { mockStore, DEMO_DATA_ANALYST_PROFILE } from "@/lib/services/mockStore";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { signIn, signUp, signInWithGoogle } = useSupabase();
+  const { signIn, signUp, signInWithGoogle, updateProfile } = useSupabase();
   const [isSignUp, setIsSignUp] = useState(false);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [name, setName] = useState("Alex Dev");
+  const [email, setEmail] = useState("alex@example.com");
+  const [password, setPassword] = useState("password123");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -23,7 +36,7 @@ export default function LoginPage() {
       setError("Please fill in all required fields.");
       return;
     }
-    
+
     setLoading(true);
     setError("");
 
@@ -33,11 +46,7 @@ export default function LoginPage() {
         if (signUpResult.error) {
           setError(signUpResult.error.message || "Sign up failed.");
         } else {
-          if (signUpResult.data?.session) {
-            router.push("/dashboard");
-          } else {
-            setShowSuccessModal(true);
-          }
+          router.push("/onboarding");
         }
       } else {
         const { error: signInError } = await signIn(email, password);
@@ -71,14 +80,58 @@ export default function LoginPage() {
     }
   };
 
+  // 1-Click Mock Logins for Testing & Judging
+  const handleQuickMockLogin = async (type: "active-dashboard" | "new-onboarding" | "admin") => {
+    setLoading(true);
+    setError("");
+
+    if (type === "active-dashboard") {
+      mockStore.saveProfile(DEMO_DATA_ANALYST_PROFILE);
+      await signIn("alex@example.com", "password123");
+      await updateProfile({
+        name: "Alex Dev",
+        email: "alex@example.com",
+        role: "learner",
+        hasCompletedSetup: true,
+      });
+      router.push("/dashboard");
+    } else if (type === "new-onboarding") {
+      const freshProf = {
+        ...DEMO_DATA_ANALYST_PROFILE,
+        name: "Alex Learner",
+        email: "alex.learner@example.com",
+        hasCompletedOnboarding: false,
+      };
+      mockStore.saveProfile(freshProf);
+      await signIn("alex.learner@example.com", "password123");
+      await updateProfile({
+        name: "Alex Learner",
+        email: "alex.learner@example.com",
+        role: "learner",
+        hasCompletedSetup: false,
+      });
+      router.push("/onboarding");
+    } else if (type === "admin") {
+      await signIn("admin@learnpath.ai", "admin123");
+      await updateProfile({
+        name: "Platform Admin",
+        email: "admin@learnpath.ai",
+        role: "admin",
+        hasCompletedSetup: true,
+      });
+      router.push("/admin");
+    }
+    setLoading(false);
+  };
+
   return (
     <div className="min-h-screen bg-paper flex items-center justify-center p-4 relative font-sans text-text-primary selection:bg-focus/30 selection:text-focus">
       {/* Background ambient glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-focus/10 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="max-w-md w-full bg-surface border border-border backdrop-blur-2xl rounded-3xl p-8 shadow-2xl space-y-6 relative z-10">
+      <div className="max-w-md w-full bg-surface border border-border backdrop-blur-2xl rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5 relative z-10">
         {/* Header */}
-        <div className="text-center space-y-2">
+        <div className="text-center space-y-1.5">
           <div className="w-12 h-12 rounded-2xl bg-focus mx-auto flex items-center justify-center shadow-lg shadow-focus/25 text-white">
             <Sparkle className="w-6 h-6" weight="fill" />
           </div>
@@ -96,74 +149,143 @@ export default function LoginPage() {
           </div>
         )}
 
+        {/* 🌟 1-CLICK INSTANT DEMO ACCOUNTS SECTION 🌟 */}
+        <div className="p-3.5 rounded-2xl border border-focus/30 bg-focus/5 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-focus uppercase tracking-wider flex items-center gap-1.5">
+              <Lightning className="w-4 h-4" weight="fill" />
+              1-Click Demo Accounts (Instant Access)
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 gap-2">
+            <button
+              type="button"
+              onClick={() => handleQuickMockLogin("active-dashboard")}
+              className="w-full p-2.5 rounded-xl bg-surface hover:bg-surface/80 border border-focus/40 text-left flex items-center justify-between group transition-all shadow-sm cursor-pointer"
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-focus/15 text-focus flex items-center justify-center font-bold text-xs">
+                  ⚡
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-text-primary block group-hover:text-focus transition-colors">
+                    Demo Learner (Active Roadmap)
+                  </span>
+                  <span className="text-[10px] text-text-secondary">Pre-populated DAG map, levels 1 & 2 done</span>
+                </div>
+              </div>
+              <ArrowRight className="w-3.5 h-3.5 text-focus opacity-0 group-hover:opacity-100 transition-opacity" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleQuickMockLogin("new-onboarding")}
+              className="w-full p-2.5 rounded-xl bg-surface hover:bg-surface/80 border border-border text-left flex items-center justify-between group transition-all shadow-sm cursor-pointer"
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-signal/15 text-signal flex items-center justify-center font-bold text-xs">
+                  ✨
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-text-primary block group-hover:text-signal transition-colors">
+                    New Learner (Launch AI Wizard)
+                  </span>
+                  <span className="text-[10px] text-text-secondary">Directly runs 4-Step Onboarding Wizard</span>
+                </div>
+              </div>
+              <ArrowRight className="w-3.5 h-3.5 text-signal opacity-0 group-hover:opacity-100 transition-opacity" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleQuickMockLogin("admin")}
+              className="w-full p-2.5 rounded-xl bg-surface hover:bg-surface/80 border border-border text-left flex items-center justify-between group transition-all shadow-sm cursor-pointer"
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-warning/15 text-warning flex items-center justify-center font-bold text-xs">
+                  🛡️
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-text-primary block group-hover:text-warning transition-colors">
+                    Platform Admin Dashboard
+                  </span>
+                  <span className="text-[10px] text-text-secondary">Learner progress directory & chat monitor</span>
+                </div>
+              </div>
+              <ArrowRight className="w-3.5 h-3.5 text-warning opacity-0 group-hover:opacity-100 transition-opacity" />
+            </button>
+          </div>
+        </div>
+
         {/* Google OAuth Button */}
         <button
           type="button"
           disabled={googleLoading || loading}
           onClick={handleGoogleSignIn}
-          className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-paper hover:bg-sidebar border border-border rounded-2xl text-xs sm:text-sm font-semibold transition-all disabled:opacity-50 cursor-pointer shadow-sm text-text-primary"
+          className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 bg-paper hover:bg-sidebar border border-border rounded-2xl text-xs font-semibold transition-all disabled:opacity-50 cursor-pointer shadow-sm text-text-primary"
         >
           {googleLoading ? (
-            <SpinnerGap className="w-5 h-5 animate-spin text-focus" />
+            <SpinnerGap className="w-4 h-4 animate-spin text-focus" />
           ) : (
             <>
-              <GoogleLogo className="w-5 h-5 text-focus" weight="bold" />
+              <GoogleLogo className="w-4 h-4 text-focus" weight="bold" />
               <span>Continue with Google</span>
             </>
           )}
         </button>
 
-        <div className="flex items-center my-4">
+        <div className="flex items-center my-2">
           <div className="flex-grow border-t border-border"></div>
-          <span className="px-3 text-[11px] text-text-secondary font-medium uppercase tracking-wider">Or continue with email</span>
+          <span className="px-3 text-[10px] text-text-secondary font-medium uppercase tracking-wider">Or email login</span>
           <div className="flex-grow border-t border-border"></div>
         </div>
 
         {/* Email & Password Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           {isSignUp && (
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <label className="text-xs font-medium text-text-secondary">Full Name</label>
               <div className="relative">
-                <User className="absolute left-3.5 top-3.5 w-4 h-4 text-text-secondary" />
+                <User className="absolute left-3.5 top-3 w-4 h-4 text-text-secondary" />
                 <input
                   type="text"
                   required={isSignUp}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Alex Dev"
-                  className="w-full pl-10 pr-4 py-3 rounded-2xl bg-paper border border-border text-xs text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-focus/50"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-paper border border-border text-xs text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-focus/50"
                 />
               </div>
             </div>
           )}
 
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             <label className="text-xs font-medium text-text-secondary">Email Address</label>
             <div className="relative">
-              <Envelope className="absolute left-3.5 top-3.5 w-4 h-4 text-text-secondary" />
+              <Envelope className="absolute left-3.5 top-3 w-4 h-4 text-text-secondary" />
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="alex@example.com"
-                className="w-full pl-10 pr-4 py-3 rounded-2xl bg-paper border border-border text-xs text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-focus/50"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-paper border border-border text-xs text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-focus/50"
               />
             </div>
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             <label className="text-xs font-medium text-text-secondary">Password</label>
             <div className="relative">
-              <Lock className="absolute left-3.5 top-3.5 w-4 h-4 text-text-secondary" />
+              <Lock className="absolute left-3.5 top-3 w-4 h-4 text-text-secondary" />
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-3 rounded-2xl bg-paper border border-border text-xs text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-focus/50"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-paper border border-border text-xs text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-focus/50"
               />
             </div>
           </div>
@@ -171,13 +293,13 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading || googleLoading}
-            className="w-full py-3.5 rounded-2xl bg-focus hover:bg-focus/90 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-focus/25 transition-all cursor-pointer disabled:opacity-50"
+            className="w-full py-3 rounded-xl bg-focus hover:bg-focus/90 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-focus/25 transition-all cursor-pointer disabled:opacity-50"
           >
             {loading ? (
               <SpinnerGap className="w-4 h-4 animate-spin" />
             ) : (
               <>
-                <span>{isSignUp ? "Create Free Account" : "Sign In to LearnPath"}</span>
+                <span>{isSignUp ? "Create Account & Start" : "Sign In with Credentials"}</span>
                 <ArrowRight className="w-4 h-4" weight="bold" />
               </>
             )}
@@ -185,7 +307,7 @@ export default function LoginPage() {
         </form>
 
         {/* Toggle Switch */}
-        <div className="text-center pt-2">
+        <div className="text-center pt-1">
           <button
             type="button"
             onClick={() => {
@@ -198,31 +320,6 @@ export default function LoginPage() {
           </button>
         </div>
       </div>
-
-      {/* Confirmation Modal */}
-      {showSuccessModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="max-w-sm w-full bg-surface border border-border rounded-3xl p-6 text-center space-y-4 shadow-2xl">
-            <div className="w-12 h-12 rounded-2xl bg-focus/15 border border-focus/30 text-focus flex items-center justify-center mx-auto">
-              <Sparkle className="w-6 h-6" weight="fill" />
-            </div>
-            <h3 className="text-base font-bold text-text-primary">Check Your Email</h3>
-            <p className="text-xs text-text-secondary leading-relaxed">
-              We have sent a verification link to <strong className="text-text-primary">{email}</strong>. Please confirm your email to activate your account.
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                setShowSuccessModal(false);
-                setIsSignUp(false);
-              }}
-              className="w-full py-2.5 rounded-xl bg-focus text-white font-bold text-xs shadow-md shadow-focus/25"
-            >
-              Back to Sign In
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
