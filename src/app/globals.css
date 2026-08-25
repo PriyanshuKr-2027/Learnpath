@@ -35,9 +35,9 @@
 
 @layer base {
   .dark {
-    --color-paper: #0a0a0b;
-    --color-sidebar: #1C1F26;
-    --color-surface: #14171C;
+    --color-paper: #0A0A0B;
+    --color-sidebar: #14171C;
+    --color-surface: #1C1F26;
     --color-border: #2A2D35;
     
     --color-text-primary: #EDEDED;
