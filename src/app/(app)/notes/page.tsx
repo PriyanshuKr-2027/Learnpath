@@ -1,37 +1,28 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
   Note,
   MagnifyingGlass,
   GameController,
   ArrowRight,
-  Sparkle,
 } from "@phosphor-icons/react";
 import { mockStore } from "@/lib/services/mockStore";
-import { LearningPath, LevelNode } from "@/types";
+import { LevelNode } from "@/types";
 
 export default function NotesPage() {
   const [search, setSearch] = useState("");
-  const [path, setPath] = useState<LearningPath | null>(null);
-  const [levelNotes, setLevelNotes] = useState<Array<{ level: LevelNode; note: string }>>([]);
-
-  useEffect(() => {
+  const [levelNotes] = useState<Array<{ level: LevelNode; note: string }>>(() => {
     const activePath = mockStore.getLearningPath();
-    setPath(activePath);
-
-    if (activePath && activePath.levels) {
-      const populated = activePath.levels
-        .map((lvl) => ({
-          level: lvl,
-          note: mockStore.getNote(lvl.id),
-        }))
-        .filter((item) => item.note && item.note.trim() !== "");
-
-      setLevelNotes(populated);
-    }
-  }, []);
+    if (!activePath || !activePath.levels) return [];
+    return activePath.levels
+      .map((lvl) => ({
+        level: lvl,
+        note: mockStore.getNote(lvl.id),
+      }))
+      .filter((item) => item.note && item.note.trim() !== "");
+  });
 
   const filteredNotes = levelNotes.filter(
     (item) =>

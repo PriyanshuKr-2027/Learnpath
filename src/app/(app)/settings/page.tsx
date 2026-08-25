@@ -4,13 +4,11 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   User,
-  Envelope,
   Phone,
   CalendarBlank,
   Moon,
   Bell,
   Trash,
-  ArrowRight,
   CheckCircle,
   Sparkle,
   GithubLogo,
@@ -25,34 +23,23 @@ import { mockStore } from "@/lib/services/mockStore";
 import { LearnerProfile } from "@/types";
 
 export default function SettingsPage() {
-  const { profile: supabaseProfile, updateProfile, isMockMode, supabase, user } = useSupabase();
+  const { profile: supabaseProfile, updateProfile, user } = useSupabase();
 
   // Profile fields
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [name, setName] = useState(() => mockStore.getProfile()?.name || "");
+  const [email, setEmail] = useState(() => mockStore.getProfile()?.email || user?.email || "");
   const [dob, setDob] = useState("");
   const [mobileNo, setMobileNo] = useState("");
   const [darkMode, setDarkMode] = useState(true);
   const [reminders, setReminders] = useState(true);
 
   // AI Recommender fields
-  const [targetRoleId, setTargetRoleId] = useState("data-analyst");
-  const [weeklyHours, setWeeklyHours] = useState(10);
-  const [githubUsername, setGithubUsername] = useState("");
+  const [targetRoleId, setTargetRoleId] = useState(() => mockStore.getProfile()?.targetRoleId || "data-analyst");
+  const [weeklyHours, setWeeklyHours] = useState(() => mockStore.getProfile()?.weeklyHoursBudget || 10);
+  const [githubUsername, setGithubUsername] = useState(() => mockStore.getProfile()?.githubStats?.username || "");
   const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
-    const localProfile = mockStore.getProfile();
-    if (localProfile) {
-      setName(localProfile.name || "");
-      setEmail(localProfile.email || user?.email || "");
-      setTargetRoleId(localProfile.targetRoleId || "data-analyst");
-      setWeeklyHours(localProfile.weeklyHoursBudget || 10);
-      if (localProfile.githubStats?.username) {
-        setGithubUsername(localProfile.githubStats.username);
-      }
-    }
-
     if (supabaseProfile) {
       if (supabaseProfile.name) setName(supabaseProfile.name);
       if (supabaseProfile.email) setEmail(supabaseProfile.email);
@@ -60,6 +47,8 @@ export default function SettingsPage() {
       if (supabaseProfile.mobileNo) setMobileNo(supabaseProfile.mobileNo);
       if (supabaseProfile.darkMode !== undefined) setDarkMode(supabaseProfile.darkMode);
       if (supabaseProfile.reminders !== undefined) setReminders(supabaseProfile.reminders);
+    } else if (user?.email) {
+      setEmail((prev) => prev || user.email || "");
     }
   }, [supabaseProfile, user]);
 

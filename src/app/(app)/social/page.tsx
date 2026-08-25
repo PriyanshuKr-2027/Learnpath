@@ -55,7 +55,7 @@ export default function SocialPage() {
   const [videoClient, setVideoClient] = useState<StreamVideoClient | null>(null);
   const [streamConnected, setStreamConnected] = useState(false);
   const [streamError, setStreamError] = useState<string | null>(null);
-  const cleanupTimeoutRef = useRef<any>(null);
+  const cleanupTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Initialize GetStream clients when user changes
   useEffect(() => {
@@ -210,10 +210,13 @@ function GlobalCallOverlay() {
   const isLeavingRef = useRef(false);
   const lastCallId = useRef<string | null>(null);
 
-  if (activeCall && activeCall.id !== lastCallId.current) {
-    isLeavingRef.current = false;
-    lastCallId.current = activeCall.id;
-  }
+  const activeCallId = activeCall?.id;
+  useEffect(() => {
+    if (activeCallId && activeCallId !== lastCallId.current) {
+      isLeavingRef.current = false;
+      lastCallId.current = activeCallId;
+    }
+  }, [activeCallId]);
 
   if (!activeCall) return null;
 
@@ -628,7 +631,7 @@ function SocialWorkspaceContent({
         );
         
         const presenceMap: Record<string, boolean> = {};
-        response.users.forEach((u: any) => {
+        response.users.forEach((u: { id: string; online?: boolean }) => {
           presenceMap[u.id] = !!u.online;
         });
         setOnlineUsers(presenceMap);
@@ -639,11 +642,11 @@ function SocialWorkspaceContent({
 
     fetchPresence();
 
-    const handlePresenceChange = (event: any) => {
+    const handlePresenceChange = (event: { user?: { id: string; online?: boolean } }) => {
       if (event.user) {
         setOnlineUsers((prev) => ({
           ...prev,
-          [event.user.id]: !!event.user.online
+          [event.user!.id]: !!event.user!.online
         }));
       }
     };

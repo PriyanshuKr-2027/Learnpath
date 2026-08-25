@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import {
   Mail,
@@ -17,10 +17,19 @@ import { FcGoogle } from "react-icons/fc";
 import { useSupabase } from "@/components/providers/SupabaseProvider";
 import { mockStore, DEMO_DATA_ANALYST_PROFILE } from "@/lib/services/mockStore";
 
+const emptySubscribe = () => () => {};
+function useIsMounted() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const { signIn, signUp, signInWithGoogle, updateProfile } = useSupabase();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useIsMounted();
   const [isSignUp, setIsSignUp] = useState(false);
   const [name, setName] = useState("Alex Dev");
   const [email, setEmail] = useState("alex@example.com");
@@ -28,10 +37,6 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,8 +81,8 @@ export default function LoginPage() {
       } else {
         router.push("/dashboard");
       }
-    } catch (err: any) {
-      setError(err?.message || "Google authentication failed.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Google authentication failed.");
     } finally {
       setGoogleLoading(false);
     }

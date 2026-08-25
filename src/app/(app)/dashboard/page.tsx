@@ -9,33 +9,19 @@ import {
   Trophy,
   Fire,
   Clock,
-  CheckCircle,
   ArrowRight,
-  Sliders,
-  WarningCircle,
   Play,
   Brain,
-  RocketLaunch,
   Note,
   UsersThree,
 } from "@phosphor-icons/react";
-import { LearnerProfile, LearningPath, LevelNode, SkillGap } from "@/types";
+import { LearnerProfile, LearningPath, SkillGap } from "@/types";
 import { mockStore, computeSkillGaps } from "@/lib/services/mockStore";
 
 export default function DashboardPage() {
-  const [profile, setProfile] = useState<LearnerProfile | null>(null);
-  const [path, setPath] = useState<LearningPath | null>(null);
-  const [gaps, setGaps] = useState<SkillGap[]>([]);
-
-  useEffect(() => {
-    const p = mockStore.getProfile();
-    const activePath = mockStore.getLearningPath();
-    const computedGaps = computeSkillGaps(p);
-
-    setProfile(p);
-    setPath(activePath);
-    setGaps(computedGaps);
-  }, []);
+  const [profile] = useState<LearnerProfile | null>(() => mockStore.getProfile());
+  const [path] = useState<LearningPath | null>(() => mockStore.getLearningPath());
+  const [gaps] = useState<SkillGap[]>(() => computeSkillGaps(mockStore.getProfile()));
 
   if (!profile || !path) {
     return (

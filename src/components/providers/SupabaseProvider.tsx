@@ -31,13 +31,13 @@ interface SupabaseContextType {
 
 const SupabaseContext = createContext<SupabaseContextType | undefined>(undefined);
 
-const MOCK_ACTIVE_USER: any = {
+const MOCK_ACTIVE_USER = {
   id: "mock-alex-dev-id",
   email: "alex@example.com",
   user_metadata: { name: "Alex Dev" },
   app_metadata: { provider: "google" },
   created_at: "2026-01-01T00:00:00.000Z",
-};
+} as unknown as User;
 
 export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -66,11 +66,11 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     mobileNo: "9876543210",
   });
 
-  const [days, setDays] = useState<Day[]>([]);
-  const [planProgress, setPlanProgress] = useState<Record<string, boolean>>({});
-  const [dayManualDone, setDayManualDone] = useState<Record<number, boolean>>({});
-  const [dayNotes, setDayNotes] = useState<Record<number, string>>({});
-  const [completedProblems, setCompletedProblems] = useState<Record<string, boolean>>({});
+  const [days] = useState<Day[]>([]);
+  const [planProgress] = useState<Record<string, boolean>>({});
+  const [dayManualDone] = useState<Record<number, boolean>>({});
+  const [dayNotes] = useState<Record<number, string>>({});
+  const [completedProblems] = useState<Record<string, boolean>>({});
   const [streak, setStreak] = useState(6);
   const [loading, setLoading] = useState(false);
 
@@ -149,7 +149,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
 
     try {
-      const updatePayload: any = {};
+      const updatePayload: Record<string, unknown> = {};
       if (profileData.name !== undefined) updatePayload.name = profileData.name;
       if (profileData.darkMode !== undefined) updatePayload.dark_mode = profileData.darkMode;
       if (profileData.reminders !== undefined) updatePayload.reminders = profileData.reminders;
@@ -202,8 +202,8 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         },
       });
       return { error };
-    } catch (err: any) {
-      return { error: err };
+    } catch (err) {
+      return { error: err as AuthError };
     }
   };
 
@@ -243,8 +243,8 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const createPortalUser = async (email: string, password: string, name: string) => {};
-  const deletePortalUser = async (userId: string) => {};
+  const createPortalUser = async (_email: string, _password: string, _name: string) => {};
+  const deletePortalUser = async (_userId: string) => {};
 
   return (
     <SupabaseContext.Provider

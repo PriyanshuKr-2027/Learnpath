@@ -1,0 +1,480 @@
+{
+  "communities": {
+    "0": [
+      "src_app_app_admin_page",
+      "src_app_app_admin_page_adminpage",
+      "src_app_app_admin_users_id_page",
+      "src_app_app_admin_users_id_page_adminuserdetailpage",
+      "src_app_app_leaderboard_page",
+      "src_app_app_leaderboard_page_activityitem",
+      "src_app_app_leaderboard_page_leaderboardpage",
+      "src_app_app_leaderboard_page_leaderboarduser",
+      "src_app_app_notes_page",
+      "src_app_app_notes_page_notespage",
+      "src_app_app_settings_page_settingspage",
+      "src_app_app_social_page",
+      "src_app_app_social_page_dbuser",
+      "src_app_app_social_page_friendship",
+      "src_app_app_social_page_globalcalloverlay",
+      "src_app_app_social_page_groupchat",
+      "src_app_app_social_page_groupmember",
+      "src_app_app_social_page_outboundcallview",
+      "src_app_app_social_page_socialpage",
+      "src_app_app_social_page_socialworkspacecontent",
+      "src_app_app_social_page_socialworkspacecontentprops",
+      "src_app_layout",
+      "src_app_layout_inter",
+      "src_app_layout_jetbrainsmono",
+      "src_app_layout_metadata",
+      "src_app_layout_rootlayout",
+      "src_app_login_page",
+      "src_app_login_page_loginpage",
+      "src_components_providers_supabaseprovider",
+      "src_components_providers_supabaseprovider_mock_active_user",
+      "src_components_providers_supabaseprovider_supabasecontext",
+      "src_components_providers_supabaseprovider_supabasecontexttype",
+      "src_components_providers_supabaseprovider_supabaseprovider",
+      "src_components_providers_supabaseprovider_supabaseprovider_init",
+      "src_components_providers_supabaseprovider_usesupabase",
+      "src_lib_services_mockstore_demo_data_analyst_profile",
+      "src_lib_services_mockstore_mockstore",
+      "src_lib_store",
+      "src_lib_store_default_profile",
+      "src_lib_store_getprofile",
+      "src_lib_store_getstreakinfo",
+      "src_lib_store_getuserprogresslist",
+      "src_lib_store_isbrowser",
+      "src_lib_store_profile",
+      "src_lib_store_saveprofile",
+      "src_lib_store_savestreakinfo",
+      "src_lib_store_streakinfo",
+      "src_lib_supabase_client",
+      "src_lib_supabase_client_createclient",
+      "src_types_index_day",
+      "src_types_index_profile"
+    ],
+    "1": [
+      "src_app_app_learn_stepid_page",
+      "src_app_app_learn_stepid_page_learningcanvaspage",
+      "src_components_canvas_flashcarddeck",
+      "src_components_canvas_flashcarddeck_flashcarddeck",
+      "src_components_canvas_flashcarddeck_flashcarddeckprops",
+      "src_components_canvas_markdownnoteseditor",
+      "src_components_canvas_markdownnoteseditor_markdownnoteseditor",
+      "src_components_canvas_markdownnoteseditor_markdownnoteseditorprops",
+      "src_components_canvas_socraticcopilotsidecar",
+      "src_components_canvas_socraticcopilotsidecar_message",
+      "src_components_canvas_socraticcopilotsidecar_quick_prompts",
+      "src_components_canvas_socraticcopilotsidecar_socraticcopilotsidecar",
+      "src_components_canvas_socraticcopilotsidecar_socraticcopilotsidecarprops",
+      "src_components_canvas_videoplayerwithcontrols",
+      "src_components_canvas_videoplayerwithcontrols_videoplayerwithcontrols",
+      "src_components_canvas_videoplayerwithcontrols_videoplayerwithcontrolsprops",
+      "src_lib_algorithms_resourceblending",
+      "src_lib_algorithms_resourceblending_calculateblendedscore",
+      "src_lib_algorithms_resourceblending_candidateresourceinput",
+      "src_lib_data_curatedcorpus",
+      "src_lib_data_curatedcorpus_preseededtopicresource",
+      "src_types_index",
+      "src_types_index_catquestion",
+      "src_types_index_catsession",
+      "src_types_index_docresource",
+      "src_types_index_flashcard",
+      "src_types_index_githubreporesource",
+      "src_types_index_nodestatus",
+      "src_types_index_problem",
+      "src_types_index_resourcescore",
+      "src_types_index_roleskillrequirement",
+      "src_types_index_skillsource",
+      "src_types_index_userlessonnote",
+      "src_types_index_videoresource"
+    ],
+    "2": [
+      "clsx",
+      "lucide_react",
+      "motion",
+      "next",
+      "package_dependencies",
+      "package_dependencies_clsx",
+      "package_dependencies_lucide_react",
+      "package_dependencies_motion",
+      "package_dependencies_next",
+      "package_dependencies_phosphor_icons_react",
+      "package_dependencies_react",
+      "package_dependencies_react_dom",
+      "package_dependencies_react_icons",
+      "package_dependencies_stream_chat",
+      "package_dependencies_stream_chat_react",
+      "package_dependencies_stream_io_video_react_sdk",
+      "package_dependencies_supabase_ssr",
+      "package_dependencies_supabase_supabase_js",
+      "package_dependencies_tailwind_merge",
+      "package_dependencies_xyflow_react",
+      "phosphor_icons_react",
+      "react",
+      "react_dom",
+      "react_icons",
+      "stream_chat",
+      "stream_chat_react",
+      "stream_io_video_react_sdk",
+      "supabase_ssr",
+      "supabase_supabase_js",
+      "tailwind_merge",
+      "xyflow_react"
+    ],
+    "3": [
+      "ref_dom",
+      "ref_dom_iterable",
+      "ref_esnext",
+      "ref_mts",
+      "ref_next_dev_types_ts",
+      "ref_next_env_d_ts",
+      "ref_next_types_ts",
+      "ref_node_modules",
+      "ref_ts",
+      "ref_tsx",
+      "tsconfig",
+      "tsconfig_compileroptions",
+      "tsconfig_compileroptions_allowjs",
+      "tsconfig_compileroptions_esmoduleinterop",
+      "tsconfig_compileroptions_incremental",
+      "tsconfig_compileroptions_isolatedmodules",
+      "tsconfig_compileroptions_jsx",
+      "tsconfig_compileroptions_lib",
+      "tsconfig_compileroptions_module",
+      "tsconfig_compileroptions_moduleresolution",
+      "tsconfig_compileroptions_noemit",
+      "tsconfig_compileroptions_paths",
+      "tsconfig_compileroptions_plugins",
+      "tsconfig_compileroptions_resolvejsonmodule",
+      "tsconfig_compileroptions_skiplibcheck",
+      "tsconfig_compileroptions_strict",
+      "tsconfig_compileroptions_target",
+      "tsconfig_exclude",
+      "tsconfig_include"
+    ],
+    "4": [
+      "eslint",
+      "eslint_config_next",
+      "package",
+      "package_devdependencies",
+      "package_devdependencies_eslint",
+      "package_devdependencies_eslint_config_next",
+      "package_devdependencies_tailwindcss",
+      "package_devdependencies_tailwindcss_postcss",
+      "package_devdependencies_types_node",
+      "package_devdependencies_types_react",
+      "package_devdependencies_types_react_dom",
+      "package_devdependencies_typescript",
+      "package_name",
+      "package_private",
+      "package_scripts",
+      "package_scripts_build",
+      "package_scripts_dev",
+      "package_scripts_lint",
+      "package_scripts_start",
+      "package_version",
+      "tailwindcss",
+      "tailwindcss_postcss",
+      "types_node",
+      "types_react",
+      "types_react_dom",
+      "typescript"
+    ],
+    "5": [
+      "src_app_app_dashboard_page",
+      "src_app_app_dashboard_page_dashboardpage",
+      "src_app_onboarding_page_onboardingpage",
+      "src_components_layout_setupmodal_unifiedonboardingmodalcontent",
+      "src_lib_algorithms_kahnsalgorithm",
+      "src_lib_algorithms_kahnsalgorithm_scheduledtoponode",
+      "src_lib_algorithms_kahnsalgorithm_schedulenodeswithkahns",
+      "src_lib_algorithms_kahnsalgorithm_toponodeinput",
+      "src_lib_algorithms_serpentinelayout",
+      "src_lib_algorithms_serpentinelayout_calculateremediationcoordinate",
+      "src_lib_algorithms_serpentinelayout_coordinate",
+      "src_lib_algorithms_serpentinelayout_generateserpentinecoordinates",
+      "src_lib_algorithms_serpentinelayout_serpentinelayoutconfig",
+      "src_lib_data_curatedcorpus_generateflashcardsforsubtopic",
+      "src_lib_services_mockstore",
+      "src_lib_services_mockstore_computeskillgaps",
+      "src_lib_services_mockstore_generatelearningpathfromprofile",
+      "src_lib_services_mockstore_injectremediallevelsintopath",
+      "src_types_index_dagedge",
+      "src_types_index_skillgap"
+    ],
+    "6": [
+      "src_app_api_admin_seed_route",
+      "src_app_api_admin_seed_route_get",
+      "src_app_api_ai_goal_extract_route",
+      "src_app_api_ai_goal_extract_route_post",
+      "src_app_api_ai_parse_resume_route",
+      "src_app_api_ai_parse_resume_route_post",
+      "src_app_api_chat_route",
+      "src_app_api_chat_route_post",
+      "src_app_app_settings_page",
+      "src_lib_data_curatedcorpus_preseeded_curated_corpus",
+      "src_lib_data_roletaxonomy",
+      "src_lib_data_roletaxonomy_preseeded_career_roles",
+      "src_lib_services_aikeys",
+      "src_lib_services_aikeys_default_fallback_gemini_keys",
+      "src_lib_services_aikeys_default_fallback_groq_keys",
+      "src_lib_services_aikeys_getnextgeminiapikey",
+      "src_lib_services_aikeys_getnextgroqapikey",
+      "src_types_index_careerrole"
+    ],
+    "7": [
+      "src_app_api_ai_github_sync_route",
+      "src_app_api_ai_github_sync_route_post",
+      "src_app_onboarding_page",
+      "src_app_onboarding_page_quick_goal_presets",
+      "src_components_layout_setupmodal",
+      "src_components_onboarding_githubtelemetrycard",
+      "src_components_onboarding_githubtelemetrycard_githubtelemetrycard",
+      "src_components_onboarding_githubtelemetrycard_githubtelemetrycardprops",
+      "src_components_onboarding_resumedropzone",
+      "src_components_onboarding_resumedropzone_resumedropzone",
+      "src_components_onboarding_resumedropzone_resumedropzoneprops",
+      "src_components_onboarding_skillslidermatrix",
+      "src_components_onboarding_skillslidermatrix_skillslidermatrix",
+      "src_components_onboarding_skillslidermatrix_skillslidermatrixprops",
+      "src_types_index_githubtelemetry",
+      "src_types_index_learnerprofile",
+      "src_types_index_projectentry",
+      "src_types_index_skillentry"
+    ],
+    "8": [
+      "src_app_app_roadmap_page",
+      "src_app_app_roadmap_page_roadmappage",
+      "src_components_roadmap_candycrushmap",
+      "src_components_roadmap_candycrushmap_candycrushmap",
+      "src_components_roadmap_candycrushmap_candycrushmapprops",
+      "src_components_roadmap_candycrushmap_nodetypes",
+      "src_components_roadmap_leveldetailsdrawer",
+      "src_components_roadmap_leveldetailsdrawer_leveldetailsdrawer",
+      "src_components_roadmap_leveldetailsdrawer_leveldetailsdrawerprops",
+      "src_components_roadmap_levelmapnode",
+      "src_components_roadmap_levelmapnode_levelmapnode",
+      "src_components_roadmap_levelmapnode_levelmapnodedata",
+      "src_components_roadmap_milestonelistview",
+      "src_components_roadmap_milestonelistview_milestonelistview",
+      "src_components_roadmap_milestonelistview_milestonelistviewprops",
+      "src_types_index_learningpath",
+      "src_types_index_levelnode",
+      "src_types_index_roadmapdiff"
+    ],
+    "9": [
+      "src_app_app_assessments_cat_page",
+      "src_app_app_assessments_cat_page_catassessmentpage",
+      "src_lib_algorithms_raschirt",
+      "src_lib_algorithms_raschirt_calculateprobabilityofsuccess",
+      "src_lib_algorithms_raschirt_default_initial_theta",
+      "src_lib_algorithms_raschirt_irt_discrimination_scaling",
+      "src_lib_algorithms_raschirt_irt_learning_rate_alpha",
+      "src_lib_algorithms_raschirt_selectnextcalibratedquestion",
+      "src_lib_algorithms_raschirt_thetatoproficiencydescription",
+      "src_lib_algorithms_raschirt_tiertocalibrateddifficulty",
+      "src_lib_algorithms_raschirt_updatelatentability",
+      "src_lib_data_curatedcorpus_getorcreatecuratedresource",
+      "src_types_index_catattempt",
+      "src_types_index_difficultytier"
+    ],
+    "10": [
+      "src_app_app_layout",
+      "src_app_app_layout_applayout",
+      "src_components_layout_appshell",
+      "src_components_layout_appshell_ai_recommender_nav",
+      "src_components_layout_appshell_appshell",
+      "src_components_layout_appshell_collaboration_nav",
+      "src_components_layout_setupmodal_setupmodal",
+      "src_lib_utils",
+      "src_lib_utils_cn"
+    ],
+    "11": [
+      "src_app_api_admin_users_route",
+      "src_app_api_admin_users_route_delete",
+      "src_app_api_admin_users_route_post",
+      "src_lib_supabase_server",
+      "src_lib_supabase_server_createclient"
+    ],
+    "12": [
+      "src_components_layout_markdownrenderer",
+      "src_components_layout_markdownrenderer_codeblock",
+      "src_components_layout_markdownrenderer_markdownrenderer",
+      "src_components_layout_markdownrenderer_markdownrendererprops",
+      "src_components_layout_markdownrenderer_renderformattedtext"
+    ],
+    "13": [
+      "src_lib_supabase_middleware",
+      "src_lib_supabase_middleware_updatesession",
+      "src_proxy",
+      "src_proxy_config",
+      "src_proxy_proxy"
+    ],
+    "14": [
+      "src_app_app_coach_page",
+      "src_app_app_coach_page_coachpage",
+      "src_app_app_coach_page_xai_questions"
+    ],
+    "15": [
+      "eslint_config",
+      "eslint_config_eslintconfig"
+    ],
+    "16": [
+      "next_config",
+      "next_config_nextconfig"
+    ],
+    "17": [
+      "postcss_config",
+      "postcss_config_config"
+    ],
+    "18": [
+      "src_app_api_stream_token_route",
+      "src_app_api_stream_token_route_get"
+    ],
+    "19": [
+      "src_app_auth_callback_route",
+      "src_app_auth_callback_route_get"
+    ],
+    "20": [
+      "src_app_page",
+      "src_app_page_rootpage"
+    ]
+  },
+  "cohesion": {
+    "0": 0.06352941176470588,
+    "1": 0.09803921568627451,
+    "2": 0.06451612903225806,
+    "3": 0.06896551724137931,
+    "4": 0.07692307692307693,
+    "5": 0.1736842105263158,
+    "6": 0.16993464052287582,
+    "7": 0.2549019607843137,
+    "8": 0.21568627450980393,
+    "9": 0.26373626373626374,
+    "10": 0.3055555555555556,
+    "11": 0.5,
+    "12": 0.5,
+    "13": 0.6,
+    "14": 0.6666666666666666,
+    "15": 1.0,
+    "16": 1.0,
+    "17": 1.0,
+    "18": 1.0,
+    "19": 1.0,
+    "20": 1.0
+  },
+  "gods": [
+    {
+      "id": "src_types_index_levelnode",
+      "label": "LevelNode",
+      "degree": 17
+    },
+    {
+      "id": "src_components_providers_supabaseprovider_usesupabase",
+      "label": "useSupabase()",
+      "degree": 17
+    },
+    {
+      "id": "tsconfig_compileroptions",
+      "label": "compilerOptions",
+      "degree": 16
+    },
+    {
+      "id": "src_lib_services_mockstore_mockstore",
+      "label": "mockStore",
+      "degree": 13
+    },
+    {
+      "id": "src_types_index_skillentry",
+      "label": "SkillEntry",
+      "degree": 12
+    },
+    {
+      "id": "src_types_index_learningpath",
+      "label": "LearningPath",
+      "degree": 11
+    },
+    {
+      "id": "src_lib_services_mockstore_generatelearningpathfromprofile",
+      "label": "generateLearningPathFromProfile()",
+      "degree": 9
+    },
+    {
+      "id": "src_lib_services_aikeys_getnextgroqapikey",
+      "label": "getNextGroqApiKey()",
+      "degree": 7
+    },
+    {
+      "id": "src_lib_data_roletaxonomy_preseeded_career_roles",
+      "label": "PRESEEDED_CAREER_ROLES",
+      "degree": 7
+    },
+    {
+      "id": "tsconfig_include",
+      "label": "include",
+      "degree": 7
+    }
+  ],
+  "surprises": [
+    {
+      "source": "SocraticCopilotSidecarProps",
+      "target": "LevelNode",
+      "source_files": [
+        "src/components/canvas/SocraticCopilotSidecar.tsx",
+        "src/types/index.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "bridges separate communities; peripheral node `SocraticCopilotSidecarProps` unexpectedly reaches hub `LevelNode`"
+    },
+    {
+      "source": "SocialWorkspaceContentProps",
+      "target": "Profile",
+      "source_files": [
+        "src/app/(app)/social/page.tsx",
+        "src/types/index.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "peripheral node `SocialWorkspaceContentProps` unexpectedly reaches hub `Profile`"
+    },
+    {
+      "source": "SkillSliderMatrixProps",
+      "target": "SkillEntry",
+      "source_files": [
+        "src/components/onboarding/SkillSliderMatrix.tsx",
+        "src/types/index.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "peripheral node `SkillSliderMatrixProps` unexpectedly reaches hub `SkillEntry`"
+    },
+    {
+      "source": "LevelDetailsDrawerProps",
+      "target": "LevelNode",
+      "source_files": [
+        "src/components/roadmap/LevelDetailsDrawer.tsx",
+        "src/types/index.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "peripheral node `LevelDetailsDrawerProps` unexpectedly reaches hub `LevelNode`"
+    },
+    {
+      "source": "LevelMapNodeData",
+      "target": "LevelNode",
+      "source_files": [
+        "src/components/roadmap/LevelMapNode.tsx",
+        "src/types/index.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "inherits",
+      "why": "peripheral node `LevelMapNodeData` unexpectedly reaches hub `LevelNode`"
+    }
+  ],
+  "tokens": {
+    "input": 0,
+    "output": 0
+  }
+}

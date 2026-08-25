@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CourseOs • Graphify Force-Directed Knowledge Graph</title>
+  <script src="https://unpkg.com/force-graph"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #0A0A0B;
+      color: #EDEDED;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+    }
+    #3d-graph {
+      width: 100vw;
+      height: 100vh;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    .panel {
+      position: absolute;
+      background: rgba(20, 23, 28, 0.88);
+      backdrop-filter: blur(20px);
+      border: 1px solid #2A2D35;
+      border-radius: 20px;
+      padding: 18px;
+      z-index: 100;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6);
+    }
+    #header {
+      top: 24px;
+      left: 24px;
+      max-width: 380px;
+    }
+    #inspector {
+      bottom: 24px;
+      right: 24px;
+      width: 360px;
+      max-height: 480px;
+      overflow-y: auto;
+      display: none;
+    }
+    #controls {
+      bottom: 24px;
+      left: 24px;
+      display: flex;
+      gap: 10px;
+    }
+    .btn {
+      background: #1C1F26;
+      border: 1px solid #2A2D35;
+      color: #EDEDED;
+      padding: 9px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .btn:hover {
+      background: #6D5BF0;
+      border-color: #6D5BF0;
+      color: white;
+      transform: translateY(-1px);
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-family: monospace;
+      margin-bottom: 8px;
+    }
+    .search-input {
+      width: 100%;
+      background: #0A0A0B;
+      border: 1px solid #2A2D35;
+      color: #EDEDED;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 12px;
+      margin-top: 12px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-input:focus {
+      border-color: #6D5BF0;
+      box-shadow: 0 0 0 2px rgba(109, 91, 240, 0.2);
+    }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #8C8C8C;
+      margin-top: 6px;
+    }
+    .stat-val {
+      color: #EDEDED;
+      font-weight: 600;
+      font-family: monospace;
+    }
+    ul::-webkit-scrollbar, #inspector::-webkit-scrollbar {
+      width: 6px;
+    }
+    ul::-webkit-scrollbar-thumb, #inspector::-webkit-scrollbar-thumb {
+      background: #2A2D35;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div id="3d-graph"></div>
+
+  <div id="header" class="panel">
+    <div class="badge" style="background: rgba(109,91,240,0.15); color: #6D5BF0; border: 1px solid rgba(109,91,240,0.3);">
+      Graphify Force Simulation
+    </div>
+    <h2 style="font-size: 18px; font-weight: 700; letter-spacing: -0.02em;">CourseOs Knowledge Graph</h2>
+    <p style="font-size: 12px; color: #8C8C8C; margin-top: 6px; line-height: 1.4;">
+      Interactive force-directed graph view of code symbols, call flows, components, and architectural communities.
+    </p>
+    <div style="margin-top: 14px; border-top: 1px solid #2A2D35; padding-top: 10px;">
+      <div class="stat-row">
+        <span>Symbols &amp; Functions:</span>
+        <span id="stat-nodes" class="stat-val">298 Nodes</span>
+      </div>
+      <div class="stat-row">
+        <span>Dependency Links:</span>
+        <span id="stat-edges" class="stat-val">522 Edges</span>
+      </div>
+      <div class="stat-row">
+        <span>Community Clusters:</span>
+        <span class="stat-val">21 Clusters</span>
+      </div>
+    </div>
+    <input type="text" id="search" class="search-input" placeholder="Search node (e.g. useSupabase, LevelNode)..." />
+  </div>
+
+  <div id="inspector" class="panel">
+    <div id="node-badge" class="badge"></div>
+    <h3 id="node-title" style="font-size: 16px; font-weight: 700;"></h3>
+    <p id="node-file" style="font-size: 11px; color: #8C8C8C; font-family: monospace; margin: 4px 0 12px;"></p>
+    <div id="node-details" style="font-size: 12px; color: #D1D1D1; line-height: 1.5;"></div>
+  </div>
+
+  <div id="controls" class="panel">
+    <button class="btn" onclick="resetCamera()">Reset Center</button>
+    <button class="btn" onclick="toggleLabels()">Toggle Labels</button>
+    <button class="btn" onclick="reheatSimulation()">Re-cluster</button>
+  </div>
+
+  <script>
+    const COMMUNITY_COLORS = [
+      '#6D5BF0', '#3DDC84', '#F5A623', '#E2533D', '#38BDF8',
+      '#EC4899', '#A855F7', '#10B981', '#F43F5E', '#8B5CF6',
+      '#06B6D4', '#EAB308', '#F97316', '#6366F1', '#14B8A6'
+    ];
+
+    let showLabels = true;
+    let selectedNode = null;
+    let Graph = null;
+
+    fetch('./graph.json')
+      .then(res => res.json())
+      .then(data => {
+        const nodes = data.nodes || [];
+        const rawEdges = data.links || data.edges || [];
+        const links = rawEdges.map(e => ({
+          source: typeof e.source === 'object' ? e.source.id : e.source,
+          target: typeof e.target === 'object' ? e.target.id : e.target,
+          ...e
+        }));
+
+        document.getElementById('stat-nodes').textContent = nodes.length + ' Nodes';
+        document.getElementById('stat-edges').textContent = links.length + ' Edges';
+
+        Graph = ForceGraph()(document.getElementById('3d-graph'))
+          .graphData({ nodes, links })
+          .nodeId('id')
+          .nodeLabel(n => `${n.label} (${n.source_file || 'AST'})`)
+          .nodeColor(n => COMMUNITY_COLORS[(n.community || 0) % COMMUNITY_COLORS.length])
+          .nodeRelSize(5)
+          .nodeVal(n => (n.label === 'LevelNode' || n.label === 'useSupabase' || n.label === 'mockStore' || n.label === 'LearningPath') ? 14 : 5)
+          .linkColor(() => '#2A2D35')
+          .linkWidth(l => l.weight ? Math.sqrt(l.weight) : 1)
+          .linkDirectionalParticles(2)
+          .linkDirectionalParticleWidth(1.5)
+          .linkDirectionalParticleSpeed(0.005)
+          .backgroundColor('#0A0A0B')
+          .onNodeClick(node => {
+            selectedNode = node;
+            const inspector = document.getElementById('inspector');
+            inspector.style.display = 'block';
+
+            const col = COMMUNITY_COLORS[(node.community || 0) % COMMUNITY_COLORS.length];
+            const badge = document.getElementById('node-badge');
+            badge.textContent = 'Community Cluster ' + (node.community || 0);
+            badge.style.background = col + '22';
+            badge.style.color = col;
+            badge.style.border = '1px solid ' + col + '55';
+
+            document.getElementById('node-title').textContent = node.label;
+            document.getElementById('node-file').textContent = (node.source_file || 'system') + (node.source_location ? ':' + node.source_location : '');
+
+            const connected = links.filter(l => (l.source.id || l.source) === node.id || (l.target.id || l.target) === node.id);
+            let html = `<strong>Connected Links (${connected.length}):</strong><ul style="margin-top: 8px; padding-left: 18px; font-size: 11px; color: #A1A1AA; line-height: 1.6;">`;
+            connected.slice(0, 15).forEach(l => {
+              const otherId = (l.source.id || l.source) === node.id ? (l.target.id || l.target) : (l.source.id || l.source);
+              const targetNode = nodes.find(n => n.id === otherId);
+              html += `<li><span style="color: #EDEDED; font-weight: 500;">${targetNode ? targetNode.label : otherId}</span></li>`;
+            });
+            if (connected.length > 15) html += `<li><em>...and ${connected.length - 15} more</em></li>`;
+            html += '</ul>';
+
+            document.getElementById('node-details').innerHTML = html;
+
+            Graph.centerAt(node.x, node.y, 800);
+            Graph.zoom(3, 800);
+          })
+          .onBackgroundClick(() => {
+            document.getElementById('inspector').style.display = 'none';
+          })
+          .nodeCanvasObject((node, ctx, globalScale) => {
+            const label = node.label;
+            const fontSize = 12 / globalScale;
+            ctx.font = `${fontSize}px monospace`;
+            
+            const r = (node.label === 'LevelNode' || node.label === 'useSupabase' || node.label === 'mockStore' || node.label === 'LearningPath') ? 7 : 4;
+            const color = COMMUNITY_COLORS[(node.community || 0) % COMMUNITY_COLORS.length];
+
+            // Outer glow for hub nodes
+            if (node.label === 'LevelNode' || node.label === 'useSupabase' || node.label === 'mockStore') {
+              ctx.beginPath();
+              ctx.arc(node.x, node.y, r + 4, 0, 2 * Math.PI, false);
+              ctx.fillStyle = color + '44';
+              ctx.fill();
+            }
+
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, r, 0, 2 * Math.PI, false);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.strokeStyle = '#0A0A0B';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            if (showLabels && globalScale > 0.8) {
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillStyle = '#EDEDED';
+              ctx.fillText(label, node.x, node.y + r + fontSize);
+            }
+          });
+
+        // Search Filter
+        document.getElementById('search').addEventListener('input', (e) => {
+          const query = e.target.value.toLowerCase().trim();
+          if (!query) {
+            Graph.nodeColor(n => COMMUNITY_COLORS[(n.community || 0) % COMMUNITY_COLORS.length]);
+            return;
+          }
+          const match = nodes.find(n => n.label.toLowerCase().includes(query));
+          if (match) {
+            Graph.centerAt(match.x, match.y, 600);
+            Graph.zoom(2.5, 600);
+          }
+        });
+      });
+
+    function resetCamera() {
+      if (Graph) Graph.zoomToFit(800, 50);
+    }
+
+    function toggleLabels() {
+      showLabels = !showLabels;
+      if (Graph) Graph.refresh();
+    }
+
+    function reheatSimulation() {
+      if (Graph) Graph.d3ReheatSimulation();
+    }
+  </script>
+</body>
+</html>
