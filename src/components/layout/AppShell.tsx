@@ -13,25 +13,36 @@ import {
   SignOut,
   MagnifyingGlass,
   Bell,
-  CaretDown,
   List,
   Trophy,
   Sparkle,
   Shield,
   Database,
   PlusCircle,
+  Code,
+  CalendarCheck,
+  UsersThree,
+  Brain,
 } from "@phosphor-icons/react";
 
 import { useSupabase } from "@/components/providers/SupabaseProvider";
 import { SetupModal } from "@/components/layout/SetupModal";
 
-const NAV_ITEMS = [
+const AI_RECOMMENDER_NAV = [
   { label: "Dashboard", href: "/dashboard", icon: SquaresFour },
   { label: "Level Map (DAG)", href: "/roadmap", icon: GameController },
   { label: "CAT Assessments", href: "/assessments/cat", icon: Target },
-  { label: "Study Notes", href: "/notes", icon: Note },
+  { label: "Goal & Resume Wizard", href: "/onboarding", icon: PlusCircle },
+  { label: "XAI Architecture Hub", href: "/coach", icon: Brain },
+];
+
+const CLASSIC_DSA_NAV = [
+  { label: "75-Day DSA Plan", href: "/plan", icon: CalendarCheck },
+  { label: "Problems Bank", href: "/problems", icon: Code },
+  { label: "Coding Patterns", href: "/patterns", icon: SquaresFour },
+  { label: "Social Study Room", href: "/social", icon: UsersThree },
   { label: "Leaderboard", href: "/leaderboard", icon: Trophy },
-  { label: "New Goal Wizard", href: "/onboarding", icon: PlusCircle },
+  { label: "Study Notes", href: "/notes", icon: Note },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -53,12 +64,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       .slice(0, 2) || "LP";
   };
 
-  const navItems = profile.role === "admin"
-    ? [
-        { label: "Admin Overview", href: "/admin", icon: Shield },
-        { label: "Admin Content", href: "/admin/days", icon: Database },
-      ]
-    : NAV_ITEMS;
+  const isAdmin = profile.role === "admin";
 
   return (
     <div className="flex min-h-screen bg-zinc-950 text-zinc-100 w-full font-sans antialiased selection:bg-emerald-500/30 selection:text-emerald-200">
@@ -69,6 +75,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           isCollapsed ? "w-20" : "w-64"
         )}
       >
+        {/* Brand Header */}
         <div
           className={cn(
             "flex h-16 items-center border-b border-zinc-800/80 transition-all duration-300",
@@ -96,53 +103,125 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </button>
         </div>
 
+        {/* Navigation Items (Scrollable) */}
         <nav
           className={cn(
-            "flex-1 py-6 space-y-1.5 overflow-visible transition-all duration-300",
-            isCollapsed ? "px-2" : "px-4"
+            "flex-1 py-4 space-y-4 overflow-y-auto no-scrollbar transition-all duration-300",
+            isCollapsed ? "px-2" : "px-3"
           )}
         >
-          {navItems.map((item) => {
-            const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname?.startsWith(item.href));
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center rounded-xl text-sm transition-all duration-200 group relative",
-                  isCollapsed ? "justify-center p-3" : "gap-3 px-3.5 py-2.5",
-                  isActive
-                    ? "bg-emerald-500 text-zinc-950 font-bold shadow-lg shadow-emerald-500/25"
-                    : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900"
-                )}
-              >
-                <item.icon
-                  weight={isActive ? "fill" : "bold"}
-                  className={cn("w-5 h-5 shrink-0 transition-transform group-hover:scale-110", isActive ? "text-zinc-950" : "text-zinc-400 group-hover:text-emerald-400")}
-                />
-                {!isCollapsed && <span>{item.label}</span>}
+          {isAdmin ? (
+            <div className="space-y-1">
+              <div className={cn("px-3 py-1 text-[10px] font-bold text-zinc-500 uppercase tracking-wider", isCollapsed && "hidden")}>
+                Admin
+              </div>
+              {[
+                { label: "Admin Overview", href: "/admin", icon: Shield },
+                { label: "Admin Content", href: "/admin/days", icon: Database },
+              ].map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      "flex items-center rounded-xl text-xs sm:text-sm transition-all duration-200 group relative",
+                      isCollapsed ? "justify-center p-3" : "gap-3 px-3.5 py-2",
+                      isActive ? "bg-emerald-500 text-zinc-950 font-bold" : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900"
+                    )}
+                  >
+                    <item.icon className="w-5 h-5 shrink-0" />
+                    {!isCollapsed && <span>{item.label}</span>}
+                  </Link>
+                );
+              })}
+            </div>
+          ) : (
+            <>
+              {/* SECTION 1: AI LEARNING PATH RECOMMENDER */}
+              <div className="space-y-1">
+                <div className={cn("px-3 py-1 text-[10px] font-bold text-emerald-400/90 uppercase tracking-wider", isCollapsed && "hidden")}>
+                  AI Path Recommender
+                </div>
+                {AI_RECOMMENDER_NAV.map((item) => {
+                  const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname?.startsWith(item.href));
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        "flex items-center rounded-xl text-xs sm:text-sm transition-all duration-200 group relative",
+                        isCollapsed ? "justify-center p-3" : "gap-3 px-3 py-2",
+                        isActive
+                          ? "bg-emerald-500 text-zinc-950 font-bold shadow-md shadow-emerald-500/20"
+                          : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900"
+                      )}
+                    >
+                      <item.icon
+                        weight={isActive ? "fill" : "bold"}
+                        className={cn("w-5 h-5 shrink-0 transition-transform group-hover:scale-110", isActive ? "text-zinc-950" : "text-zinc-400 group-hover:text-emerald-400")}
+                      />
+                      {!isCollapsed && <span>{item.label}</span>}
 
-                {/* Tooltip for collapsed mode */}
-                {isCollapsed && (
-                  <span className="absolute left-full ml-4 px-2.5 py-1.5 bg-zinc-900 border border-zinc-800 text-zinc-100 text-xs font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50 pointer-events-none shadow-2xl">
-                    {item.label}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+                      {isCollapsed && (
+                        <span className="absolute left-full ml-4 px-2.5 py-1.5 bg-zinc-900 border border-zinc-800 text-zinc-100 text-xs font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50 pointer-events-none shadow-2xl">
+                          {item.label}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+
+              {/* SECTION 2: CLASSIC DSA & PRACTICE HUB */}
+              <div className="space-y-1 pt-2 border-t border-zinc-850">
+                <div className={cn("px-3 py-1 text-[10px] font-bold text-zinc-500 uppercase tracking-wider", isCollapsed && "hidden")}>
+                  DSA & Practice Hub
+                </div>
+                {CLASSIC_DSA_NAV.map((item) => {
+                  const isActive = pathname === item.href || pathname?.startsWith(item.href);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        "flex items-center rounded-xl text-xs sm:text-sm transition-all duration-200 group relative",
+                        isCollapsed ? "justify-center p-3" : "gap-3 px-3 py-2",
+                        isActive
+                          ? "bg-zinc-800 text-zinc-100 font-bold border border-zinc-700"
+                          : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900"
+                      )}
+                    >
+                      <item.icon
+                        weight={isActive ? "fill" : "bold"}
+                        className={cn("w-5 h-5 shrink-0 transition-transform group-hover:scale-110", isActive ? "text-emerald-400" : "text-zinc-400 group-hover:text-zinc-200")}
+                      />
+                      {!isCollapsed && <span>{item.label}</span>}
+
+                      {isCollapsed && (
+                        <span className="absolute left-full ml-4 px-2.5 py-1.5 bg-zinc-900 border border-zinc-800 text-zinc-100 text-xs font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50 pointer-events-none shadow-2xl">
+                          {item.label}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </nav>
 
+        {/* Bottom Actions */}
         <div
           className={cn(
-            "p-4 border-t border-zinc-800/80 space-y-1.5 transition-all duration-300",
-            isCollapsed ? "px-2" : "p-4"
+            "p-3 border-t border-zinc-800/80 space-y-1 transition-all duration-300",
+            isCollapsed ? "px-2" : "px-3"
           )}
         >
           <Link
             href="/settings"
             className={cn(
-              "flex items-center rounded-xl text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 transition-all duration-200 group relative",
+              "flex items-center rounded-xl text-xs sm:text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 transition-all duration-200 group relative",
               isCollapsed ? "justify-center p-3" : "gap-3 px-3.5 py-2",
               pathname === "/settings" && "bg-zinc-800 text-zinc-100 font-semibold"
             )}
@@ -158,7 +237,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <button
             onClick={handleLogout}
             className={cn(
-              "w-full flex items-center rounded-xl text-sm text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-200 group relative cursor-pointer",
+              "w-full flex items-center rounded-xl text-xs sm:text-sm text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-200 group relative cursor-pointer",
               isCollapsed ? "justify-center p-3" : "gap-3 px-3.5 py-2"
             )}
           >
