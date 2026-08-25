@@ -15,7 +15,6 @@ import {
   Target,
   Clock,
   Key,
-  X,
 } from "@phosphor-icons/react";
 import { useSupabase } from "@/components/providers/SupabaseProvider";
 import { PRESEEDED_CAREER_ROLES } from "@/lib/data/roleTaxonomy";
@@ -23,7 +22,7 @@ import { ResumeDropzone } from "@/components/onboarding/ResumeDropzone";
 import { GitHubTelemetryCard } from "@/components/onboarding/GitHubTelemetryCard";
 import { SkillSliderMatrix } from "@/components/onboarding/SkillSliderMatrix";
 import { mockStore, generateLearningPathFromProfile } from "@/lib/services/mockStore";
-import { GitHubTelemetry, LearnerProfile, SkillEntry } from "@/types";
+import { GitHubTelemetry, LearnerProfile, ProjectEntry, SkillEntry } from "@/types";
 
 export function SetupModal() {
   const { profile, updateProfile, user } = useSupabase();
@@ -67,11 +66,9 @@ function UnifiedOnboardingModalContent({
   } | null>(null);
 
   // Step 3 State (Resume & GitHub)
-  const [resumeText, setResumeText] = useState("");
-  const [resumeSkills, setResumeSkills] = useState<string[]>([]);
-  const [githubUrl, setGithubUrl] = useState("https://github.com/alex-dev");
-  const [isSyncingGithub, setIsSyncingGithub] = useState(false);
-  const [githubStats, setGithubStats] = useState<GitHubTelemetry | null>(null);
+  const [resumeSkills, setResumeSkills] = useState<SkillEntry[]>([]);
+  const [githubTelemetry, setGithubTelemetry] = useState<GitHubTelemetry | null>(null);
+  const [githubSkills, setGithubSkills] = useState<SkillEntry[]>([]);
 
   // Step 4 State (Skill Matrix)
   const [skills, setSkills] = useState<SkillEntry[]>([]);
@@ -119,66 +116,39 @@ function UnifiedOnboardingModalContent({
   };
 
   // Handle Resume Parsed
-  const handleResumeParsed = (text: string, parsedSkills: string[]) => {
-    setResumeText(text);
-    setResumeSkills(parsedSkills);
+  const handleResumeParsed = (data: { skills: SkillEntry[]; certifications: string[]; projects: ProjectEntry[] }) => {
+    setResumeSkills(data.skills || []);
   };
 
-  // Handle GitHub Sync
-  const handleSyncGithub = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleanUsername = githubUrl.replace(/https?:\/\/(www\.)?github\.com\//, "").replace(/\/$/, "").trim();
-    if (!cleanUsername) return;
-
-    setIsSyncingGithub(true);
-    try {
-      const res = await fetch("/api/ai/github-sync", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: cleanUsername }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setGithubStats(data.telemetry);
-      }
-    } catch {
-      setGithubStats({
-        username: cleanUsername,
-        publicReposCount: 12,
-        topLanguages: { Python: 65, SQL: 25, JavaScript: 10 },
-        detectedSkills: ["Python", "SQL", "Pandas", "ETL"],
-        recentRepos: [
-          { name: "data-pipeline-etl", description: "Automated ETL script", language: "Python", stars: 14, isFork: false },
-        ],
-      });
-    } finally {
-      setIsSyncingGithub(false);
-    }
+  // Handle GitHub Synced
+  const handleGithubSynced = (data: { telemetry: GitHubTelemetry; skills: SkillEntry[] }) => {
+    setGithubTelemetry(data.telemetry);
+    setGithubSkills(data.skills || []);
   };
 
   // Build Skill Baseline Matrix for Step 4
   const handleProceedToMatrix = () => {
     const selectedRole = PRESEEDED_CAREER_ROLES.find((r) => r.id === targetRoleId) || PRESEEDED_CAREER_ROLES[0];
     const initialSkills: SkillEntry[] = selectedRole.skills.map((req) => {
-      const isFromResume = resumeSkills.some((s) => s.toLowerCase() === req.skillName.toLowerCase());
-      const isFromGithub = githubStats?.detectedSkills.some((s) => s.toLowerCase() === req.skillName.toLowerCase());
+      const resumeMatch = resumeSkills.find((s) => s.name.toLowerCase() === req.skillName.toLowerCase());
+      const githubMatch = githubSkills.find((s) => s.name.toLowerCase() === req.skillName.toLowerCase());
 
       let currentProficiency = 15;
       let source: SkillEntry["source"] = "inferred";
-      let evidence = "Baseline assumption";
+      let evidence = "Baseline prerequisite assumption";
 
-      if (isFromResume && isFromGithub) {
-        currentProficiency = 60;
+      if (resumeMatch && githubMatch) {
+        currentProficiency = Math.max(resumeMatch.currentProficiency, githubMatch.currentProficiency, 60);
         source = "resume";
-        evidence = "Verified in Resume & GitHub repositories";
-      } else if (isFromResume) {
-        currentProficiency = req.skillName.includes("Excel") ? 80 : 45;
+        evidence = "Verified in Resume & GitHub commits";
+      } else if (resumeMatch) {
+        currentProficiency = resumeMatch.currentProficiency || (req.skillName.includes("Excel") ? 80 : 45);
         source = "resume";
-        evidence = "Stated in uploaded resume";
-      } else if (isFromGithub) {
-        currentProficiency = 55;
+        evidence = resumeMatch.evidence || "Stated in uploaded resume";
+      } else if (githubMatch) {
+        currentProficiency = githubMatch.currentProficiency || 55;
         source = "github";
-        evidence = "Demonstrated in original GitHub commits";
+        evidence = githubMatch.evidence || "Demonstrated in original GitHub repos";
       }
 
       return {
@@ -209,7 +179,7 @@ function UnifiedOnboardingModalContent({
       skills,
       certifications: ["Data Analytics Certified"],
       pastProjects: [],
-      githubStats: githubStats || undefined,
+      githubStats: githubTelemetry || undefined,
       hasCompletedOnboarding: true,
       groqApiKey,
       currentStreak: 5,
@@ -443,42 +413,10 @@ function UnifiedOnboardingModalContent({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Resume Dropzone */}
-                <ResumeDropzone onParsed={handleResumeParsed} />
+                <ResumeDropzone onParsed={handleResumeParsed} apiKey={groqApiKey} />
 
-                {/* GitHub Telemetry */}
-                <div className="flex flex-col gap-3 p-5 rounded-2xl border border-zinc-800 bg-zinc-900/40">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-100">
-                      <GithubLogo className="w-4 h-4" weight="fill" />
-                    </div>
-                    <span className="text-xs font-bold text-zinc-200">GitHub Profile Scraper</span>
-                  </div>
-
-                  <form onSubmit={handleSyncGithub} className="flex gap-2">
-                    <input
-                      type="text"
-                      value={githubUrl}
-                      onChange={(e) => setGithubUrl(e.target.value)}
-                      placeholder="https://github.com/username"
-                      className="flex-1 p-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-zinc-100 focus:outline-none focus:border-emerald-500/50"
-                    />
-                    <button
-                      type="submit"
-                      disabled={isSyncingGithub}
-                      className="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold transition-colors cursor-pointer"
-                    >
-                      {isSyncingGithub ? <SpinnerGap className="w-4 h-4 animate-spin" /> : "Sync"}
-                    </button>
-                  </form>
-
-                  {githubStats ? (
-                    <GitHubTelemetryCard telemetry={githubStats} />
-                  ) : (
-                    <p className="text-[11px] text-zinc-500 italic mt-1">
-                      Filters forked repos and analyzes your original commits & language byte ratios.
-                    </p>
-                  )}
-                </div>
+                {/* GitHub Telemetry Card */}
+                <GitHubTelemetryCard onSynced={handleGithubSynced} />
               </div>
 
               <div className="flex items-center justify-between pt-2">
