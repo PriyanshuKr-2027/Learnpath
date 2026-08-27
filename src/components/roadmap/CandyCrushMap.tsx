@@ -108,7 +108,7 @@ export function CandyCrushMap({ path, onSelectNode }: CandyCrushMapProps) {
           variant={BackgroundVariant.Dots}
           gap={24}
           size={1.5}
-          color="#6D5BF022"
+          color="#14B8A622"
         />
         <Controls
           showInteractive={false}
@@ -117,11 +117,11 @@ export function CandyCrushMap({ path, onSelectNode }: CandyCrushMapProps) {
         <MiniMap
           nodeColor={(n: any) => {
             const data = n.data as LevelNode;
-            if (data?.status === "completed") return "#3DDC84";
-            if (data?.isBossCheckpoint) return "#F5A623";
-            if (data?.isRemediation) return "#E2533D";
-            if (data?.status === "active") return "#6D5BF0";
-            return "#2A2D35";
+            if (data?.status === "completed") return "#10B981";
+            if (data?.isBossCheckpoint) return "#F59E0B";
+            if (data?.isRemediation) return "#EF4444";
+            if (data?.status === "active") return "#14B8A6";
+            return "#1F242F";
           }}
           maskColor="rgba(10, 10, 11, 0.75)"
           className="!bg-surface/90 !border-border !rounded-2xl overflow-hidden shadow-xl"

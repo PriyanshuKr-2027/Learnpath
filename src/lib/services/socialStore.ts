@@ -124,7 +124,7 @@ const DEFAULT_GROUPS: StudyGroup[] = [
     topic: "SQL",
     description: "Complex window functions, CTEs, indexing, query optimization, and OLAP star schemas.",
     icon: "🗄️",
-    bannerColor: "from-purple-600/20 via-indigo-600/10 to-transparent",
+    bannerColor: "from-teal-600/20 via-cyan-600/10 to-transparent",
     membersCount: 56,
     activeNowCount: 19,
     solvedDoubtsCount: 124,
