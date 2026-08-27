@@ -416,24 +416,28 @@ export const mockStore = {
     return null;
   },
 
-  getNote(levelId: string): string {
-    if (typeof window === "undefined") {
-      if (levelId === "lvl-1") return `# SQL Window Functions & Analytics Notes\n\n### Key Concepts Mastered:\n1. **ROW_NUMBER() vs RANK() vs DENSE_RANK()**:\n   - ROW_NUMBER assigns sequential integers without ties.\n   - DENSE_RANK does not skip numbers after ties (1, 2, 2, 3).\n\n2. **Moving 7-Day Running Averages**:\n\`\`\`sql\nSELECT \n  transaction_date,\n  daily_revenue,\n  AVG(daily_revenue) OVER (\n    ORDER BY transaction_date \n    ROWS BETWEEN 6 PRECEDING AND CURRENT ROW\n  ) AS running_7d_avg\nFROM sales_records;\n\`\`\``;
-      if (levelId === "lvl-2") return `# Relational Data Modeling & Star Schema\n\n### Core Architecture:\n- **Fact Tables**: Contain numeric business metrics (order_amount, discount_rate, quantity) and foreign keys to dimension tables.\n- **Dimension Tables**: Contain contextual business attributes (DimCustomer, DimProduct, DimDate).\n- **Star vs Snowflake**: Star schema minimizes join overhead for columnar OLAP databases like Power BI VertiPaq.`;
-      return "";
-    }
+  getAllNotes(): Record<string, string> {
+    const defaults: Record<string, string> = {
+      "lvl-1": `# SQL Window Functions & Analytics Notes\n\n### Key Concepts Mastered:\n1. **ROW_NUMBER() vs RANK() vs DENSE_RANK()**:\n   - ROW_NUMBER assigns sequential integers without ties.\n   - DENSE_RANK does not skip numbers after ties (1, 2, 2, 3).\n\n2. **Moving 7-Day Running Averages**:\n\`\`\`sql\nSELECT \n  transaction_date,\n  daily_revenue,\n  AVG(daily_revenue) OVER (\n    ORDER BY transaction_date \n    ROWS BETWEEN 6 PRECEDING AND CURRENT ROW\n  ) AS running_7d_avg\nFROM sales_records;\n\`\`\``,
+      "lvl-2": `# Relational Data Modeling & Star Schema\n\n### Core Architecture:\n- **Fact Tables**: Contain numeric business metrics (order_amount, discount_rate, quantity) and foreign keys to dimension tables.\n- **Dimension Tables**: Contain contextual business attributes (DimCustomer, DimProduct, DimDate).\n- **Star vs Snowflake**: Star schema minimizes join overhead for columnar OLAP databases like Power BI VertiPaq.`,
+    };
+
+    if (typeof window === "undefined") return defaults;
+
     try {
       const stored = localStorage.getItem(NOTES_KEY);
       if (stored) {
-        const notesMap = JSON.parse(stored);
-        if (notesMap[levelId]) return notesMap[levelId];
+        const parsed = JSON.parse(stored);
+        return { ...defaults, ...parsed };
       }
     } catch {}
 
-    if (levelId === "lvl-1") return `# SQL Window Functions & Analytics Notes\n\n### Key Concepts Mastered:\n1. **ROW_NUMBER() vs RANK() vs DENSE_RANK()**:\n   - ROW_NUMBER assigns sequential integers without ties.\n   - DENSE_RANK does not skip numbers after ties (1, 2, 2, 3).\n\n2. **Moving 7-Day Running Averages**:\n\`\`\`sql\nSELECT \n  transaction_date,\n  daily_revenue,\n  AVG(daily_revenue) OVER (\n    ORDER BY transaction_date \n    ROWS BETWEEN 6 PRECEDING AND CURRENT ROW\n  ) AS running_7d_avg\nFROM sales_records;\n\`\`\``;
-    if (levelId === "lvl-2") return `# Relational Data Modeling & Star Schema\n\n### Core Architecture:\n- **Fact Tables**: Contain numeric business metrics (order_amount, discount_rate, quantity) and foreign keys to dimension tables.\n- **Dimension Tables**: Contain contextual business attributes (DimCustomer, DimProduct, DimDate).\n- **Star vs Snowflake**: Star schema minimizes join overhead for columnar OLAP databases like Power BI VertiPaq.`;
+    return defaults;
+  },
 
-    return "";
+  getNote(levelId: string): string {
+    const all = this.getAllNotes();
+    return all[levelId] || "";
   },
 
   saveNote(levelId: string, content: string) {
@@ -443,6 +447,7 @@ export const mockStore = {
       const notesMap = stored ? JSON.parse(stored) : {};
       notesMap[levelId] = content;
       localStorage.setItem(NOTES_KEY, JSON.stringify(notesMap));
+      window.dispatchEvent(new CustomEvent("learnpath_notes_updated", { detail: { levelId, content } }));
     } catch {}
   },
 };

@@ -4,29 +4,19 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  Target,
-  Brain,
-  Sparkle,
   CheckCircle,
   XCircle,
-  Crown,
   Trophy,
   ArrowRight,
   ArrowsClockwise,
-  Gauge,
   Lightning,
   WarningCircle,
-  ArrowLeft,
-  Question,
-  Cards,
 } from "@phosphor-icons/react";
 import { CATAttempt, CATQuestion, LearningPath, LevelNode } from "@/types";
 import { mockStore } from "@/lib/services/mockStore";
 import { getOrCreateCuratedResource } from "@/lib/data/curatedCorpus";
 import {
-  calculateProbabilityOfSuccess,
   updateLatentAbility,
-  thetaToProficiencyDescription,
   selectNextCalibratedQuestion,
   DEFAULT_INITIAL_THETA,
 } from "@/lib/algorithms/raschIRT";
@@ -95,10 +85,6 @@ export default function CATAssessmentPage() {
       </div>
     );
   }
-
-  const currentProbability = currentQuestion
-    ? calculateProbabilityOfSuccess(currentTheta, currentQuestion.calibratedDifficulty)
-    : 0.5;
 
   const handleSubmitAnswer = () => {
     if (selectedOption === null || !currentQuestion || isAnswerSubmitted) return;
@@ -183,81 +169,6 @@ export default function CATAssessmentPage() {
 
   return (
     <div className="flex flex-col gap-6 w-full max-w-5xl mx-auto pb-16 text-text-primary">
-      {/* Top Navigation Bar */}
-      <div className="flex items-center justify-between p-4 rounded-2xl border border-border bg-surface shadow-xl">
-        <Link
-          href="/roadmap"
-          className="p-2 rounded-xl bg-paper hover:bg-border border border-border text-text-secondary hover:text-text-primary flex items-center gap-1.5 text-xs font-semibold transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Exit to Level Map</span>
-        </Link>
-
-        <div className="flex items-center gap-2">
-          <span className="px-2.5 py-1 rounded-lg text-xs font-black bg-warning/15 text-warning border border-warning/30 font-mono flex items-center gap-1">
-            <Crown className="w-3.5 h-3.5" weight="fill" />
-            1-PL RASCH IRT CHECKPOINT
-          </span>
-          <span className="text-xs font-bold text-text-primary hidden sm:inline">
-            {level?.title || skillParam}
-          </span>
-        </div>
-
-        <div className="text-xs text-text-secondary font-mono">
-          Theta: <strong className="text-focus">{currentTheta.toFixed(2)}</strong>
-        </div>
-      </div>
-
-      {/* Latent Ability HUD Gauge Card */}
-      <div className="p-6 sm:p-7 rounded-3xl border border-border bg-surface shadow-2xl flex flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-focus/15 border border-focus/30 text-focus flex items-center justify-center">
-              <Brain className="w-5 h-5" weight="fill" />
-            </div>
-            <div>
-              <span className="text-xs font-bold text-text-secondary block">
-                Estimated Latent Ability Metric (&theta;)
-              </span>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-2xl font-black font-mono text-text-primary">
-                  {currentTheta.toFixed(2)}
-                </span>
-                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-paper border border-border text-text-secondary">
-                  {thetaToProficiencyDescription(currentTheta).label}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-text-secondary font-mono">
-              Progress: <strong className="text-text-primary">{correctCount}/{answeredQuestionIds.length} Correct</strong>
-            </span>
-            <span className="text-xs text-text-secondary">
-              Question {Math.min(TOTAL_QUESTIONS_IN_TEST, answeredQuestionIds.length + 1)} of {TOTAL_QUESTIONS_IN_TEST}
-            </span>
-          </div>
-        </div>
-
-        {/* Dynamic Ability Meter Gradient Track */}
-        <div className="relative w-full h-4 bg-paper rounded-full overflow-hidden p-0.5 border border-border">
-          <div
-            style={{ width: `${Math.round(currentTheta * 100)}%` }}
-            className="h-full bg-gradient-to-r from-alert via-warning to-signal rounded-full transition-all duration-700 shadow-md"
-          />
-        </div>
-
-        {/* Formula Math Transparency Pill */}
-        <div className="flex flex-wrap items-center justify-between text-[11px] text-text-secondary pt-1">
-          <span className="font-mono">
-            Rasch 1-PL: P(correct | &theta;={currentTheta.toFixed(2)}, D={currentQuestion?.calibratedDifficulty.toFixed(2)}) = <strong>{(currentProbability * 100).toFixed(0)}%</strong>
-          </span>
-          <span className="font-mono text-text-secondary">
-            Current Tier: <strong className="text-text-primary">Tier {currentQuestion?.difficultyTier} ({currentQuestion?.topic})</strong>
-          </span>
-        </div>
-      </div>
 
       {/* Main Question Arena */}
       {!isCompleted && currentQuestion && (
