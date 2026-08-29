@@ -145,16 +145,13 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-paper flex items-center justify-center p-4 relative font-sans text-text-primary selection:bg-focus/30 selection:text-focus">
-      {/* Ambient glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-focus/10 rounded-full blur-3xl pointer-events-none" />
-
-      <div className="max-w-md w-full bg-surface border border-border backdrop-blur-2xl rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5 relative z-10">
+      <div className="max-w-md w-full bg-surface border border-border rounded-2xl p-6 sm:p-8 shadow-xl space-y-5 relative z-10">
         {/* Header */}
         <div className="text-center space-y-1.5">
-          <div className="w-12 h-12 rounded-2xl bg-focus mx-auto flex items-center justify-center shadow-lg shadow-focus/25 text-white">
-            <Sparkles className="w-6 h-6" />
+          <div className="w-11 h-11 rounded-xl bg-focus mx-auto flex items-center justify-center shadow-sm text-white">
+            <Sparkles className="w-5 h-5" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-text-primary">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-text-primary">
             {isSignUp ? "Create your LearnPath Account" : "Welcome back to LearnPath AI"}
           </h1>
           <p className="text-xs text-text-secondary">

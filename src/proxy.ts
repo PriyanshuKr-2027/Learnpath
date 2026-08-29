@@ -5,6 +5,20 @@ export async function proxy(request: NextRequest) {
   const { supabaseResponse, user, role } = await updateSession(request);
   const pathname = request.nextUrl.pathname;
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const isMockMode =
+    !supabaseUrl ||
+    !supabaseKey ||
+    supabaseUrl.includes("your-project-id") ||
+    supabaseUrl.includes("deblsqilknaxulxqbmmm") ||
+    supabaseKey.includes("your-anon-public-key");
+
+  // In mock/demo mode, allow all authenticated routes (dashboard, notes, etc.)
+  if (isMockMode) {
+    return supabaseResponse;
+  }
+
   // Paths that require authentication
   const isProtectedPath = 
     pathname.startsWith("/dashboard") ||
@@ -15,7 +29,12 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith("/problems") ||
     pathname.startsWith("/social") ||
     pathname.startsWith("/notes") ||
-    pathname.startsWith("/settings");
+    pathname.startsWith("/settings") ||
+    pathname.startsWith("/profile") ||
+    pathname.startsWith("/roadmap") ||
+    pathname.startsWith("/coach") ||
+    pathname.startsWith("/assessments") ||
+    pathname.startsWith("/learn");
 
   // Auth routing logic
   if (!user && isProtectedPath) {

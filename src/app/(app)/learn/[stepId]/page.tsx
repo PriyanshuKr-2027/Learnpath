@@ -16,14 +16,12 @@ import {
   ArrowRight,
   ArrowsClockwise,
   WarningCircle,
-  Cards,
 } from "@phosphor-icons/react";
 import { LevelNode, LearningPath } from "@/types";
 import { mockStore } from "@/lib/services/mockStore";
 import { VideoPlayerWithControls } from "@/components/canvas/VideoPlayerWithControls";
 import { MarkdownNotesEditor } from "@/components/canvas/MarkdownNotesEditor";
 import { SocraticCopilotSidecar } from "@/components/canvas/SocraticCopilotSidecar";
-import { FlashcardDeck } from "@/components/canvas/FlashcardDeck";
 
 export default function LearningCanvasPage() {
   const params = useParams();
@@ -152,18 +150,8 @@ export default function LearningCanvasPage() {
 
       {/* Main Split-Screen Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* LEFT COLUMN (7 Cols): Flashcards + Video & Documentation */}
+        {/* LEFT COLUMN (7 Cols): Video & Documentation */}
         <div className="lg:col-span-7 flex flex-col gap-4">
-          {level.flashcards && level.flashcards.length > 0 && (
-            <FlashcardDeck
-              flashcards={level.flashcards}
-              title={
-                isRemediation
-                  ? `Level ${level.displayLevel} Remedial Flashcards`
-                  : `${level.skillName} High-Yield Flashcards`
-              }
-            />
-          )}
 
           <VideoPlayerWithControls
             video={level.video}

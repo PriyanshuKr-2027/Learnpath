@@ -18,7 +18,6 @@ import {
   Sparkles,
   Shield,
   Database,
-  PlusCircle,
   Users,
   Brain,
   Video,
@@ -31,8 +30,7 @@ const AI_RECOMMENDER_NAV = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Level Map (DAG)", href: "/roadmap", icon: GitFork },
   { label: "CAT Assessments", href: "/assessments/cat", icon: Target },
-  { label: "Goal & Resume Wizard", href: "/onboarding", icon: PlusCircle },
-  { label: "XAI Architecture Hub", href: "/coach", icon: Brain },
+  { label: "Socratic Copilot", href: "/coach", icon: Brain },
 ];
 
 const COLLABORATION_NAV = [
@@ -182,12 +180,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         "flex items-center rounded-xl text-xs sm:text-sm transition-all duration-200 group relative",
                         isCollapsed ? "justify-center p-3" : "gap-3 px-3 py-2",
                         isActive
-                          ? "bg-surface text-text-primary font-bold border border-border shadow-md"
-                          : "text-text-secondary hover:text-text-primary hover:bg-surface"
+                        ? "bg-focus text-white font-bold shadow-lg shadow-focus/25"
+                        : "text-text-secondary hover:text-text-primary hover:bg-surface"
                       )}
                     >
                       <item.icon
-                        className={cn("w-5 h-5 shrink-0 transition-transform group-hover:scale-110", isActive ? "text-focus" : "text-text-secondary group-hover:text-text-primary")}
+                        className={cn("w-5 h-5 shrink-0 transition-transform group-hover:scale-110", isActive ? "text-white" : "text-text-secondary group-hover:text-focus")}
                       />
                       {!isCollapsed && <span>{item.label}</span>}
 
@@ -288,14 +286,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
             <div className="w-px h-6 bg-border"></div>
 
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-focus/15 border border-focus/30 flex items-center justify-center">
+            <Link
+              href="/profile"
+              className="flex items-center gap-2.5 px-2.5 py-1 rounded-xl bg-surface hover:bg-surface/80 border border-border hover:border-focus/50 transition-all cursor-pointer group"
+              title="Open Profile & Account Details"
+            >
+              <div className="w-8 h-8 rounded-full bg-focus/15 border border-focus/30 flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
                 <span className="text-xs font-bold text-focus">{getInitials(profile?.name || "Alex Dev")}</span>
               </div>
-              <span className="text-sm font-medium text-text-primary hidden md:inline-block">
+              <span className="text-sm font-medium text-text-primary hidden md:inline-block group-hover:text-focus transition-colors">
                 {profile?.name || "Alex Dev"}
               </span>
-            </div>
+            </Link>
           </div>
         </header>
 

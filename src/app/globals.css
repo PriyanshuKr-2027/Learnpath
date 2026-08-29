@@ -1,47 +1,73 @@
 @import "tailwindcss";
 
 @theme {
-  --color-paper: #F7F6F2;
-  --color-sidebar: #F4F0EA;
+  /* Light Mode Base Tokens */
+  --color-paper: #F8F9FA;
+  --color-sidebar: #F1F3F5;
   --color-surface: #FFFFFF;
-  --color-border: #E7E4DC;
+  --color-border: #E2E5E9;
   
-  --color-text-primary: #14171C;
-  --color-text-secondary: #6B6F76;
+  --color-text-primary: #111827;
+  --color-text-secondary: #6B7280;
 
-  --color-focus: #6D5BF0;
-  --color-signal: #3DDC84;
-  --color-warning: #F5A623;
-  --color-alert: #E2533D;
+  /* Technical Educational Brand Accents (Non-Purple) */
+  --color-focus: #0D9488;         /* Deep Technical Teal */
+  --color-focus-hover: #0F766E;   /* Darker Teal on Hover */
+  --color-signal: #10B981;        /* Precision Emerald */
+  --color-warning: #F59E0B;       /* Amber */
+  --color-alert: #EF4444;         /* Coral Red */
 
-  --color-lavender-bg: #EDE9FE;
-  --color-lavender-text: #6D5BF0;
-  --color-mint-bg: #DCFCE7;
-  --color-mint-text: #16A34A;
-  --color-peach-bg: #FFE8D6;
-  --color-peach-text: #C2571B;
-  --color-sky-bg: #DBEAFE;
-  --color-sky-text: #2563EB;
-  --color-rose-bg: #FCE7F3;
-  --color-rose-text: #DB2777;
-  --color-butter-bg: #FEF9C3;
+  /* Neutral Category Tints */
+  --color-lavender-bg: #F0FDFA;
+  --color-lavender-text: #0D9488;
+  --color-mint-bg: #ECFDF5;
+  --color-mint-text: #059669;
+  --color-peach-bg: #FFFBEB;
+  --color-peach-text: #B45309;
+  --color-sky-bg: #F0F9FF;
+  --color-sky-text: #0284C7;
+  --color-rose-bg: #FEF2F2;
+  --color-rose-text: #DC2626;
+  --color-butter-bg: #FEFCE8;
   --color-butter-text: #A16207;
-  --color-rest-bg: #EDEDED;
-  --color-rest-text: #6B6F76;
+  --color-rest-bg: #F3F4F6;
+  --color-rest-text: #6B7280;
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 @layer base {
   .dark {
-    --color-paper: #0A0A0B;
-    --color-sidebar: #14171C;
-    --color-surface: #1C1F26;
-    --color-border: #2A2D35;
+    /* Dark Mode Deep Slate & Charcoal Foundations */
+    --color-paper: #090B0E;
+    --color-sidebar: #0E1116;
+    --color-surface: #13171F;
+    --color-border: #1F242F;
     
-    --color-text-primary: #EDEDED;
-    --color-text-secondary: #A0A4AB;
+    --color-text-primary: #F1F3F6;
+    --color-text-secondary: #8B949E;
+
+    --color-focus: #14B8A6;
+    --color-focus-hover: #0D9488;
+    --color-signal: #34D399;
+    --color-warning: #FBBF24;
+    --color-alert: #F87171;
+
+    --color-lavender-bg: #112225;
+    --color-lavender-text: #2DD4BF;
+    --color-mint-bg: #06281E;
+    --color-mint-text: #34D399;
+    --color-peach-bg: #2B1D0C;
+    --color-peach-text: #FBBF24;
+    --color-sky-bg: #0C2133;
+    --color-sky-text: #38BDF8;
+    --color-rose-bg: #2B1214;
+    --color-rose-text: #F87171;
+    --color-butter-bg: #2B260E;
+    --color-butter-text: #FDE047;
+    --color-rest-bg: #191D26;
+    --color-rest-text: #8B949E;
   }
 }
 
@@ -55,10 +81,17 @@
   }
 }
 
+/* Subtle scrollbars and utilities */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Focus and selection refinements */
+::selection {
+  background-color: rgba(20, 184, 166, 0.25);
+  color: inherit;
 }
