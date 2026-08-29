@@ -1,66 +1,103 @@
 // Centralized AI API Key Manager & Key Rotation Engine
 // Handles multiple Groq and Gemini API keys transparently on the backend.
-// Users / Judges never have to input keys in the UI.
+// Uses Upstash Redis for atomic round-robin rotation across server restarts.
 
-const DEFAULT_FALLBACK_GROQ_KEYS = [
-  process.env.GROQ_API_KEY,
-  process.env.GROQ_API_KEY_2,
-  process.env.GROQ_API_KEY_3,
-].filter(Boolean) as string[];
+import { getNextIndexAtomic } from "@/lib/redis";
 
-const DEFAULT_FALLBACK_GEMINI_KEYS = [
-  process.env.GEMINI_API_KEY,
-  process.env.GEMINI_API_KEY_2,
-].filter(Boolean) as string[];
+const GROQ_ROTATION_KEY = "learnpath:groq_key_idx";
+const GEMINI_ROTATION_KEY = "learnpath:gemini_key_idx";
 
-let currentGroqIndex = 0;
-let currentGeminiIndex = 0;
+function buildGroqPool(customKey?: string): string[] {
+  if (customKey?.trim().startsWith("gsk_")) return [customKey.trim()];
 
-/**
- * Returns an active Groq API Key with automatic round-robin rotation.
- */
-export function getNextGroqApiKey(customKey?: string): string {
-  if (customKey && customKey.trim().startsWith("gsk_")) {
-    return customKey.trim();
-  }
-
-  // Parse comma-separated list if provided in env
+  // Comma-separated env pool takes priority
   const envKeys = (process.env.GROQ_API_KEYS || "")
     .split(",")
     .map((k) => k.trim())
     .filter((k) => k.startsWith("gsk_"));
 
-  const keyPool = envKeys.length > 0 ? envKeys : DEFAULT_FALLBACK_GROQ_KEYS;
+  if (envKeys.length > 0) return envKeys;
 
-  if (keyPool.length === 0) {
-    return process.env.GROQ_API_KEY || "";
-  }
-
-  const selectedKey = keyPool[currentGroqIndex % keyPool.length];
-  currentGroqIndex = (currentGroqIndex + 1) % keyPool.length;
-  return selectedKey;
+  return [
+    process.env.GROQ_API_KEY,
+    process.env.GROQ_API_KEY_2,
+    process.env.GROQ_API_KEY_3,
+  ].filter(Boolean) as string[];
 }
 
-/**
- * Returns an active Gemini API Key with automatic round-robin rotation.
- */
-export function getNextGeminiApiKey(customKey?: string): string {
-  if (customKey && customKey.trim().length > 10) {
-    return customKey.trim();
-  }
+function buildGeminiPool(customKey?: string): string[] {
+  if (customKey?.trim() && customKey.trim().length > 10) return [customKey.trim()];
 
   const envKeys = (process.env.GEMINI_API_KEYS || "")
     .split(",")
     .map((k) => k.trim())
     .filter((k) => k.length > 10);
 
-  const keyPool = envKeys.length > 0 ? envKeys : DEFAULT_FALLBACK_GEMINI_KEYS;
+  if (envKeys.length > 0) return envKeys;
 
-  if (keyPool.length === 0) {
-    return process.env.GEMINI_API_KEY || "";
+  return [
+    process.env.GEMINI_API_KEY,
+    process.env.GEMINI_API_KEY_2,
+  ].filter(Boolean) as string[];
+}
+
+// Module-level fallback index (used when Redis is unavailable)
+let _groqFallbackIdx = 0;
+let _geminiFallbackIdx = 0;
+
+/**
+ * Returns an active Groq API Key using Redis atomic round-robin rotation.
+ * Falls back to module-level counter if Redis is unavailable.
+ */
+export async function getNextGroqApiKey(customKey?: string): Promise<string> {
+  const pool = buildGroqPool(customKey);
+  if (pool.length === 0) return process.env.GROQ_API_KEY || "";
+  if (pool.length === 1) return pool[0];
+
+  try {
+    const idx = await getNextIndexAtomic(GROQ_ROTATION_KEY, pool.length);
+    return pool[idx];
+  } catch {
+    const idx = _groqFallbackIdx % pool.length;
+    _groqFallbackIdx++;
+    return pool[idx];
   }
+}
 
-  const selectedKey = keyPool[currentGeminiIndex % keyPool.length];
-  currentGeminiIndex = (currentGeminiIndex + 1) % keyPool.length;
-  return selectedKey;
+/**
+ * Returns an active Gemini API Key using Redis atomic round-robin rotation.
+ */
+export async function getNextGeminiApiKey(customKey?: string): Promise<string> {
+  const pool = buildGeminiPool(customKey);
+  if (pool.length === 0) return process.env.GEMINI_API_KEY || "";
+  if (pool.length === 1) return pool[0];
+
+  try {
+    const idx = await getNextIndexAtomic(GEMINI_ROTATION_KEY, pool.length);
+    return pool[idx];
+  } catch {
+    const idx = _geminiFallbackIdx % pool.length;
+    _geminiFallbackIdx++;
+    return pool[idx];
+  }
+}
+
+// Synchronous variants for backward-compatibility in non-async contexts
+let _syncGroqIdx = 0;
+let _syncGeminiIdx = 0;
+
+export function getNextGroqApiKeySync(customKey?: string): string {
+  const pool = buildGroqPool(customKey);
+  if (pool.length === 0) return process.env.GROQ_API_KEY || "";
+  const key = pool[_syncGroqIdx % pool.length];
+  _syncGroqIdx++;
+  return key;
+}
+
+export function getNextGeminiApiKeySync(customKey?: string): string {
+  const pool = buildGeminiPool(customKey);
+  if (pool.length === 0) return process.env.GEMINI_API_KEY || "";
+  const key = pool[_syncGeminiIdx % pool.length];
+  _syncGeminiIdx++;
+  return key;
 }

@@ -5,15 +5,7 @@ export async function createClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (
-    !url ||
-    !key ||
-    url.includes("deblsqilknaxulxqbmmm") ||
-    url.includes("your-project-id") ||
-    key.includes("your-anon-public-key")
-  ) {
-    return null;
-  }
+  if (!url || !key) return null;
 
   try {
     const cookieStore = await cookies();
@@ -29,10 +21,30 @@ export async function createClient() {
               cookieStore.set(name, value, options)
             );
           } catch {
-            // The `setAll` method was called from a Server Component.
+            // Called from a Server Component — safe to ignore
           }
         },
       },
+    });
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Admin/service-role client for server-only mutations (bypasses RLS).
+ * Never expose this to the client.
+ */
+export async function createAdminClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !serviceKey) return null;
+
+  try {
+    const { createClient } = await import("@supabase/supabase-js");
+    return createClient(url, serviceKey, {
+      auth: { persistSession: false },
     });
   } catch {
     return null;

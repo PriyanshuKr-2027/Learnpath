@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SkillEntry, ProjectEntry } from "@/types";
-import { getNextGroqApiKey } from "@/lib/services/aiKeys";
+import { getNextGeminiApiKey, getNextGroqApiKey } from "@/lib/services/aiKeys";
+import { geminiExtractJSON } from "@/lib/services/gemini";
+
+interface ResumeParseResult {
+  skills: Array<{ name: string; proficiency: number; evidence: string }>;
+  certifications: string[];
+  projects: Array<{ title: string; techStack: string[]; description: string }>;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,12 +18,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Resume text content is required" }, { status: 400 });
     }
 
-    const groqKey = getNextGroqApiKey(apiKey);
+    const truncatedText = resumeText.slice(0, 6000); // Gemini handles more tokens than Groq
 
-    // 1. If Groq API key is available, run LLM entity extraction
-    if (groqKey) {
-      try {
-        const systemPrompt = `You are a technical resume parser.
+    const systemPrompt = `You are a technical resume parser.
 Extract technical skills, certifications, and projects from the provided resume text.
 For each skill, estimate an initial baseline proficiency (0-100%) based on years of experience, depth of projects, and stated familiarity.
 
@@ -27,6 +31,32 @@ Return STRICT JSON matching:
   "projects": Array<{ "title": string, "techStack": string[], "description": string }>
 }`;
 
+    const userPrompt = `Resume text (${fileName}):\n${truncatedText}`;
+
+    // ── 1. Try Gemini (primary — supports 6k token resume, JSON mode) ────────
+    const geminiKey = await getNextGeminiApiKey(apiKey);
+    if (geminiKey) {
+      const result = await geminiExtractJSON<ResumeParseResult>(systemPrompt, userPrompt, geminiKey);
+      if (result?.skills?.length) {
+        const formattedSkills: SkillEntry[] = result.skills.map((s) => ({
+          name: s.name,
+          source: "resume" as const,
+          currentProficiency: Math.min(100, Math.max(10, Number(s.proficiency) || 50)),
+          evidence: s.evidence || `Extracted from ${fileName}`,
+        }));
+        return NextResponse.json({
+          skills: formattedSkills,
+          certifications: result.certifications || [],
+          projects: result.projects || [],
+          provider: "gemini",
+        });
+      }
+    }
+
+    // ── 2. Try Groq (secondary — 4k token cap) ───────────────────────────────
+    const groqKey = await getNextGroqApiKey(apiKey);
+    if (groqKey) {
+      try {
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
           method: "POST",
           headers: {
@@ -46,9 +76,9 @@ Return STRICT JSON matching:
 
         if (response.ok) {
           const data = await response.json();
-          const parsed = JSON.parse(data.choices[0].message.content);
+          const parsed = JSON.parse(data.choices[0].message.content) as ResumeParseResult;
 
-          const formattedSkills: SkillEntry[] = (parsed.skills || []).map((s: any) => ({
+          const formattedSkills: SkillEntry[] = (parsed.skills || []).map((s) => ({
             name: s.name,
             source: "resume" as const,
             currentProficiency: Math.min(100, Math.max(10, Number(s.proficiency) || 50)),
@@ -59,14 +89,15 @@ Return STRICT JSON matching:
             skills: formattedSkills,
             certifications: parsed.certifications || [],
             projects: parsed.projects || [],
+            provider: "groq",
           });
         }
       } catch (e) {
-        console.warn("LLM resume parse failed, falling back to heuristic parsing:", e);
+        console.warn("[parse-resume] Groq failed:", e);
       }
     }
 
-    // 2. Deterministic Heuristic Parser Fallback
+    // ── 3. Heuristic keyword scanner fallback ────────────────────────────────
     const textLower = resumeText.toLowerCase();
     const detectedSkills: SkillEntry[] = [];
     const knownSkillsList = [
@@ -81,11 +112,12 @@ Return STRICT JSON matching:
       { name: "Docker", keywords: ["docker", "container", "k8s", "kubernetes"], prof: 40 },
       { name: "Git", keywords: ["git", "github", "version control"], prof: 70 },
       { name: "Statistics", keywords: ["statistics", "probability", "hypothesis testing"], prof: 40 },
+      { name: "AWS", keywords: ["aws", "amazon web services", "s3", "ec2", "lambda"], prof: 45 },
+      { name: "LangChain", keywords: ["langchain", "langgraph", "rag", "vector"], prof: 40 },
     ];
 
     for (const item of knownSkillsList) {
-      const match = item.keywords.some((kw) => textLower.includes(kw));
-      if (match) {
+      if (item.keywords.some((kw) => textLower.includes(kw))) {
         detectedSkills.push({
           name: item.name,
           source: "resume",
@@ -96,29 +128,27 @@ Return STRICT JSON matching:
     }
 
     const detectedCerts: string[] = [];
-    if (textLower.includes("google") || textLower.includes("analytics")) {
-      detectedCerts.push("Google Data Analytics Certificate");
-    }
+    if (textLower.includes("google") && textLower.includes("analytics")) detectedCerts.push("Google Data Analytics Certificate");
+    if (textLower.includes("aws") && textLower.includes("certified")) detectedCerts.push("AWS Certified");
+    if (textLower.includes("azure") && textLower.includes("certified")) detectedCerts.push("Azure Certified");
 
-    const fallbackProjects: ProjectEntry[] = [
-      {
-        title: "Analytical Data Pipeline",
-        techStack: ["Python", "SQL", "Pandas"],
-        description: "Automated aggregation and cleaning of performance metrics.",
-      },
-    ];
+    const fallbackProjects: ProjectEntry[] = [{
+      title: "Analytical Data Pipeline",
+      techStack: ["Python", "SQL", "Pandas"],
+      description: "Automated aggregation and cleaning of performance metrics.",
+    }];
 
     return NextResponse.json({
       skills: detectedSkills.length > 0 ? detectedSkills : [
         { name: "SQL", source: "resume", currentProficiency: 45, evidence: "Identified in resume" },
         { name: "Python", source: "resume", currentProficiency: 55, evidence: "Identified in resume" },
-        { name: "Power BI & DAX", source: "inferred", currentProficiency: 20, evidence: "Target prerequisite" },
       ],
       certifications: detectedCerts,
       projects: fallbackProjects,
+      provider: "heuristic",
     });
   } catch (error: any) {
-    console.error("Error in parse-resume route:", error);
+    console.error("[parse-resume]", error);
     return NextResponse.json({ error: "Failed to parse resume" }, { status: 500 });
   }
 }

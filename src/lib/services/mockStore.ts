@@ -319,7 +319,37 @@ export const DEMO_DATA_ANALYST_PROFILE: LearnerProfile = {
   darkMode: true,
 };
 
-// Client-safe LocalStorage helper
+// ─────────────────────────────────────────────────────────────────────────────
+// Supabase sync helper — fire-and-forget (never blocks the UI)
+// ─────────────────────────────────────────────────────────────────────────────
+async function syncToSupabase(route: string, payload: Record<string, unknown>) {
+  if (typeof window === "undefined") return;
+  try {
+    await fetch(route, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  } catch {
+    // Supabase sync is best-effort — localStorage is the source of truth for UX
+  }
+}
+
+async function loadFromSupabase<T>(route: string): Promise<T | null> {
+  if (typeof window === "undefined") return null;
+  try {
+    const res = await fetch(route);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Client-safe Store with dual localStorage + Supabase persistence
+// ─────────────────────────────────────────────────────────────────────────────
 export const mockStore = {
   getProfile(): LearnerProfile {
     if (typeof window === "undefined") return DEMO_DATA_ANALYST_PROFILE;
@@ -333,6 +363,23 @@ export const mockStore = {
   saveProfile(profile: LearnerProfile) {
     if (typeof window === "undefined") return;
     localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+    // Fire-and-forget cloud sync
+    syncToSupabase("/api/learner/profile", { profile });
+  },
+
+  /** Hydrates profile from Supabase if localStorage is empty */
+  async hydrateProfile(): Promise<LearnerProfile> {
+    if (typeof window === "undefined") return DEMO_DATA_ANALYST_PROFILE;
+    const local = this.getProfile();
+    // If we already have real data locally, use it immediately
+    if (local.email && local.email !== "alex@example.com") return local;
+
+    const remote = await loadFromSupabase<{ profile: LearnerProfile }>("/api/learner/profile");
+    if (remote?.profile) {
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(remote.profile));
+      return remote.profile;
+    }
+    return local;
   },
 
   getLearningPath(): LearningPath {
@@ -351,6 +398,23 @@ export const mockStore = {
   saveLearningPath(path: LearningPath) {
     if (typeof window === "undefined") return;
     localStorage.setItem(PATH_KEY, JSON.stringify(path));
+    // Fire-and-forget cloud sync
+    syncToSupabase("/api/learner/path", { path });
+  },
+
+  /** Hydrates learning path from Supabase if localStorage is empty */
+  async hydrateLearningPath(): Promise<LearningPath> {
+    if (typeof window === "undefined") {
+      return generateLearningPathFromProfile(DEMO_DATA_ANALYST_PROFILE);
+    }
+    const local = this.getLearningPath();
+
+    const remote = await loadFromSupabase<{ path: LearningPath }>("/api/learner/path");
+    if (remote?.path && remote.path.version >= (local.version ?? 0)) {
+      localStorage.setItem(PATH_KEY, JSON.stringify(remote.path));
+      return remote.path;
+    }
+    return local;
   },
 
   updateLevelProgress(
@@ -444,5 +508,28 @@ export const mockStore = {
       notesMap[levelId] = content;
       localStorage.setItem(NOTES_KEY, JSON.stringify(notesMap));
     } catch {}
+    // Fire-and-forget cloud sync
+    syncToSupabase("/api/learner/notes", { levelId, content });
+  },
+
+  /** Hydrates a single note from Supabase if not in localStorage */
+  async hydrateNote(levelId: string): Promise<string> {
+    if (typeof window === "undefined") return this.getNote(levelId);
+    const local = this.getNote(levelId);
+    if (local) return local;
+
+    const remote = await loadFromSupabase<{ content: string }>(`/api/learner/notes?levelId=${encodeURIComponent(levelId)}`);
+    if (remote?.content) {
+      // Cache in localStorage
+      try {
+        const stored = localStorage.getItem(NOTES_KEY);
+        const notesMap = stored ? JSON.parse(stored) : {};
+        notesMap[levelId] = remote.content;
+        localStorage.setItem(NOTES_KEY, JSON.stringify(notesMap));
+      } catch {}
+      return remote.content;
+    }
+    return "";
   },
 };
+

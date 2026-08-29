@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
-import { getNextGroqApiKey } from "@/lib/services/aiKeys";
+import { getNextGroqApiKey, getNextGeminiApiKey } from "@/lib/services/aiKeys";
+import { getGeminiModel } from "@/lib/services/gemini";
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,10 +14,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Resolve API key transparently from rotation pool
-    const apiKey = getNextGroqApiKey(clientApiKey);
-
-    // Build the system instructions based on level context
+    // Build level-aware system prompt
     const levelContext = dayInfo
       ? `The user is studying Level ${dayInfo.id}: "${dayInfo.topic}" (Skill Focus: ${dayInfo.pattern}).`
       : "";
@@ -31,70 +29,95 @@ Pedagogical Rules:
 3. For code implementations, always provide full syntax with language tags (e.g. \`\`\`sql, \`\`\`python, \`\`\`tsx).
 4. Encourage the user and keep explanations punchy and actionable.`;
 
-    const formattedMessages = [
-      { role: "system", content: systemPrompt },
-      ...messages.filter((m: any) => m.role !== "system"),
-    ];
+    // ── 1. Try Groq (primary, streaming) ────────────────────────────────────
+    const groqKey = await getNextGroqApiKey(clientApiKey);
 
-    if (!apiKey) {
-      // Offline fallback generator for zero-config judging
-      const lastUserMsg = messages[messages.length - 1]?.content || "";
-      const fallbackResponse = `Here is the Socratic breakdown for **${dayInfo?.topic || "your learning topic"}**:\n\n1. **Core Mechanism**: Focus on foundational principles and edge-case handling.\n2. **Hands-On Practice**: Implement a minimal reproducible example to test your comprehension.\n\n\`\`\`python\n# Example Implementation\ndef process_data(records):\n    return [r for r in records if r.get('valid')]\n\`\`\`\n\nClick **"Insert to Notes"** to paste this directly into your study scratchpad!`;
+    if (groqKey) {
+      const formattedMessages = [
+        { role: "system", content: systemPrompt },
+        ...messages.filter((m: any) => m.role !== "system"),
+      ];
 
-      return new Response(fallbackResponse, {
-        status: 200,
-        headers: { "Content-Type": "text/plain; charset=utf-8" },
-      });
-    }
-
-    const groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        messages: formattedMessages,
-        temperature: 0.5,
-        max_tokens: 1024,
-        stream: true,
-      }),
-    });
-
-    if (!groqResponse.ok) {
-      const errText = await groqResponse.text();
-      console.warn("Groq API error, falling back to local reasoning:", errText);
-
-      const fallbackStream = new ReadableStream({
-        start(controller) {
-          controller.enqueue(
-            new TextEncoder().encode(
-              `Here is the architectural overview for **${dayInfo?.topic || "this topic"}**:\n\n1. Focus on understanding the primary relational and data flow patterns.\n2. You can seek relevant lecture moments at [Jump to 04:30] and [Jump to 11:15].\n\n\`\`\`sql\n-- Core syntax pattern\nSELECT category, SUM(amount) AS total_revenue\nFROM transactions\nGROUP BY category;\n\`\`\`\n\nClick **"Insert to Notes"** to copy this snippet into your study canvas.`
-            )
-          );
-          controller.close();
-        },
-      });
-
-      return new Response(fallbackStream, {
+      const groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
         headers: {
-          "Content-Type": "text/event-stream",
-          "Cache-Control": "no-cache",
-          Connection: "keep-alive",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${groqKey}`,
         },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: formattedMessages,
+          temperature: 0.5,
+          max_tokens: 1024,
+          stream: true,
+        }),
       });
+
+      if (groqResponse.ok) {
+        return new Response(groqResponse.body, {
+          headers: {
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache",
+            Connection: "keep-alive",
+          },
+        });
+      }
+
+      console.warn("[chat] Groq failed, falling back to Gemini.");
     }
 
-    return new Response(groqResponse.body, {
-      headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      },
+    // ── 2. Gemini fallback (non-streaming, wrapped as SSE) ──────────────────
+    const geminiKey = await getNextGeminiApiKey(clientApiKey);
+    if (geminiKey) {
+      try {
+        const model = await getGeminiModel("gemini-1.5-flash", geminiKey);
+        if (model) {
+          const userMessages = messages.filter((m: any) => m.role !== "system");
+          const history = userMessages.slice(0, -1).map((m: any) => ({
+            role: m.role === "assistant" ? "model" : "user",
+            parts: [{ text: m.content }],
+          }));
+          const lastMsg = userMessages[userMessages.length - 1];
+
+          const chat = model.startChat({ systemInstruction: systemPrompt, history });
+          const result = await chat.sendMessage(lastMsg?.content || "Hello");
+          const responseText = result.response.text();
+
+          // Wrap as SSE-compatible stream
+          const stream = new ReadableStream({
+            start(controller) {
+              // Emit as a single data chunk mimicking Groq SSE format
+              const sseData = `data: ${JSON.stringify({
+                choices: [{ delta: { content: responseText }, finish_reason: null }],
+              })}\n\n`;
+              controller.enqueue(new TextEncoder().encode(sseData));
+              controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"));
+              controller.close();
+            },
+          });
+
+          return new Response(stream, {
+            headers: {
+              "Content-Type": "text/event-stream",
+              "Cache-Control": "no-cache",
+              Connection: "keep-alive",
+            },
+          });
+        }
+      } catch (geminiErr) {
+        console.warn("[chat] Gemini fallback also failed:", geminiErr);
+      }
+    }
+
+    // ── 3. Static offline fallback ──────────────────────────────────────────
+    const fallbackText = `Here is the Socratic breakdown for **${dayInfo?.topic || "your learning topic"}**:\n\n1. **Core Mechanism**: Focus on foundational principles and edge-case handling.\n2. **Hands-On Practice**: Implement a minimal reproducible example to test your comprehension.\n\n\`\`\`python\n# Example Implementation\ndef process_data(records):\n    return [r for r in records if r.get('valid')]\n\`\`\`\n\nClick **"Insert to Notes"** to paste this directly into your study scratchpad!`;
+
+    return new Response(fallbackText, {
+      status: 200,
+      headers: { "Content-Type": "text/plain; charset=utf-8" },
     });
   } catch (error: any) {
-    console.error("Chat API error:", error);
+    console.error("[chat] API error:", error);
     return new Response(JSON.stringify({ error: error.message || "Internal server error" }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
