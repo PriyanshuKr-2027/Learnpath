@@ -104,7 +104,7 @@ export function MarkdownNotesEditor({
               onClick={() => setActiveTab("write")}
               className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === "write"
-                  ? "bg-emerald-500 text-zinc-950 shadow-sm"
+                  ? "bg-focus text-zinc-950 shadow-sm"
                   : "text-zinc-400 hover:text-zinc-200"
               }`}
             >
@@ -116,7 +116,7 @@ export function MarkdownNotesEditor({
               onClick={() => setActiveTab("preview")}
               className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === "preview"
-                  ? "bg-emerald-500 text-zinc-950 shadow-sm"
+                  ? "bg-focus text-zinc-950 shadow-sm"
                   : "text-zinc-400 hover:text-zinc-200"
               }`}
             >
@@ -175,7 +175,7 @@ export function MarkdownNotesEditor({
         {/* Save Status Indicator */}
         <div className="flex items-center gap-1.5 text-xs">
           {isSaved ? (
-            <span className="text-emerald-400 flex items-center gap-1 text-[11px] font-medium">
+            <span className="text-focus flex items-center gap-1 text-[11px] font-medium">
               <CheckCircle className="w-3.5 h-3.5" weight="fill" />
               Auto-saved
             </span>

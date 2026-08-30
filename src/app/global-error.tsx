@@ -33,7 +33,7 @@ export default function RootGlobalError({
             <button
               type="button"
               onClick={() => reset()}
-              className="flex-1 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-bold text-xs transition-colors cursor-pointer"
+              className="flex-1 py-3 rounded-xl bg-focus hover:bg-focus/90 text-zinc-950 font-bold text-xs transition-colors cursor-pointer"
             >
               Recover Session
             </button>

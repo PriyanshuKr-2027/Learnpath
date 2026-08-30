@@ -80,7 +80,7 @@ export function SocraticCopilotSidecar({
             key={`seek-${match.index}-${totalSecs}`}
             type="button"
             onClick={() => onSeekRequested?.(totalSecs)}
-            className="inline-flex items-center gap-1 px-2 py-0.5 my-0.5 mx-1 rounded-md bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-mono font-bold transition-colors cursor-pointer shrink-0"
+            className="inline-flex items-center gap-1 px-2 py-0.5 my-0.5 mx-1 rounded-md bg-focus/20 hover:bg-focus/30 text-emerald-300 border border-focus/40 text-xs font-mono font-bold transition-colors cursor-pointer shrink-0"
           >
             <FastForward className="w-3 h-3" />
             <span>Jump to {match[2]}:{match[3]}</span>
@@ -169,8 +169,8 @@ export function SocraticCopilotSidecar({
     return (
       <div className="flex flex-col gap-4 w-full text-zinc-200">
         {/* Title Header Card */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-950/70 via-zinc-900 to-zinc-950 border border-emerald-500/30 shadow-lg">
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold mb-2">
+        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-950/70 via-zinc-900 to-zinc-950 border border-focus/30 shadow-lg">
+          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-focus/10 text-focus border border-focus/20 text-xs font-bold mb-2">
             <Sparkle className="w-3.5 h-3.5" weight="fill" />
             <span>AI Curriculum Rationale</span>
           </div>
@@ -185,7 +185,7 @@ export function SocraticCopilotSidecar({
         {/* 3 Pillars Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="p-3.5 rounded-2xl bg-zinc-900/90 border border-zinc-800 flex flex-col gap-1.5 shadow-sm">
-            <span className="text-xs font-bold text-emerald-400">1. Skill Delta Engine</span>
+            <span className="text-xs font-bold text-focus">1. Skill Delta Engine</span>
             <span className="text-[11px] font-mono font-bold text-zinc-100 bg-zinc-950 px-2 py-1 rounded-lg border border-zinc-800/80 w-fit">
                 = max(0, Target - Current)
             </span>
@@ -195,7 +195,7 @@ export function SocraticCopilotSidecar({
           </div>
 
           <div className="p-3.5 rounded-2xl bg-zinc-900/90 border border-zinc-800 flex flex-col gap-1.5 shadow-sm">
-            <span className="text-xs font-bold text-emerald-400">2. Kahn&apos;s Topological DAG</span>
+            <span className="text-xs font-bold text-focus">2. Kahn&apos;s Topological DAG</span>
             <span className="text-[11px] font-mono font-bold text-zinc-100 bg-zinc-950 px-2 py-1 rounded-lg border border-zinc-800/80 w-fit">
               Complexity: O(|V| + |E|)
             </span>
@@ -205,7 +205,7 @@ export function SocraticCopilotSidecar({
           </div>
 
           <div className="p-3.5 rounded-2xl bg-zinc-900/90 border border-zinc-800 flex flex-col gap-1.5 shadow-sm">
-            <span className="text-xs font-bold text-emerald-400">3. 1-PL Rasch IRT Testing</span>
+            <span className="text-xs font-bold text-focus">3. 1-PL Rasch IRT Testing</span>
             <span className="text-[11px] font-mono font-bold text-zinc-100 bg-zinc-950 px-2 py-1 rounded-lg border border-zinc-800/80 w-fit">
               Latent Ability: &theta; Calibration
             </span>
@@ -232,7 +232,7 @@ export function SocraticCopilotSidecar({
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-mono font-bold text-xs flex items-center justify-center shrink-0">
+                    <span className="w-6 h-6 rounded-lg bg-focus/15 border border-focus/30 text-focus font-mono font-bold text-xs flex items-center justify-center shrink-0">
                       {lvl.num}
                     </span>
                     <span className="text-xs sm:text-sm font-bold text-zinc-100">{lvl.title}</span>
@@ -304,7 +304,7 @@ export function SocraticCopilotSidecar({
                   <button
                     type="button"
                     onClick={() => onInsertToNotes?.(`\`\`\`${p.lang}\n${p.code}\n\`\`\``)}
-                    className="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 font-semibold px-2 py-0.5 rounded bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors cursor-pointer"
+                    className="flex items-center gap-1 text-focus hover:text-emerald-300 font-semibold px-2 py-0.5 rounded bg-focus/10 hover:bg-focus/20 transition-colors cursor-pointer"
                   >
                     <ClipboardText className="w-3.5 h-3.5" />
                     <span>Insert to Notes</span>
@@ -338,7 +338,7 @@ export function SocraticCopilotSidecar({
 
                 if (trimmed.startsWith("#### ")) {
                   return (
-                    <h4 key={lIdx} className="text-xs sm:text-sm font-bold text-emerald-400 pt-1.5 pb-0.5 break-words">
+                    <h4 key={lIdx} className="text-xs sm:text-sm font-bold text-focus pt-1.5 pb-0.5 break-words">
                       {formatInlineText(trimmed.replace(/^####\s+/, ""))}
                     </h4>
                   );
@@ -348,7 +348,7 @@ export function SocraticCopilotSidecar({
                   const content = trimmed.replace(/^[\*\-*]\s+/, "");
                   return (
                     <div key={lIdx} className="flex items-start gap-2.5 text-xs sm:text-sm leading-relaxed pl-2 py-0.5 text-zinc-200 w-full min-w-0">
-                      <span className="text-emerald-400 mt-0.5 shrink-0 font-bold">*</span>
+                      <span className="text-focus mt-0.5 shrink-0 font-bold">*</span>
                       <div className="flex-1 min-w-0 break-words">{formatInlineText(content)}</div>
                     </div>
                   );
@@ -536,7 +536,7 @@ Provide clean code blocks with language indicators so the user can insert them i
       {/* Header */}
       <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-zinc-800 bg-zinc-950/90 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-focus/15 border border-focus/30 text-focus flex items-center justify-center shrink-0">
             <Sparkle className="w-4 h-4 sm:w-5 sm:h-5" weight="fill" />
           </div>
           <div>
@@ -547,7 +547,7 @@ Provide clean code blocks with language indicators so the user can insert them i
           </div>
         </div>
 
-        <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5 shrink-0">
+        <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-focus/10 text-focus border border-focus/20 flex items-center gap-1.5 shrink-0">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
           Live
         </span>
@@ -566,7 +566,7 @@ Provide clean code blocks with language indicators so the user can insert them i
               className={`w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 text-xs mt-0.5 ${
                 msg.sender === "user"
                   ? "bg-zinc-700 text-zinc-200"
-                  : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                  : "bg-focus/20 text-focus border border-focus/30"
               }`}
             >
               {msg.sender === "user" ? <User className="w-3.5 h-3.5" /> : <Robot className="w-3.5 h-3.5" />}
@@ -575,7 +575,7 @@ Provide clean code blocks with language indicators so the user can insert them i
             <div
               className={`max-w-[88%] sm:max-w-[92%] min-w-0 p-4 sm:p-5 rounded-2xl text-xs sm:text-sm leading-relaxed break-words overflow-hidden ${
                 msg.sender === "user"
-                  ? "bg-emerald-500 text-zinc-950 font-semibold rounded-tr-sm shadow-md"
+                  ? "bg-focus text-zinc-950 font-semibold rounded-tr-sm shadow-md"
                   : "bg-zinc-950 border border-zinc-800/90 text-zinc-200 rounded-tl-sm shadow-md"
               }`}
             >
@@ -590,7 +590,7 @@ Provide clean code blocks with language indicators so the user can insert them i
 
         {isLoading && (
           <div className="flex items-center gap-2 p-2.5 rounded-xl bg-zinc-950/60 border border-zinc-800 text-xs text-zinc-400 w-fit">
-            <SpinnerGap className="w-4 h-4 animate-spin text-emerald-400" />
+            <SpinnerGap className="w-4 h-4 animate-spin text-focus" />
             <span>Copilot is reasoning...</span>
           </div>
         )}
@@ -625,12 +625,12 @@ Provide clean code blocks with language indicators so the user can insert them i
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask Copilot (e.g. Explain DAX syntax at 10:20)..."
-          className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-emerald-500/50"
+          className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-focus/50"
         />
         <button
           type="submit"
           disabled={!input.trim() || isLoading}
-          className="p-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 disabled:opacity-40 transition-all cursor-pointer shadow-md shadow-emerald-500/20"
+          className="p-2.5 rounded-xl bg-focus hover:bg-emerald-400 text-zinc-950 disabled:opacity-40 transition-all cursor-pointer shadow-md shadow-focus/20"
         >
           <PaperPlaneRight className="w-4 h-4" weight="fill" />
         </button>

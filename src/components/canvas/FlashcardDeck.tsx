@@ -103,7 +103,7 @@ export function FlashcardDeck({ flashcards = [], title = "Remedial Concept Flash
         <div
           className={`w-full h-full min-h-[220px] rounded-2xl p-6 flex flex-col justify-between border transition-all duration-500 [transform-style:preserve-3d] ${
             isFlipped
-              ? "border-emerald-500/40 bg-zinc-950/95 shadow-xl shadow-emerald-500/5 [transform:rotateY(180deg)]"
+              ? "border-focus/40 bg-zinc-950/95 shadow-xl shadow-focus/5 [transform:rotateY(180deg)]"
               : "border-orange-500/30 bg-gradient-to-br from-zinc-950 to-zinc-900/90 shadow-xl shadow-orange-500/5 hover:border-orange-400/50"
           }`}
         >
@@ -133,7 +133,7 @@ export function FlashcardDeck({ flashcards = [], title = "Remedial Concept Flash
                   Click to test recall
                 </span>
                 {isCurrentMastered && (
-                  <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                  <span className="text-focus font-semibold flex items-center gap-1">
                     <CheckCircle className="w-3.5 h-3.5" weight="fill" /> Mastered
                   </span>
                 )}
@@ -143,7 +143,7 @@ export function FlashcardDeck({ flashcards = [], title = "Remedial Concept Flash
             /* BACK SIDE (Solution / Core Rule) */
             <div className="flex flex-col justify-between h-full gap-3 [transform:rotateY(180deg)]">
               <div className="flex items-center justify-between">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-wider font-mono">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-focus/10 text-focus border border-focus/20 uppercase tracking-wider font-mono">
                   Solution & Core Takeaway
                 </span>
 
@@ -152,7 +152,7 @@ export function FlashcardDeck({ flashcards = [], title = "Remedial Concept Flash
                   onClick={handleToggleMastered}
                   className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer ${
                     isCurrentMastered
-                      ? "bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20"
+                      ? "bg-focus text-zinc-950 shadow-md shadow-focus/20"
                       : "bg-zinc-800 hover:bg-zinc-700 text-zinc-300"
                   }`}
                 >
@@ -205,7 +205,7 @@ export function FlashcardDeck({ flashcards = [], title = "Remedial Concept Flash
         <button
           type="button"
           onClick={handleNext}
-          className="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-xs font-bold flex items-center gap-1.5 transition-all shadow-md shadow-emerald-500/20 cursor-pointer"
+          className="px-3.5 py-2 rounded-xl bg-focus hover:bg-emerald-400 text-zinc-950 text-xs font-bold flex items-center gap-1.5 transition-all shadow-md shadow-focus/20 cursor-pointer"
         >
           <span>Next Card</span>
           <ArrowRight className="w-3.5 h-3.5" />

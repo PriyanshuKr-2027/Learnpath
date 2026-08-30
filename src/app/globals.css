@@ -1,37 +1,38 @@
 @import "tailwindcss";
 
 @theme {
-  /* Light Mode Base Tokens */
-  --color-paper: #F8F9FA;
-  --color-sidebar: #F1F3F5;
-  --color-surface: #FFFFFF;
-  --color-border: #E2E5E9;
+  /* Claude Editorial Warm Palette */
+  --color-paper: #F4F3EE;         /* Pampas - Warm Cream/Linen Canvas */
+  --color-sidebar: #ECEAE2;       /* Subtle Warm Cream */
+  --color-surface: #FFFFFF;       /* Pure Crisp White Card Surface */
+  --color-border: #E2DFD7;        /* Soft Cloudy Stone Border */
+  --color-cloudy: #B1ADA1;        /* Cloudy Warm Stone */
   
-  --color-text-primary: #111827;
-  --color-text-secondary: #6B7280;
+  --color-text-primary: #1F1D1A;   /* Deep Warm Ink */
+  --color-text-secondary: #706B63; /* Warm Stone Secondary */
 
-  /* Technical Educational Brand Accents (Non-Purple) */
-  --color-focus: #0D9488;         /* Deep Technical Teal */
-  --color-focus-hover: #0F766E;   /* Darker Teal on Hover */
-  --color-signal: #10B981;        /* Precision Emerald */
-  --color-warning: #F59E0B;       /* Amber */
-  --color-alert: #EF4444;         /* Coral Red */
+  /* Claude Brand Accents */
+  --color-focus: #C15F3C;         /* Crail Terracotta */
+  --color-focus-hover: #A94E2E;   /* Deep Crail */
+  --color-signal: #447B58;        /* Natural Sage Green */
+  --color-warning: #D97706;       /* Warm Ochre */
+  --color-alert: #DC2626;         /* Crimson Alert */
 
-  /* Neutral Category Tints */
-  --color-lavender-bg: #F0FDFA;
-  --color-lavender-text: #0D9488;
-  --color-mint-bg: #ECFDF5;
-  --color-mint-text: #059669;
-  --color-peach-bg: #FFFBEB;
+  /* Warm Category Tints */
+  --color-lavender-bg: #FAF0EB;
+  --color-lavender-text: #C15F3C;
+  --color-mint-bg: #EFF5F0;
+  --color-mint-text: #447B58;
+  --color-peach-bg: #FAF5EB;
   --color-peach-text: #B45309;
-  --color-sky-bg: #F0F9FF;
-  --color-sky-text: #0284C7;
-  --color-rose-bg: #FEF2F2;
-  --color-rose-text: #DC2626;
-  --color-butter-bg: #FEFCE8;
+  --color-sky-bg: #F0F4F8;
+  --color-sky-text: #3B6E8C;
+  --color-rose-bg: #FDF1F0;
+  --color-rose-text: #C15F3C;
+  --color-butter-bg: #FDF9EC;
   --color-butter-text: #A16207;
-  --color-rest-bg: #F3F4F6;
-  --color-rest-text: #6B7280;
+  --color-rest-bg: #ECEAE2;
+  --color-rest-text: #706B63;
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -39,35 +40,36 @@
 
 @layer base {
   .dark {
-    /* Dark Mode Deep Slate & Charcoal Foundations */
-    --color-paper: #090B0E;
-    --color-sidebar: #0E1116;
-    --color-surface: #13171F;
-    --color-border: #1F242F;
+    /* Claude Dark Palette */
+    --color-paper: #1B1917;
+    --color-sidebar: #22201D;
+    --color-surface: #292723;
+    --color-border: #3D3934;
+    --color-cloudy: #B1ADA1;
     
-    --color-text-primary: #F1F3F6;
-    --color-text-secondary: #8B949E;
+    --color-text-primary: #F4F3EE;
+    --color-text-secondary: #B1ADA1;
 
-    --color-focus: #14B8A6;
-    --color-focus-hover: #0D9488;
-    --color-signal: #34D399;
-    --color-warning: #FBBF24;
+    --color-focus: #C15F3C;
+    --color-focus-hover: #D7734E;
+    --color-signal: #5A996B;
+    --color-warning: #F59E0B;
     --color-alert: #F87171;
 
-    --color-lavender-bg: #112225;
-    --color-lavender-text: #2DD4BF;
-    --color-mint-bg: #06281E;
-    --color-mint-text: #34D399;
-    --color-peach-bg: #2B1D0C;
+    --color-lavender-bg: #2D1F1A;
+    --color-lavender-text: #E07D5A;
+    --color-mint-bg: #162B1D;
+    --color-mint-text: #5A996B;
+    --color-peach-bg: #2D2413;
     --color-peach-text: #FBBF24;
-    --color-sky-bg: #0C2133;
-    --color-sky-text: #38BDF8;
-    --color-rose-bg: #2B1214;
-    --color-rose-text: #F87171;
-    --color-butter-bg: #2B260E;
+    --color-sky-bg: #152633;
+    --color-sky-text: #6BA5C4;
+    --color-rose-bg: #2D1718;
+    --color-rose-text: #E07D5A;
+    --color-butter-bg: #2D2713;
     --color-butter-text: #FDE047;
-    --color-rest-bg: #191D26;
-    --color-rest-text: #8B949E;
+    --color-rest-bg: #22201D;
+    --color-rest-text: #B1ADA1;
   }
 }
 
@@ -92,6 +94,6 @@
 
 /* Focus and selection refinements */
 ::selection {
-  background-color: rgba(20, 184, 166, 0.25);
+  background-color: rgba(193, 95, 60, 0.2);
   color: inherit;
 }

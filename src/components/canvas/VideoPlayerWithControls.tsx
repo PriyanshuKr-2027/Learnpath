@@ -58,7 +58,7 @@ export function VideoPlayerWithControls({
             href={`https://www.youtube.com/watch?v=${video.youtubeId}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-zinc-400 hover:text-emerald-400 flex items-center gap-1 p-1.5 rounded-lg hover:bg-zinc-800 transition-colors flex-shrink-0"
+            className="text-xs text-zinc-400 hover:text-focus flex items-center gap-1 p-1.5 rounded-lg hover:bg-zinc-800 transition-colors flex-shrink-0"
             title="Open on YouTube"
           >
             <ArrowSquareOut className="w-4 h-4" />
@@ -67,10 +67,10 @@ export function VideoPlayerWithControls({
 
         {/* AI Pruning Filter Badge */}
         {video.pruningReason && (
-          <div className="flex items-start gap-2 p-2.5 rounded-xl bg-emerald-950/20 border border-emerald-500/20 text-xs text-zinc-300">
-            <Sparkle className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+          <div className="flex items-start gap-2 p-2.5 rounded-xl bg-emerald-950/20 border border-focus/20 text-xs text-zinc-300">
+            <Sparkle className="w-4 h-4 text-focus flex-shrink-0 mt-0.5" />
             <p className="text-[11px] leading-relaxed">
-              <strong className="text-emerald-400">AI Pruned Focus: </strong>
+              <strong className="text-focus">AI Pruned Focus: </strong>
               {video.pruningReason}
             </p>
           </div>
@@ -87,7 +87,7 @@ export function VideoPlayerWithControls({
             onClick={() => onSeekRequested?.(video.relevantStartSeconds || 0)}
             className="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-[11px] font-mono font-medium flex items-center gap-1 transition-colors cursor-pointer"
           >
-            <FastForward className="w-3 h-3 text-emerald-400" />
+            <FastForward className="w-3 h-3 text-focus" />
             Core Focus ({Math.floor((video.relevantStartSeconds || 0) / 60)}m)
           </button>
           {video.relevantEndSeconds !== undefined && (

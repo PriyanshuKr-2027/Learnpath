@@ -46,7 +46,7 @@ export function MilestoneListView({ path, onSelectNode }: MilestoneListViewProps
             {/* Week Header */}
             <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-zinc-800/80">
               <div className="flex items-center gap-3">
-                <span className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm font-mono">
+                <span className="w-10 h-10 rounded-2xl bg-focus/10 border border-focus/20 text-focus flex items-center justify-center font-bold text-sm font-mono">
                   W{weekNum}
                 </span>
                 <div>
@@ -60,7 +60,7 @@ export function MilestoneListView({ path, onSelectNode }: MilestoneListViewProps
                   <Clock className="w-4 h-4 text-cyan-400" />
                   {Math.round(totalMinutes / 60 * 10) / 10} Hours
                 </span>
-                <span className="font-mono text-emerald-400 font-semibold">
+                <span className="font-mono text-focus font-semibold">
                   {completedCount}/{levels.length} Done
                 </span>
               </div>
@@ -81,7 +81,7 @@ export function MilestoneListView({ path, onSelectNode }: MilestoneListViewProps
                     onClick={() => onSelectNode(lvl)}
                     className={`flex items-center justify-between p-4 rounded-2xl border transition-all cursor-pointer ${
                       isActive
-                        ? "border-emerald-500/50 bg-emerald-950/20 shadow-md shadow-emerald-500/10 scale-[1.01]"
+                        ? "border-focus/50 bg-emerald-950/20 shadow-md shadow-focus/10 scale-[1.01]"
                         : isCompleted
                         ? "border-zinc-800/80 bg-zinc-950/40 hover:border-zinc-700"
                         : isLocked
@@ -94,11 +94,11 @@ export function MilestoneListView({ path, onSelectNode }: MilestoneListViewProps
                       <div
                         className={`w-10 h-10 rounded-xl flex items-center justify-center font-mono font-bold text-xs ${
                           isCompleted
-                            ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
+                            ? "bg-focus/20 text-focus border border-focus/40"
                             : isActive
                             ? isBoss
                               ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse"
-                              : "bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/30"
+                              : "bg-focus text-zinc-950 shadow-md shadow-focus/30"
                             : isLocked
                             ? "bg-zinc-800 text-zinc-600"
                             : "bg-zinc-800 text-zinc-300"
@@ -152,7 +152,7 @@ export function MilestoneListView({ path, onSelectNode }: MilestoneListViewProps
                         type="button"
                         className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
                           isActive
-                            ? "bg-emerald-500 text-zinc-950 hover:bg-emerald-400"
+                            ? "bg-focus text-zinc-950 hover:bg-emerald-400"
                             : "bg-zinc-800 hover:bg-zinc-700 text-zinc-300"
                         }`}
                       >
