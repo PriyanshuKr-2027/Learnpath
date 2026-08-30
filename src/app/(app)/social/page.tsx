@@ -471,6 +471,46 @@ export default function SocialStudyRoomPage() {
               )}
             </div>
           </div>
+
+          {/* Mini Pomodoro Focus Widget */}
+          <div className="p-3 rounded-xl border border-border bg-surface shadow-xs flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-lg bg-focus/15 border border-focus/30 text-focus flex items-center justify-center shrink-0">
+                <Timer className="w-4 h-4" weight="fill" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold font-mono text-text-primary">
+                    {formatTimer(timeLeft)}
+                  </span>
+                  {isTimerRunning && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-signal animate-pulse" />
+                  )}
+                </div>
+                <span className="text-[10px] text-text-secondary truncate block">
+                  {isTimerRunning ? "Focus Sprint Active" : "Sprint Paused"}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setIsTimerRunning(!isTimerRunning)}
+                className="px-2.5 py-1 rounded-lg bg-focus hover:bg-focus/90 text-white text-[11px] font-bold shadow-xs transition-colors cursor-pointer"
+              >
+                {isTimerRunning ? "Pause" : "Start"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("study-together")}
+                className="p-1 rounded-lg bg-paper hover:bg-sidebar border border-border text-text-secondary hover:text-text-primary text-[10px] transition-colors cursor-pointer"
+                title="Expand full focus timer"
+              >
+                Expand
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* RIGHT COLUMN (8 Cols): Tabs (Live Discussion, Doubt Board, Study Together, Challenges) */}

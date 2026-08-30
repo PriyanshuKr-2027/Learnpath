@@ -111,9 +111,9 @@ export default function RoadmapPage() {
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-focus/10 text-focus border border-focus/20 flex items-center gap-1">
               <Sparkles className="w-3.5 h-3.5" />
-              Dynamic Kahn&apos;s DAG * Version {path.version}.0
+              Adaptive Roadmap • Version {path.version}.0
             </span>
-            <span className="text-xs text-text-secondary">*</span>
+            <span className="text-xs text-text-secondary">•</span>
             <span className="text-xs text-text-secondary font-medium">
               {path.totalWeeks} Weeks ({path.weeklyHours}h/wk)
             </span>
@@ -123,7 +123,7 @@ export default function RoadmapPage() {
             {path.title}
           </h1>
           <p className="text-xs text-text-secondary">
-            Sequenced using topological sorting to ensure foundational prerequisites precede advanced modeling.
+            Structured with prerequisite sequencing so foundational concepts naturally build toward advanced milestones.
           </p>
         </div>
 
@@ -157,9 +157,9 @@ export default function RoadmapPage() {
 
             <div className="flex flex-col">
               <span className="text-xs font-bold text-text-primary">
-                {path.completedLevelsCount} / {path.totalLevelsCount} Levels
+                {path.completedLevelsCount} / {path.totalLevelsCount} Milestones
               </span>
-              <span className="text-[11px] text-text-secondary">Career Readiness</span>
+              <span className="text-[11px] text-text-secondary">Path Progress</span>
             </div>
           </div>
 
@@ -175,7 +175,7 @@ export default function RoadmapPage() {
               }`}
             >
               <GitFork className="w-4 h-4" />
-              <span>Candy Crush Map</span>
+              <span>Interactive Map</span>
             </button>
             <button
               type="button"
@@ -187,7 +187,7 @@ export default function RoadmapPage() {
               }`}
             >
               <List className="w-4 h-4" />
-              <span>Weekly Timeline</span>
+              <span>Timeline List</span>
             </button>
           </div>
         </div>

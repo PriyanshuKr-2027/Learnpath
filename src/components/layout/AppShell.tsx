@@ -28,9 +28,9 @@ import { SetupModal } from "@/components/layout/SetupModal";
 
 const AI_RECOMMENDER_NAV = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Level Map (DAG)", href: "/roadmap", icon: GitFork },
-  { label: "CAT Assessments", href: "/assessments/cat", icon: Target },
-  { label: "Socratic Copilot", href: "/coach", icon: Brain },
+  { label: "Learning Roadmap", href: "/roadmap", icon: GitFork },
+  { label: "Skill Diagnostic", href: "/assessments/cat", icon: Target },
+  { label: "Socratic AI Tutor", href: "/coach", icon: Brain },
 ];
 
 const COLLABORATION_NAV = [
@@ -77,12 +77,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         >
           {!isCollapsed && (
             <Link href="/dashboard" className="flex items-center gap-2.5 group">
-              <div className="w-8 h-8 rounded-xl bg-focus flex items-center justify-center shadow-lg shadow-focus/25 group-hover:scale-105 transition-transform text-white">
+              <div className="w-8 h-8 rounded-xl bg-focus flex items-center justify-center shadow-md shadow-focus/20 group-hover:scale-105 transition-transform text-white">
                 <Sparkles className="w-4 h-4" />
               </div>
               <div className="flex flex-col">
-                <span className="font-bold text-base tracking-tight text-text-primary flex items-center gap-1.5">
-                  LearnPath <span className="text-focus text-[11px] font-mono font-bold px-1.5 py-0.5 rounded bg-focus/10 border border-focus/20">AI 2.0</span>
+                <span className="font-bold text-base tracking-tight text-text-primary">
+                  LearnPath
+                </span>
+                <span className="text-[10px] text-text-secondary font-medium -mt-0.5">
+                  Adaptive Learning
                 </span>
               </div>
             </Link>
@@ -256,27 +259,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         )}
       >
         {/* Topbar */}
-        <header className="sticky top-0 z-40 flex h-16 items-center justify-between px-8 bg-paper/80 backdrop-blur-xl border-b border-border">
+        <header className="sticky top-0 z-40 flex h-16 items-center justify-between px-6 sm:px-8 bg-paper/80 backdrop-blur-xl border-b border-border">
           <div className="flex items-center max-w-md w-full relative">
             <Search className="absolute left-3.5 w-4 h-4 text-text-secondary" />
             <input
               type="text"
               suppressHydrationWarning
-              placeholder="Search skills, topics, or documentation..."
-              className="w-full pl-10 pr-4 py-2 rounded-xl bg-surface border border-border focus:outline-none focus:border-focus/50 text-xs text-text-primary placeholder:text-text-secondary transition-all"
+              placeholder="Search topics, skills, or notes..."
+              className="w-full pl-10 pr-12 py-2 rounded-xl bg-surface border border-border focus:outline-none focus:border-focus/50 text-xs text-text-primary placeholder:text-text-secondary transition-all"
             />
+            <kbd className="absolute right-3 px-1.5 py-0.5 rounded bg-paper border border-border text-[10px] font-mono text-text-secondary">
+              ⌘K
+            </kbd>
           </div>
 
           <div className="flex items-center gap-3">
-            <Link
-              href="/social"
-              className="hidden md:flex items-center gap-1.5 text-xs font-bold text-focus bg-focus/10 hover:bg-focus/20 border border-focus/20 px-3 py-1.5 rounded-xl transition-colors"
-            >
-              <Video className="w-4 h-4" />
-              <span>Live Study Room</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-signal animate-pulse" />
-            </Link>
-
             <Link
               href="/onboarding"
               className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-text-primary bg-surface hover:bg-surface/80 border border-border px-3 py-1.5 rounded-xl transition-colors"

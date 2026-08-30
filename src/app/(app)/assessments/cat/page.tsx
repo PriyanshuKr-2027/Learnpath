@@ -371,7 +371,7 @@ function CATAssessmentContent() {
                   onClick={() => setSelectedOption(idx)}
                   className={`flex items-start gap-3 p-3.5 rounded-xl border text-left transition-all cursor-pointer text-xs sm:text-sm font-medium ${optionStyle}`}
                 >
-                  <span className="w-5 h-5 rounded-md bg-surface border border-border flex items-center justify-center text-xs font-mono font-bold flex-shrink-0 mt-0.5">
+                  <span className="w-5 h-5 rounded-md bg-surface/80 flex items-center justify-center text-xs font-mono font-bold text-text-secondary flex-shrink-0 mt-0.5">
                     {String.fromCharCode(65 + idx)}
                   </span>
                   <span className="flex-1 leading-relaxed text-xs sm:text-sm">{option}</span>

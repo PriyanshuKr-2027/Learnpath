@@ -102,35 +102,27 @@ export function LevelDetailsDrawer({ node, onClose }: LevelDetailsModalProps) {
         <div className="flex-1 p-4 sm:p-5 overflow-y-auto space-y-3.5 bg-paper/30 min-h-0">
           <div>
             <h2 className="text-base sm:text-lg font-bold text-text-primary leading-snug">{node.title}</h2>
-            <p className="text-xs text-text-secondary mt-0.5">
-              Phase: {node.phase} • Estimated time: {node.estimatedMinutes} mins
-            </p>
-          </div>
-
-          {/* Quick Metrics Tag Row */}
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-surface border border-border text-text-secondary">
-              <Calendar className="w-3.5 h-3.5 text-focus" />
+            <div className="flex items-center gap-2 text-xs text-text-secondary mt-1 font-medium">
               <span>Week {node.targetWeek}</span>
-            </div>
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-surface border border-border text-text-secondary">
-              <Clock className="w-3.5 h-3.5 text-focus" />
+              <span>•</span>
               <span>{node.estimatedMinutes} mins</span>
+              <span>•</span>
+              <span>{node.phase}</span>
+              {node.flashcards && node.flashcards.length > 0 && (
+                <>
+                  <span>•</span>
+                  <span className="text-focus font-semibold">{node.flashcards.length} Flashcards</span>
+                </>
+              )}
             </div>
-            {node.flashcards && node.flashcards.length > 0 && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-focus/15 border border-focus/30 text-focus font-bold">
-                <Cards className="w-3.5 h-3.5" />
-                <span>{node.flashcards.length} Flashcards</span>
-              </div>
-            )}
           </div>
 
-          {/* XAI Recommendation Rationale Box */}
+          {/* Milestone Recommendation Rationale */}
           {node.whyRecommended && (
-            <div className="p-3 sm:p-3.5 rounded-2xl bg-focus/5 border border-focus/20 flex flex-col gap-1">
+            <div className="p-3.5 rounded-2xl bg-surface border border-border flex flex-col gap-1 shadow-2xs">
               <div className="flex items-center gap-1.5 text-xs font-bold text-focus">
-                <Sparkle className="w-3.5 h-3.5" weight="fill" />
-                <span>Explainable AI (XAI) Justification</span>
+                <Sparkle className="w-3.5 h-3.5 text-focus" weight="fill" />
+                <span>Why This Milestone Fits Your Goal</span>
               </div>
               <p className="text-xs text-text-primary leading-relaxed">
                 {node.whyRecommended}
@@ -141,7 +133,7 @@ export function LevelDetailsDrawer({ node, onClose }: LevelDetailsModalProps) {
           {/* Curated Resources Section */}
           <div className="flex flex-col gap-2.5 pt-1">
             <h3 className="text-[11px] font-bold text-text-secondary uppercase tracking-wider">
-              Curated Multimodal Learning Content
+              Curated Learning Resources
             </h3>
 
             {/* Video Card */}

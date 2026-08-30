@@ -21,13 +21,13 @@ export default function CoachPage() {
       {/* Navigation CTA */}
       <div className="flex items-center justify-between pt-2">
         <span className="text-xs text-text-secondary">
-          CogniPath Pedagogical AI Engine &bull; Kahn&apos;s DAG &bull; 1-PL Rasch IRT
+          LearnPath Adaptive Learning Architecture
         </span>
         <Link
           href="/roadmap"
-          className="px-6 py-3 rounded-2xl bg-focus hover:bg-focus/90 text-white text-xs sm:text-sm font-bold flex items-center gap-2 shadow-lg shadow-focus/25 transition-all"
+          className="px-5 py-2.5 rounded-xl bg-focus hover:bg-focus/90 text-white text-xs sm:text-sm font-bold flex items-center gap-2 shadow-md shadow-focus/25 transition-all"
         >
-          <span>Return to Candy Crush DAG Map</span>
+          <span>Return to Learning Roadmap</span>
           <ArrowRight className="w-4 h-4" weight="bold" />
         </Link>
       </div>

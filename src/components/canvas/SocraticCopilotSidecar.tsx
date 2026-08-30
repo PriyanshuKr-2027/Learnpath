@@ -39,18 +39,26 @@ export function SocraticCopilotSidecar({
   groqApiKey,
 }: SocraticCopilotSidecarProps) {
   const contextTitle = level?.title || level?.skillName || "Applied Business Statistics";
+  const [copiedToast, setCopiedToast] = useState<string | null>(null);
 
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "init-1",
       sender: "copilot",
-      content: `Hello! I'm your 24/7 **AI Learning Copilot** for **${contextTitle}**.\n\nAsk me any question about this lecture, request code clarifications, or click the quick action chips below. I can also seek the video to relevant timestamps like [Jump to 02:30].`,
+      content: `Hi! I'm your AI tutor for **${contextTitle}**. Ask me any question about this lecture, request code clarifications, or pick a quick prompt below to get started.`,
       timestamp: "Just now",
     },
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const handleInsertNote = (snippet: string) => {
+    if (!onInsertToNotes) return;
+    onInsertToNotes(snippet);
+    setCopiedToast("Snippet saved to your notes!");
+    setTimeout(() => setCopiedToast(null), 2200);
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -160,7 +168,7 @@ export function SocraticCopilotSidecar({
                   {onInsertToNotes && (
                     <button
                       type="button"
-                      onClick={() => onInsertToNotes(`\`\`\`${lang}\n${code}\n\`\`\``)}
+                      onClick={() => handleInsertNote(`\`\`\`${lang}\n${code}\n\`\`\``)}
                       className="inline-flex items-center gap-1 text-[11px] text-text-secondary hover:text-focus transition-colors cursor-pointer font-semibold"
                     >
                       <ClipboardText className="w-3.5 h-3.5" />
@@ -449,10 +457,17 @@ export function SocraticCopilotSidecar({
           </div>
         </div>
 
-        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-signal/15 text-signal border border-signal/30 flex items-center gap-1 shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-signal animate-pulse" />
-          Live
-        </span>
+        <div className="flex items-center gap-2">
+          {copiedToast && (
+            <span className="px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-signal/15 text-signal border border-signal/30 animate-in fade-in duration-200">
+              {copiedToast}
+            </span>
+          )}
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-signal/15 text-signal border border-signal/30 flex items-center gap-1 shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-signal animate-pulse" />
+            Live
+          </span>
+        </div>
       </div>
 
       {/* Messages Scroll Area */}
