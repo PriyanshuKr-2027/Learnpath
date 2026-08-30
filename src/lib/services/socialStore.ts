@@ -2,6 +2,19 @@
 
 import { mockStore } from "./mockStore";
 
+export interface Friend {
+  id: string;
+  name: string;
+  avatar: string;
+  role: string;
+  currentSkill: string;
+  currentLevel: string;
+  status: "online" | "in_session" | "offline";
+  statusText?: string;
+  minutesToday: number;
+  streakDays: number;
+}
+
 export interface StudyGroup {
   id: string;
   name: string;
@@ -15,6 +28,7 @@ export interface StudyGroup {
   progressPercentage: number;
   isMember: boolean;
   levelBadge: string;
+  isCustom?: boolean;
 }
 
 export interface GroupMessage {
@@ -103,13 +117,64 @@ export interface Contributor {
   rank: number;
 }
 
-const SOCIAL_STORAGE_KEY = "learnpath_social_store_v4";
+const SOCIAL_STORAGE_KEY = "learnpath_social_store_v5";
+const FRIENDS_STORAGE_KEY = "learnpath_friends_v2";
+
+const DEFAULT_FRIENDS: Friend[] = [
+  {
+    id: "f-1",
+    name: "Elena Rostova",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Elena",
+    role: "Full-Stack Engineer",
+    currentSkill: "PostgreSQL & Query Plans",
+    currentLevel: "Level 4",
+    status: "in_session",
+    statusText: "Focus Sprint: Indexing optimizations",
+    minutesToday: 75,
+    streakDays: 14,
+  },
+  {
+    id: "f-2",
+    name: "Marcus Vance",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Marcus",
+    role: "Data Analyst",
+    currentSkill: "DAX Time Intelligence",
+    currentLevel: "Level 3",
+    status: "online",
+    statusText: "Practicing Power BI data models",
+    minutesToday: 45,
+    streakDays: 8,
+  },
+  {
+    id: "f-3",
+    name: "Aisha Patel",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Aisha",
+    role: "ML Engineer",
+    currentSkill: "Applied Business Statistics",
+    currentLevel: "Level 5",
+    status: "online",
+    statusText: "Solving Hypothesis Testing quizzes",
+    minutesToday: 110,
+    streakDays: 21,
+  },
+  {
+    id: "f-4",
+    name: "Devansh Sharma",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Devansh",
+    role: "Software Architect",
+    currentSkill: "System Architecture",
+    currentLevel: "Level 6",
+    status: "offline",
+    statusText: "Last seen 2 hours ago",
+    minutesToday: 30,
+    streakDays: 5,
+  },
+];
 
 function generateDynamicGroups(): StudyGroup[] {
   if (typeof window !== "undefined") {
     const path = mockStore.getLearningPath();
     if (path && path.levels && path.levels.length > 0) {
-      // Group levels by skillName
       const groupsMap = new Map<string, typeof path.levels>();
       path.levels.forEach((lvl) => {
         const key = lvl.skillName;
@@ -138,13 +203,13 @@ function generateDynamicGroups(): StudyGroup[] {
           id: `grp-${skillName.toLowerCase().replace(/[^a-z0-9]/g, "-")}`,
           name: `${skillName} Study Circle`,
           topic: skillName,
-          description: `Collaborative study circle for mastering ${skillName} milestones and DAG challenges.`,
+          description: `Collaborative circle for mastering ${skillName} milestones and sharing solutions.`,
           icon: icons[idx % icons.length],
           bannerColor: colors[idx % colors.length],
-          membersCount: 1,
-          activeNowCount: 1,
-          solvedDoubtsCount: 0,
-          progressPercentage: progress,
+          membersCount: 12 + idx * 3,
+          activeNowCount: 2 + idx,
+          solvedDoubtsCount: 8 + idx * 2,
+          progressPercentage: progress || 25,
           isMember: true,
           levelBadge: `Level ${levelNumbers}`,
         });
@@ -155,7 +220,6 @@ function generateDynamicGroups(): StudyGroup[] {
     }
   }
 
-  // Fallback defaults if no path exists yet
   return [
     {
       id: "grp-core",
@@ -164,10 +228,10 @@ function generateDynamicGroups(): StudyGroup[] {
       description: "Collaborative study circle for algorithms, distributed systems, and core architecture.",
       icon: "cpu",
       bannerColor: "from-blue-600/20 via-emerald-600/10 to-transparent",
-      membersCount: 1,
-      activeNowCount: 1,
-      solvedDoubtsCount: 0,
-      progressPercentage: 0,
+      membersCount: 15,
+      activeNowCount: 4,
+      solvedDoubtsCount: 12,
+      progressPercentage: 40,
       isMember: true,
       levelBadge: "Foundations",
     },
@@ -190,6 +254,57 @@ export interface SocialStoreState {
 }
 
 export const socialStore = {
+  // Friends API
+  getFriends(): Friend[] {
+    if (typeof window === "undefined") return DEFAULT_FRIENDS;
+    try {
+      const stored = localStorage.getItem(FRIENDS_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    try {
+      localStorage.setItem(FRIENDS_STORAGE_KEY, JSON.stringify(DEFAULT_FRIENDS));
+    } catch {}
+    return DEFAULT_FRIENDS;
+  },
+
+  addFriend(name: string, skillFocus?: string): Friend {
+    const friends = this.getFriends();
+    const newFriend: Friend = {
+      id: `f-${Date.now()}`,
+      name: name.trim(),
+      avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`,
+      role: "Learner",
+      currentSkill: skillFocus || "Data Structures & Algorithms",
+      currentLevel: "Level 1",
+      status: "online",
+      statusText: "Just connected on LearnPath AI",
+      minutesToday: 0,
+      streakDays: 1,
+    };
+    friends.unshift(newFriend);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(FRIENDS_STORAGE_KEY, JSON.stringify(friends));
+        window.dispatchEvent(new Event("learnpath_friends_updated"));
+      } catch {}
+    }
+    return newFriend;
+  },
+
+  removeFriend(friendId: string) {
+    const friends = this.getFriends().filter((f) => f.id !== friendId);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(FRIENDS_STORAGE_KEY, JSON.stringify(friends));
+        window.dispatchEvent(new Event("learnpath_friends_updated"));
+      } catch {}
+    }
+  },
+
+  // State & Groups API
   getState(): SocialStoreState {
     const dynamicGroups = generateDynamicGroups();
 
@@ -253,8 +368,7 @@ export const socialStore = {
   getGroups(): StudyGroup[] {
     const state = this.getState();
     const dynamic = generateDynamicGroups();
-    // Refresh groups when dynamic path changes or if on stale defaults
-    if (dynamic.length > 0 && (!state.groups || state.groups.length === 0 || state.groups[0].id === "grp-python")) {
+    if (dynamic.length > 0 && (!state.groups || state.groups.length === 0)) {
       state.groups = dynamic;
       this.saveState(state);
     }
@@ -281,21 +395,22 @@ export const socialStore = {
     this.saveState(state);
   },
 
-  createGroup(group: Partial<StudyGroup>): StudyGroup {
+  createGroup(group: { name: string; topic: string; description: string; isPrivate?: boolean }): StudyGroup {
     const state = this.getState();
     const newGroup: StudyGroup = {
       id: `grp-${Date.now()}`,
-      name: group.name || "New Study Circle",
-      topic: group.topic || "General",
-      description: group.description || "A collaborative study space.",
-      icon: group.icon || "code",
-      bannerColor: "from-emerald-600/20 via-teal-600/10 to-transparent",
+      name: group.name.trim() || "New Study Circle",
+      topic: group.topic.trim() || "General Engineering",
+      description: group.description.trim() || "Collaborative peer learning circle.",
+      icon: "code",
+      bannerColor: "from-teal-600/20 via-emerald-600/10 to-transparent",
       membersCount: 1,
       activeNowCount: 1,
       solvedDoubtsCount: 0,
       progressPercentage: 0,
       isMember: true,
-      levelBadge: "Active Cohort",
+      levelBadge: "Custom Cohort",
+      isCustom: true,
     };
 
     state.groups.unshift(newGroup);
@@ -307,6 +422,25 @@ export const socialStore = {
 
   getMessages(groupId: string): GroupMessage[] {
     const state = this.getState();
+    if (!state.messages[groupId] || state.messages[groupId].length === 0) {
+      // Default initial welcome message
+      const defaultMsgs: GroupMessage[] = [
+        {
+          id: `msg-init-${groupId}`,
+          groupId,
+          authorId: "u-elena",
+          authorName: "Elena Rostova",
+          authorAvatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Elena",
+          authorRole: "mentor",
+          content: "Welcome everyone! Feel free to share code snippets or post questions in the Doubt Board.",
+          timestamp: "10 mins ago",
+          reactions: { "👍": 3 },
+        },
+      ];
+      state.messages[groupId] = defaultMsgs;
+      this.saveState(state);
+      return defaultMsgs;
+    }
     return state.messages[groupId] || [];
   },
 
@@ -357,6 +491,43 @@ export const socialStore = {
 
   getDoubts(groupId: string): DoubtItem[] {
     const state = this.getState();
+    if (!state.doubts[groupId] || state.doubts[groupId].length === 0) {
+      const defaultDoubts: DoubtItem[] = [
+        {
+          id: `dbt-init-${groupId}`,
+          groupId,
+          title: "How do I optimize window functions in PostgreSQL?",
+          description: "When running ROW_NUMBER() over large partitions, what index configuration gives O(1) partition lookups?",
+          topicTag: "SQL & Query Plans",
+          authorName: "Marcus Vance",
+          authorAvatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Marcus",
+          codeSnippet: {
+            code: "SELECT id, category, ROW_NUMBER() OVER (PARTITION BY category ORDER BY created_at DESC) FROM events;",
+            lang: "sql",
+          },
+          upvotes: 4,
+          hasUpvoted: false,
+          isResolved: false,
+          answers: [
+            {
+              id: `ans-init-${groupId}`,
+              doubtId: `dbt-init-${groupId}`,
+              authorName: "Elena Rostova",
+              authorAvatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Elena",
+              authorRole: "Mentor",
+              content: "Create a composite B-Tree index on (category, created_at DESC). PostgreSQL will perform an index-only scan avoiding full table sort.",
+              upvotes: 3,
+              isAccepted: true,
+              timestamp: "15 mins ago",
+            },
+          ],
+          createdAt: "20 mins ago",
+        },
+      ];
+      state.doubts[groupId] = defaultDoubts;
+      this.saveState(state);
+      return defaultDoubts;
+    }
     return state.doubts[groupId] || [];
   },
 
@@ -376,7 +547,7 @@ export const socialStore = {
       groupId,
       title,
       description,
-      topicTag,
+      topicTag: topicTag || "General",
       authorName: `${selfName} (You)`,
       authorAvatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(selfName)}`,
       codeSnippet,
@@ -454,152 +625,30 @@ export const socialStore = {
     this.saveState(state);
   },
 
-  getActiveStudiers(): StudyParticipant[] {
-    const state = this.getState();
-    const selfName = typeof window !== "undefined"
-      ? (() => { try { const p = JSON.parse(localStorage.getItem("learnpath_profile_v2") || "{}"); return p?.name || "You"; } catch { return "You"; } })()
-      : "You";
-
-    if (state.studyTimer.isRunning) {
-      return [
-        {
-          id: "u-self",
-          name: `${selfName} (You)`,
-          avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(selfName)}`,
-          status: "Deep Focus Session Active",
-          minutesStudied: Math.max(1, state.studyTimer.completedSessions * 25),
-          isSelf: true,
-        },
-      ];
-    }
-    return [];
-  },
-
   getChallenges(groupId: string): StudyChallenge[] {
-    const state = this.getState();
-    const path = typeof window !== "undefined" ? mockStore.getLearningPath() : null;
-    const completedLevels = path?.levels.filter((l) => l.status === "completed").length || 0;
-
     return [
       {
-        id: "ch-1",
+        id: `ch-1-${groupId}`,
         groupId,
-        title: "Sprint Pioneer: Complete 3 DAG Milestones",
-        description: "Master 3 consecutive milestones in your curriculum path.",
-        xpReward: 300,
-        target: 3,
-        progress: Math.min(3, completedLevels),
-        type: "weekly",
-        isCompleted: completedLevels >= 3,
-      },
-      {
-        id: "ch-2",
-        groupId,
-        title: "Diagnostic Ace: Pass a Boss Level Checkpoint",
-        description: "Score theta >= 0.55 on any 1-PL Rasch CAT assessment.",
-        xpReward: 250,
-        target: 1,
-        progress: completedLevels > 0 ? 1 : 0,
-        type: "weekly",
-        isCompleted: completedLevels > 0,
-      },
-      {
-        id: "ch-3",
-        groupId,
-        title: "Focus Master: Log 50 Minutes of Deep Work",
-        description: "Complete two 25-minute Pomodoro sprints in the live focus room.",
+        title: "Daily Socratic Sprint",
+        description: "Complete 2 diagnostic quizzes and solve 1 cohort doubt.",
         xpReward: 150,
         target: 2,
-        progress: state.studyTimer.completedSessions,
+        progress: 1,
         type: "daily",
-        isCompleted: state.studyTimer.completedSessions >= 2,
+        isCompleted: false,
       },
-    ];
-  },
-
-  getContributors(): Contributor[] {
-    const selfName = typeof window !== "undefined"
-      ? (() => { try { const p = JSON.parse(localStorage.getItem("learnpath_profile_v2") || "{}"); return p?.name || "You"; } catch { return "You"; } })()
-      : "You";
-    const path = typeof window !== "undefined" ? mockStore.getLearningPath() : null;
-    const completedLevels = path?.levels.filter((l) => l.status === "completed").length || 0;
-    const points = completedLevels * 150;
-
-    return [
       {
-        id: "u-self",
-        name: `${selfName} (You)`,
-        avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(selfName)}`,
-        role: "Active Learner",
-        points: points > 0 ? points : 100,
-        doubtsAnswered: 0,
-        upvotesReceived: 0,
-        studyMinutes: 25,
-        badge: "Pioneer",
-        rank: 1,
+        id: `ch-2-${groupId}`,
+        groupId,
+        title: "100-Minute Deep Focus Sprint",
+        description: "Log at least 100 minutes of synchronized Pomodoro focus sessions this week.",
+        xpReward: 300,
+        target: 100,
+        progress: 60,
+        type: "weekly",
+        isCompleted: false,
       },
     ];
-  },
-
-  postDoubt(
-    groupId: string,
-    title: string,
-    description: string,
-    topicTag: string,
-    codeSnippet?: { code: string; lang: string }
-  ): DoubtItem {
-    return this.createDoubt(groupId, title, description, topicTag, codeSnippet);
-  },
-
-  upvoteAnswer(groupId: string, doubtId: string, answerId: string) {
-    const state = this.getState();
-    const doubts = state.doubts[groupId] || [];
-    const doubt = doubts.find((d) => d.id === doubtId);
-    if (!doubt) return;
-    const answer = doubt.answers.find((a) => a.id === answerId);
-    if (!answer) return;
-    if (answer.hasUpvoted) {
-      answer.upvotes = Math.max(0, answer.upvotes - 1);
-      answer.hasUpvoted = false;
-    } else {
-      answer.upvotes += 1;
-      answer.hasUpvoted = true;
-    }
-    this.saveState(state);
-  },
-
-  completeChallenge(groupId: string, challengeId: string) {
-    const state = this.getState();
-    const list = state.challenges[groupId] || [];
-    const ch = list.find((c) => c.id === challengeId);
-    if (ch) {
-      ch.isCompleted = true;
-      ch.progress = ch.target;
-      this.saveState(state);
-    }
-  },
-
-  logStudyMinutes(mins: number) {
-    const state = this.getState();
-    const sessions = Math.ceil(mins / 25);
-    state.studyTimer.completedSessions += sessions;
-    this.saveState(state);
-  },
-
-  getTimerState() {
-    return this.getState().studyTimer;
-  },
-
-  updateTimerState(timer: Partial<SocialStoreState["studyTimer"]>) {
-    const state = this.getState();
-    state.studyTimer = { ...state.studyTimer, ...timer };
-    this.saveState(state);
-  },
-
-  completePomodoroSession() {
-    const state = this.getState();
-    state.studyTimer.completedSessions += 1;
-    this.saveState(state);
   },
 };
-
