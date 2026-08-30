@@ -275,30 +275,30 @@ function CATAssessmentContent() {
   const missedTopics = Array.from(new Set(missedQuestions.map((q) => q.topic)));
 
   return (
-    <div className="flex flex-col gap-4 w-full max-w-4xl mx-auto pb-2 text-text-primary">
+    <div className="flex flex-col gap-4 w-full max-w-5xl mx-auto pb-3 text-text-primary">
       {/*    1. Top Mastery Speedometer & Diagnostic Header    */}
-      <div className="p-4 sm:p-5 rounded-2xl border border-border bg-surface shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-0.5">
+      <div className="p-5 sm:p-6 rounded-2xl border border-border bg-surface shadow-md flex flex-col md:flex-row md:items-center justify-between gap-5">
+        <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-focus/10 text-focus border border-focus/20">
+            <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono font-bold bg-focus/10 text-focus border border-focus/20">
               ADAPTIVE DIAGNOSTIC
             </span>
             <span className="text-xs text-text-secondary font-mono">
               Level {level?.displayLevel || "1"}: {level?.skillName || skillParam}
             </span>
           </div>
-          <h1 className="text-lg sm:text-xl font-bold text-text-primary">
+          <h1 className="text-xl sm:text-2xl font-bold text-text-primary">
             {level?.title || `${skillParam} Core Diagnostic`}
           </h1>
-          <p className="text-[11px] text-text-secondary">
+          <p className="text-xs text-text-secondary">
             Question {Math.min(answeredQuestionIds.length + (isAnswerSubmitted ? 0 : 1), TOTAL_QUESTIONS_IN_TEST)} of {TOTAL_QUESTIONS_IN_TEST} • Dynamic difficulty calibrates to your mastery zone
           </p>
         </div>
 
         {/* Visual Mastery Meter (Novice -> Competent -> Expert) */}
-        <div className="flex flex-col gap-1.5 min-w-[220px] p-3 rounded-xl bg-paper border border-border shadow-xs">
+        <div className="flex flex-col gap-2 min-w-[250px] p-3.5 rounded-xl bg-paper border border-border shadow-xs">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-semibold text-text-secondary flex items-center gap-1.5 text-[11px]">
+            <span className="font-semibold text-text-secondary flex items-center gap-1.5 text-xs">
               <Target className="w-3.5 h-3.5 text-focus" />
               Skill Mastery Level
             </span>
@@ -306,7 +306,7 @@ function CATAssessmentContent() {
           </div>
 
           {/* Meter Bar with 3 Visual Zones */}
-          <div className="relative w-full h-2 bg-surface rounded-full overflow-hidden border border-border">
+          <div className="relative w-full h-2.5 bg-surface rounded-full overflow-hidden border border-border">
             <div
               style={{ width: `${Math.min(100, Math.max(8, masteryPercentage))}%` }}
               className={`h-full rounded-full transition-all duration-500 ${
@@ -319,7 +319,7 @@ function CATAssessmentContent() {
             />
           </div>
 
-          <div className="flex items-center justify-between text-[9px] text-text-secondary font-mono">
+          <div className="flex items-center justify-between text-[10px] text-text-secondary font-mono">
             <span className={masteryPercentage < 45 ? "text-warning font-bold" : ""}>Foundational</span>
             <span className={masteryPercentage >= 45 && masteryPercentage < 75 ? "text-focus font-bold" : ""}>Competent</span>
             <span className={masteryPercentage >= 75 ? "text-signal font-bold" : ""}>Role-Ready</span>
@@ -329,9 +329,9 @@ function CATAssessmentContent() {
 
       {/*    2. Main Question Arena    */}
       {!isCompleted && currentQuestion && (
-        <div className="flex flex-col gap-4 p-4 sm:p-5 rounded-2xl border border-border bg-surface shadow-lg">
+        <div className="flex flex-col gap-4.5 p-5 sm:p-6 rounded-2xl border border-border bg-surface shadow-lg">
           <div>
-            <div className="flex items-center justify-between text-[11px] text-text-secondary mb-1.5">
+            <div className="flex items-center justify-between text-xs text-text-secondary mb-1.5">
               <span className="font-mono font-semibold text-focus uppercase tracking-wider">
                 Topic: {currentQuestion.topic}
               </span>
@@ -339,13 +339,13 @@ function CATAssessmentContent() {
                 Calibrated Level: Tier {currentQuestion.difficultyTier}
               </span>
             </div>
-            <h3 className="text-sm sm:text-base font-bold text-text-primary leading-snug">
+            <h3 className="text-base sm:text-lg font-bold text-text-primary leading-snug">
               {currentQuestion.question}
             </h3>
           </div>
 
           {/* Options List */}
-          <div className="flex flex-col gap-2.5">
+          <div className="flex flex-col gap-3">
             {currentQuestion.options.map((option, idx) => {
               const isSelected = selectedOption === idx;
               const isCorrectOption = idx === currentQuestion.correctOptionIndex;
@@ -369,9 +369,9 @@ function CATAssessmentContent() {
                   type="button"
                   disabled={isAnswerSubmitted}
                   onClick={() => setSelectedOption(idx)}
-                  className={`flex items-start gap-2.5 p-3 rounded-xl border text-left transition-all cursor-pointer text-xs sm:text-sm font-medium ${optionStyle}`}
+                  className={`flex items-start gap-3 p-3.5 rounded-xl border text-left transition-all cursor-pointer text-xs sm:text-sm font-medium ${optionStyle}`}
                 >
-                  <span className="w-5 h-5 rounded-md bg-surface border border-border flex items-center justify-center text-[11px] font-mono font-bold flex-shrink-0 mt-0.5">
+                  <span className="w-5 h-5 rounded-md bg-surface border border-border flex items-center justify-center text-xs font-mono font-bold flex-shrink-0 mt-0.5">
                     {String.fromCharCode(65 + idx)}
                   </span>
                   <span className="flex-1 leading-relaxed text-xs sm:text-sm">{option}</span>
@@ -390,7 +390,7 @@ function CATAssessmentContent() {
           {/* Answer Explanation */}
           {isAnswerSubmitted && (
             <div
-              className={`p-3 rounded-xl border text-xs leading-relaxed animate-in fade-in duration-200 ${
+              className={`p-3.5 rounded-xl border text-xs leading-relaxed animate-in fade-in duration-200 ${
                 selectedOption === currentQuestion.correctOptionIndex
                   ? "border-signal/30 bg-signal/10 text-text-primary"
                   : "border-alert/30 bg-alert/10 text-text-primary"
@@ -398,22 +398,22 @@ function CATAssessmentContent() {
             >
               <div className="flex items-center gap-1.5 font-bold mb-0.5">
                 {selectedOption === currentQuestion.correctOptionIndex ? (
-                  <span className="text-signal flex items-center gap-1 text-[11px]">
+                  <span className="text-signal flex items-center gap-1 text-xs">
                     <CheckCircle className="w-3.5 h-3.5" weight="fill" /> Correct Answer! (+Mastery Gain)
                   </span>
                 ) : (
-                  <span className="text-alert flex items-center gap-1 text-[11px]">
+                  <span className="text-alert flex items-center gap-1 text-xs">
                     <WarningCircle className="w-3.5 h-3.5" weight="bold" /> Conceptual Gap Detected
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-text-secondary">{currentQuestion.explanation}</p>
+              <p className="text-xs text-text-secondary leading-relaxed">{currentQuestion.explanation}</p>
             </div>
           )}
 
           {/* Question Action Bar */}
-          <div className="flex items-center justify-between pt-2.5 border-t border-border">
-            <span className="text-[11px] text-text-secondary">
+          <div className="flex items-center justify-between pt-3 border-t border-border">
+            <span className="text-xs text-text-secondary">
               {isAnswerSubmitted ? "Mastery score updated" : "Select an option and submit"}
             </span>
 
@@ -422,7 +422,7 @@ function CATAssessmentContent() {
                 type="button"
                 disabled={selectedOption === null}
                 onClick={handleSubmitAnswer}
-                className="px-5 py-2.5 rounded-xl bg-focus hover:bg-focus/90 text-white font-bold text-xs sm:text-sm shadow-md shadow-focus/25 transition-all cursor-pointer disabled:opacity-50"
+                className="px-6 py-2.5 rounded-xl bg-focus hover:bg-focus/90 text-white font-bold text-xs sm:text-sm shadow-md shadow-focus/25 transition-all cursor-pointer disabled:opacity-50"
               >
                 Submit Answer
               </button>
@@ -430,7 +430,7 @@ function CATAssessmentContent() {
               <button
                 type="button"
                 onClick={handleNextQuestion}
-                className="px-5 py-2.5 rounded-xl bg-focus hover:bg-focus/90 text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-md shadow-focus/25 transition-all cursor-pointer"
+                className="px-6 py-2.5 rounded-xl bg-focus hover:bg-focus/90 text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-md shadow-focus/25 transition-all cursor-pointer"
               >
                 <span>{answeredQuestionIds.length >= TOTAL_QUESTIONS_IN_TEST ? "View Diagnostic Scorecard" : "Next Adaptive Question"}</span>
                 <ArrowRight className="w-4 h-4" weight="bold" />
