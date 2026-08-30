@@ -58,10 +58,11 @@ export function SocraticCopilotSidecar({
 
   // Helper: Format inline text for bold, code, and timestamp seek buttons
   const formatInlineText = (text: string): React.ReactNode[] => {
-    const tokenRegex = /([(?:Jump to|Seek to|timestamp:?)\s*(\d{1,2}):(\d{2})\])|(\bhttps?:\/\/[^\s)]+)|(\*\*[^*]+\*\*)|(`[^`]+`)/gi;
+    const tokenRegex = /(\[(?:Jump to|Seek to)\s*(\d{1,2}):(\d{2})\])|(\bhttps?:\/\/[^\s)]+)|(\*\*[^*]+\*\*)|(`[^`]+`)/gi;
     const nodes: React.ReactNode[] = [];
     let lastIndex = 0;
     let match;
+
 
     while ((match = tokenRegex.exec(text)) !== null) {
       if (match.index > lastIndex) {
