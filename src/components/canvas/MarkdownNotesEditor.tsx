@@ -37,7 +37,7 @@ export function MarkdownNotesEditor({
     if (saved && saved.trim() !== "") {
       setContent(saved);
     } else {
-      const initialTemplate = `# Study Notes — Level ${levelId}\n\n- Key concepts learned:\n- Practical code patterns:\n`;
+      const initialTemplate = `# Study Notes  -  Level ${levelId}\n\n- Key concepts learned:\n- Practical code patterns:\n`;
       setContent(initialTemplate);
       mockStore.saveNote(levelId, initialTemplate);
     }

@@ -16,7 +16,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LearnPath AI — Personalized Autonomous Career Architect",
+  title: "LearnPath AI  -  Personalized Autonomous Career Architect",
   description: "AI-powered DAG learning roadmap and adaptive mastery engine.",
 };
 

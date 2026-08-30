@@ -1,5 +1,7 @@
 "use client";
 
+import { mockStore } from "./mockStore";
+
 export interface StudyGroup {
   id: string;
   name: string;
@@ -101,335 +103,78 @@ export interface Contributor {
   rank: number;
 }
 
-const SOCIAL_STORAGE_KEY = "learnpath_social_store_v1";
+const SOCIAL_STORAGE_KEY = "learnpath_social_store_v4";
 
-const DEFAULT_GROUPS: StudyGroup[] = [
-  {
-    id: "grp-python",
-    name: "Python for Data Science & AI",
-    topic: "Python",
-    description: "Algorithmic scripting, vector manipulation with NumPy, and automating analytical pipelines.",
-    icon: "🐍",
-    bannerColor: "from-blue-600/20 via-emerald-600/10 to-transparent",
-    membersCount: 48,
-    activeNowCount: 14,
-    solvedDoubtsCount: 86,
-    progressPercentage: 68,
-    isMember: true,
-    levelBadge: "Levels 2 & 3",
-  },
-  {
-    id: "grp-sql",
-    name: "SQL & Relational Engineering",
-    topic: "SQL",
-    description: "Complex window functions, CTEs, indexing, query optimization, and OLAP star schemas.",
-    icon: "🗄️",
-    bannerColor: "from-teal-600/20 via-cyan-600/10 to-transparent",
-    membersCount: 56,
-    activeNowCount: 19,
-    solvedDoubtsCount: 124,
-    progressPercentage: 82,
-    isMember: true,
-    levelBadge: "Level 1",
-  },
-  {
-    id: "grp-stats",
-    name: "Applied Business Statistics Guild",
-    topic: "Statistics",
-    description: "Hypothesis testing, p-values, ANOVA, Bayesian inference, and psychometric IRT models.",
-    icon: "📊",
-    bannerColor: "from-amber-600/20 via-orange-600/10 to-transparent",
-    membersCount: 32,
-    activeNowCount: 8,
-    solvedDoubtsCount: 52,
-    progressPercentage: 45,
-    isMember: false,
-    levelBadge: "Level 5",
-  },
-  {
-    id: "grp-bi",
-    name: "Power BI & Executive Storytelling",
-    topic: "Power BI",
-    description: "DAX calculations, time intelligence, data modeling, and KPI dashboard architectures.",
-    icon: "📈",
-    bannerColor: "from-yellow-600/20 via-amber-600/10 to-transparent",
-    membersCount: 41,
-    activeNowCount: 11,
-    solvedDoubtsCount: 67,
-    progressPercentage: 54,
-    isMember: false,
-    levelBadge: "Level 4 & 6",
-  },
-];
+function generateDynamicGroups(): StudyGroup[] {
+  if (typeof window !== "undefined") {
+    const path = mockStore.getLearningPath();
+    if (path && path.levels && path.levels.length > 0) {
+      // Group levels by skillName
+      const groupsMap = new Map<string, typeof path.levels>();
+      path.levels.forEach((lvl) => {
+        const key = lvl.skillName;
+        if (!groupsMap.has(key)) groupsMap.set(key, []);
+        groupsMap.get(key)!.push(lvl);
+      });
 
-const DEFAULT_MESSAGES: Record<string, GroupMessage[]> = {
-  "grp-python": [
-    {
-      id: "msg-p1",
-      groupId: "grp-python",
-      authorId: "u-marcus",
-      authorName: "Marcus Vance",
-      authorAvatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Marcus",
-      authorRole: "mentor",
-      content: "Welcome everyone! Today we are discussing optimizing Pandas vectorized operations over iterative `.iterrows()`. Notice the 100x speedup when using numpy underlying arrays.",
-      codeSnippet: {
-        lang: "python",
-        code: "# Vectorized speedup\ndf['tax'] = np.where(df['amount'] > 1000, df['amount'] * 0.18, df['amount'] * 0.05)",
-      },
-      timestamp: "10:15 AM",
-      reactions: { "🔥": 8, "👏": 5 },
-    },
-    {
-      id: "msg-p2",
-      groupId: "grp-python",
-      authorId: "u-elena",
-      authorName: "Elena Rostova",
-      authorAvatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Elena",
-      authorRole: "learner",
-      content: "That `.where` pattern solved my timeout on large datasets! Are we covering list comprehensions vs map() next?",
-      timestamp: "10:22 AM",
-      reactions: { "💡": 4 },
-    },
-    {
-      id: "msg-p3",
-      groupId: "grp-python",
-      authorId: "u-alex",
-      authorName: "Alex Dev (You)",
-      authorAvatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Alex",
-      authorRole: "learner",
-      content: "Working through the Level 2 Python milestones right now. Joining the 25m Focus Timer room if anyone wants to study together!",
-      timestamp: "Just now",
-      reactions: { "🚀": 3 },
-    },
-  ],
-  "grp-sql": [
-    {
-      id: "msg-s1",
-      groupId: "grp-sql",
-      authorId: "u-priya",
-      authorName: "Priya Sharma",
-      authorAvatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Priya",
-      authorRole: "mentor",
-      content: "Remember for Level 1 boss challenge: `DENSE_RANK()` does NOT skip ranks on ties, whereas `RANK()` will skip. Here is a quick reference query:",
-      codeSnippet: {
-        lang: "sql",
-        code: "SELECT employee_id, department_id, salary,\n       DENSE_RANK() OVER (PARTITION BY department_id ORDER BY salary DESC) as rank_no\nFROM employees;",
-      },
-      timestamp: "09:40 AM",
-      reactions: { "🎯": 12, "⭐": 7 },
-    },
-  ],
-};
+      const colors = [
+        "from-blue-600/20 via-emerald-600/10 to-transparent",
+        "from-teal-600/20 via-cyan-600/10 to-transparent",
+        "from-purple-600/20 via-indigo-600/10 to-transparent",
+        "from-amber-600/20 via-orange-600/10 to-transparent",
+        "from-rose-600/20 via-pink-600/10 to-transparent",
+      ];
 
-const DEFAULT_DOUBTS: Record<string, DoubtItem[]> = {
-  "grp-python": [
+      const icons = ["shield", "terminal", "cpu", "code", "database"];
+
+      let idx = 0;
+      const result: StudyGroup[] = [];
+      groupsMap.forEach((lvls, skillName) => {
+        const completedCount = lvls.filter((l) => l.status === "completed").length;
+        const progress = Math.round((completedCount / lvls.length) * 100);
+        const levelNumbers = lvls.map((l) => l.displayLevel).join(" & ");
+
+        result.push({
+          id: `grp-${skillName.toLowerCase().replace(/[^a-z0-9]/g, "-")}`,
+          name: `${skillName} Study Circle`,
+          topic: skillName,
+          description: `Collaborative study circle for mastering ${skillName} milestones and DAG challenges.`,
+          icon: icons[idx % icons.length],
+          bannerColor: colors[idx % colors.length],
+          membersCount: 1,
+          activeNowCount: 1,
+          solvedDoubtsCount: 0,
+          progressPercentage: progress,
+          isMember: true,
+          levelBadge: `Level ${levelNumbers}`,
+        });
+        idx++;
+      });
+
+      if (result.length > 0) return result;
+    }
+  }
+
+  // Fallback defaults if no path exists yet
+  return [
     {
-      id: "dbt-1",
-      groupId: "grp-python",
-      title: "How to handle SettingWithCopyWarning in nested Pandas indexing?",
-      description: "When filtering rows and attempting to assign values to a new column, Pandas throws `SettingWithCopyWarning`. What is the canonical idiom to avoid this?",
-      topicTag: "Pandas",
-      authorName: "Devon Clark",
-      authorAvatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Devon",
-      codeSnippet: {
-        lang: "python",
-        code: "# Throws warning:\nsubset = df[df['status'] == 'active']\nsubset['discount'] = 0.15",
-      },
-      upvotes: 14,
-      isResolved: true,
-      createdAt: "2 hours ago",
-      answers: [
-        {
-          id: "ans-1",
-          doubtId: "dbt-1",
-          authorName: "Marcus Vance",
-          authorAvatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Marcus",
-          authorRole: "Mentor",
-          content: "Use `.loc` directly on the parent DataFrame or explicitly call `.copy()` on the subset:",
-          codeSnippet: {
-            lang: "python",
-            code: "# Method 1: In-place with .loc\ndf.loc[df['status'] == 'active', 'discount'] = 0.15\n\n# Method 2: Explicit deep copy\nsubset = df[df['status'] == 'active'].copy()\nsubset['discount'] = 0.15",
-          },
-          upvotes: 21,
-          isAccepted: true,
-          timestamp: "1 hour ago",
-        },
-      ],
+      id: "grp-core",
+      name: "Core Engineering Study Circle",
+      topic: "Core Engineering",
+      description: "Collaborative study circle for algorithms, distributed systems, and core architecture.",
+      icon: "cpu",
+      bannerColor: "from-blue-600/20 via-emerald-600/10 to-transparent",
+      membersCount: 1,
+      activeNowCount: 1,
+      solvedDoubtsCount: 0,
+      progressPercentage: 0,
+      isMember: true,
+      levelBadge: "Foundations",
     },
-    {
-      id: "dbt-2",
-      groupId: "grp-python",
-      title: "Difference between `pd.merge()` and `pd.concat()` in complex joins?",
-      description: "I have 3 CSV tables with varying foreign keys. Should I use merge on keys or concat along axis=1?",
-      topicTag: "ETL / DataFrames",
-      authorName: "Samantha Reed",
-      authorAvatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Samantha",
-      upvotes: 7,
-      isResolved: false,
-      createdAt: "35 mins ago",
-      answers: [],
-    },
-  ],
-  "grp-sql": [
-    {
-      id: "dbt-3",
-      groupId: "grp-sql",
-      title: "When to use CTEs vs Temporary Tables for recursive tree queries?",
-      description: "When traversing hierarchical org charts, CTEs work well with `WITH RECURSIVE`. Is there any memory overhead difference compared to indexed temp tables?",
-      topicTag: "Recursive SQL",
-      authorName: "Kenji Sato",
-      authorAvatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Kenji",
-      upvotes: 9,
-      isResolved: false,
-      createdAt: "1 hour ago",
-      answers: [],
-    },
-  ],
-};
+  ];
+}
 
-const DEFAULT_CHALLENGES: StudyChallenge[] = [
-  {
-    id: "ch-1",
-    groupId: "grp-python",
-    title: "Vectorization Sprint",
-    description: "Write 3 vectorized pandas transformations without iterative for-loops.",
-    xpReward: 150,
-    target: 3,
-    progress: 2,
-    type: "daily",
-    isCompleted: false,
-  },
-  {
-    id: "ch-2",
-    groupId: "grp-python",
-    title: "Focus Master",
-    description: "Complete two 25-minute collaborative study timer sessions.",
-    xpReward: 200,
-    target: 2,
-    progress: 1,
-    type: "daily",
-    isCompleted: false,
-  },
-  {
-    id: "ch-3",
-    groupId: "grp-python",
-    title: "Community Peer Helper",
-    description: "Post a verified or upvoted answer on the Doubt Board.",
-    xpReward: 300,
-    target: 1,
-    progress: 1,
-    type: "weekly",
-    isCompleted: true,
-  },
-  {
-    id: "ch-4",
-    groupId: "grp-sql",
-    title: "Window Function Marathon",
-    description: "Solve 5 SQL queries utilizing ROW_NUMBER, RANK, and DENSE_RANK.",
-    xpReward: 250,
-    target: 5,
-    progress: 4,
-    type: "weekly",
-    isCompleted: false,
-  },
-];
-
-const DEFAULT_CONTRIBUTORS: Contributor[] = [
-  {
-    id: "c-1",
-    name: "Marcus Vance",
-    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Marcus",
-    role: "Senior Data Mentor",
-    points: 1420,
-    doubtsAnswered: 38,
-    upvotesReceived: 184,
-    studyMinutes: 720,
-    badge: "🏆 Top Mentor",
-    rank: 1,
-  },
-  {
-    id: "c-2",
-    name: "Priya Sharma",
-    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Priya",
-    role: "SQL Lead",
-    points: 1180,
-    doubtsAnswered: 29,
-    upvotesReceived: 142,
-    studyMinutes: 560,
-    badge: "⚡ Query Master",
-    rank: 2,
-  },
-  {
-    id: "c-3",
-    name: "Elena Rostova",
-    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Elena",
-    role: "Active Learner",
-    points: 920,
-    doubtsAnswered: 18,
-    upvotesReceived: 88,
-    studyMinutes: 490,
-    badge: "🌟 Focus Champion",
-    rank: 3,
-  },
-  {
-    id: "c-4",
-    name: "Alex Dev (You)",
-    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Alex",
-    role: "Learner",
-    points: 680,
-    doubtsAnswered: 11,
-    upvotesReceived: 54,
-    studyMinutes: 340,
-    badge: "🚀 Rising Star",
-    rank: 4,
-  },
-  {
-    id: "c-5",
-    name: "Kenji Sato",
-    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Kenji",
-    role: "Data Analyst",
-    points: 540,
-    doubtsAnswered: 8,
-    upvotesReceived: 36,
-    studyMinutes: 280,
-    badge: "🎯 Solver",
-    rank: 5,
-  },
-];
-
-const DEFAULT_ACTIVE_STUDIERS: StudyParticipant[] = [
-  {
-    id: "st-alex",
-    name: "Alex Dev (You)",
-    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Alex",
-    status: "Solving SQL Window Exercises",
-    minutesStudied: 35,
-    isSelf: true,
-  },
-  {
-    id: "st-elena",
-    name: "Elena Rostova",
-    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Elena",
-    status: "Reviewing Pandas Vectorization",
-    minutesStudied: 45,
-  },
-  {
-    id: "st-marcus",
-    name: "Marcus Vance",
-    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Marcus",
-    status: "Building Power BI Tabular Models",
-    minutesStudied: 80,
-  },
-  {
-    id: "st-devon",
-    name: "Devon Clark",
-    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Devon",
-    status: "Hypothesis Testing with p-values",
-    minutesStudied: 20,
-  },
-];
-
-interface SocialStoreState {
+export interface SocialStoreState {
   groups: StudyGroup[];
   messages: Record<string, GroupMessage[]>;
   doubts: Record<string, DoubtItem[]>;
@@ -446,19 +191,21 @@ interface SocialStoreState {
 
 export const socialStore = {
   getState(): SocialStoreState {
+    const dynamicGroups = generateDynamicGroups();
+
     if (typeof window === "undefined") {
       return {
-        groups: DEFAULT_GROUPS,
-        messages: DEFAULT_MESSAGES,
-        doubts: DEFAULT_DOUBTS,
-        challenges: { "grp-python": DEFAULT_CHALLENGES },
-        contributors: DEFAULT_CONTRIBUTORS,
-        activeStudiers: DEFAULT_ACTIVE_STUDIERS,
+        groups: dynamicGroups,
+        messages: {},
+        doubts: {},
+        challenges: {},
+        contributors: [],
+        activeStudiers: [],
         studyTimer: {
           isRunning: false,
           timeLeft: 25 * 60,
           mode: "25",
-          completedSessions: 3,
+          completedSessions: 0,
         },
       };
     }
@@ -466,22 +213,25 @@ export const socialStore = {
     try {
       const stored = localStorage.getItem(SOCIAL_STORAGE_KEY);
       if (stored) {
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        if (parsed && Array.isArray(parsed.groups) && parsed.groups.length > 0) {
+          return parsed;
+        }
       }
     } catch {}
 
     const initial: SocialStoreState = {
-      groups: DEFAULT_GROUPS,
-      messages: DEFAULT_MESSAGES,
-      doubts: DEFAULT_DOUBTS,
-      challenges: { "grp-python": DEFAULT_CHALLENGES },
-      contributors: DEFAULT_CONTRIBUTORS,
-      activeStudiers: DEFAULT_ACTIVE_STUDIERS,
+      groups: dynamicGroups,
+      messages: {},
+      doubts: {},
+      challenges: {},
+      contributors: [],
+      activeStudiers: [],
       studyTimer: {
         isRunning: false,
         timeLeft: 25 * 60,
         mode: "25",
-        completedSessions: 3,
+        completedSessions: 0,
       },
     };
 
@@ -501,7 +251,14 @@ export const socialStore = {
   },
 
   getGroups(): StudyGroup[] {
-    return this.getState().groups;
+    const state = this.getState();
+    const dynamic = generateDynamicGroups();
+    // Refresh groups when dynamic path changes or if on stale defaults
+    if (dynamic.length > 0 && (!state.groups || state.groups.length === 0 || state.groups[0].id === "grp-python")) {
+      state.groups = dynamic;
+      this.saveState(state);
+    }
+    return state.groups;
   },
 
   joinGroup(groupId: string) {
@@ -531,7 +288,7 @@ export const socialStore = {
       name: group.name || "New Study Circle",
       topic: group.topic || "General",
       description: group.description || "A collaborative study space.",
-      icon: group.icon || "📚",
+      icon: group.icon || "code",
       bannerColor: "from-emerald-600/20 via-teal-600/10 to-transparent",
       membersCount: 1,
       activeNowCount: 1,
@@ -542,19 +299,7 @@ export const socialStore = {
     };
 
     state.groups.unshift(newGroup);
-    state.messages[newGroup.id] = [
-      {
-        id: `msg-${Date.now()}`,
-        groupId: newGroup.id,
-        authorId: "u-self",
-        authorName: "Alex Dev (You)",
-        authorAvatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Alex",
-        authorRole: "learner",
-        content: `🎉 Created study group "${newGroup.name}"! Welcome study partners.`,
-        timestamp: "Just now",
-        reactions: { "👋": 1 },
-      },
-    ];
+    state.messages[newGroup.id] = [];
     state.doubts[newGroup.id] = [];
     this.saveState(state);
     return newGroup;
@@ -571,12 +316,15 @@ export const socialStore = {
     codeSnippet?: { code: string; lang: string }
   ) {
     const state = this.getState();
+    const selfName = typeof window !== "undefined"
+      ? (() => { try { const p = JSON.parse(localStorage.getItem("learnpath_profile_v2") || "{}"); return p?.name || "You"; } catch { return "You"; } })()
+      : "You";
     const newMsg: GroupMessage = {
       id: `msg-${Date.now()}`,
       groupId,
       authorId: "u-self",
-      authorName: "Alex Dev (You)",
-      authorAvatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Alex",
+      authorName: `${selfName} (You)`,
+      authorAvatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(selfName)}`,
       authorRole: "learner",
       content,
       codeSnippet,
@@ -584,20 +332,27 @@ export const socialStore = {
       reactions: {},
     };
 
-    if (!state.messages[groupId]) state.messages[groupId] = [];
+    if (!state.messages[groupId]) {
+      state.messages[groupId] = [];
+    }
     state.messages[groupId].push(newMsg);
     this.saveState(state);
+    return newMsg;
   },
 
-  toggleReaction(groupId: string, msgId: string, emoji: string) {
+  toggleReaction(groupId: string, messageId: string, emojiKey: string) {
     const state = this.getState();
-    const msgs = state.messages[groupId] || [];
-    const target = msgs.find((m) => m.id === msgId);
-    if (target) {
-      if (!target.reactions) target.reactions = {};
-      target.reactions[emoji] = (target.reactions[emoji] || 0) + 1;
-      this.saveState(state);
+    const msgs = state.messages[groupId];
+    if (!msgs) return;
+    const msg = msgs.find((m) => m.id === messageId);
+    if (!msg) return;
+    if (!msg.reactions) msg.reactions = {};
+    if (msg.reactions[emojiKey]) {
+      delete msg.reactions[emojiKey];
+    } else {
+      msg.reactions[emojiKey] = 1;
     }
+    this.saveState(state);
   },
 
   getDoubts(groupId: string): DoubtItem[] {
@@ -605,22 +360,25 @@ export const socialStore = {
     return state.doubts[groupId] || [];
   },
 
-  postDoubt(
+  createDoubt(
     groupId: string,
     title: string,
     description: string,
     topicTag: string,
     codeSnippet?: { code: string; lang: string }
-  ) {
+  ): DoubtItem {
     const state = this.getState();
+    const selfName = typeof window !== "undefined"
+      ? (() => { try { const p = JSON.parse(localStorage.getItem("learnpath_profile_v2") || "{}"); return p?.name || "You"; } catch { return "You"; } })()
+      : "You";
     const newDoubt: DoubtItem = {
       id: `dbt-${Date.now()}`,
       groupId,
       title,
       description,
-      topicTag: topicTag || "General",
-      authorName: "Alex Dev (You)",
-      authorAvatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Alex",
+      topicTag,
+      authorName: `${selfName} (You)`,
+      authorAvatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(selfName)}`,
       codeSnippet,
       upvotes: 1,
       hasUpvoted: true,
@@ -629,25 +387,12 @@ export const socialStore = {
       createdAt: "Just now",
     };
 
-    if (!state.doubts[groupId]) state.doubts[groupId] = [];
+    if (!state.doubts[groupId]) {
+      state.doubts[groupId] = [];
+    }
     state.doubts[groupId].unshift(newDoubt);
     this.saveState(state);
-  },
-
-  upvoteDoubt(groupId: string, doubtId: string) {
-    const state = this.getState();
-    const doubts = state.doubts[groupId] || [];
-    const d = doubts.find((item) => item.id === doubtId);
-    if (d) {
-      if (d.hasUpvoted) {
-        d.upvotes = Math.max(0, d.upvotes - 1);
-        d.hasUpvoted = false;
-      } else {
-        d.upvotes += 1;
-        d.hasUpvoted = true;
-      }
-      this.saveState(state);
-    }
+    return newDoubt;
   },
 
   answerDoubt(
@@ -658,103 +403,203 @@ export const socialStore = {
   ) {
     const state = this.getState();
     const doubts = state.doubts[groupId] || [];
-    const d = doubts.find((item) => item.id === doubtId);
-    if (d) {
-      const newAnswer: DoubtAnswer = {
-        id: `ans-${Date.now()}`,
-        doubtId,
-        authorName: "Alex Dev (You)",
-        authorAvatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Alex",
-        authorRole: "Learner",
-        content,
-        codeSnippet,
-        upvotes: 1,
-        isAccepted: false,
-        timestamp: "Just now",
-        hasUpvoted: true,
-      };
-      d.answers.push(newAnswer);
-      this.saveState(state);
-    }
+    const doubt = doubts.find((d) => d.id === doubtId);
+    if (!doubt) return;
+
+    const selfName = typeof window !== "undefined"
+      ? (() => { try { const p = JSON.parse(localStorage.getItem("learnpath_profile_v2") || "{}"); return p?.name || "You"; } catch { return "You"; } })()
+      : "You";
+
+    const answer: DoubtAnswer = {
+      id: `ans-${Date.now()}`,
+      doubtId,
+      authorName: `${selfName} (You)`,
+      authorAvatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(selfName)}`,
+      authorRole: "Learner",
+      content,
+      codeSnippet,
+      upvotes: 0,
+      isAccepted: false,
+      timestamp: "Just now",
+    };
+
+    doubt.answers.push(answer);
+    this.saveState(state);
   },
 
-  upvoteAnswer(groupId: string, doubtId: string, answerId: string) {
+  upvoteDoubt(groupId: string, doubtId: string) {
     const state = this.getState();
     const doubts = state.doubts[groupId] || [];
-    const d = doubts.find((item) => item.id === doubtId);
-    if (d) {
-      const ans = d.answers.find((a) => a.id === answerId);
-      if (ans) {
-        if (ans.hasUpvoted) {
-          ans.upvotes = Math.max(0, ans.upvotes - 1);
-          ans.hasUpvoted = false;
-        } else {
-          ans.upvotes += 1;
-          ans.hasUpvoted = true;
-        }
-        this.saveState(state);
-      }
+    const doubt = doubts.find((d) => d.id === doubtId);
+    if (!doubt) return;
+    if (doubt.hasUpvoted) {
+      doubt.upvotes = Math.max(0, doubt.upvotes - 1);
+      doubt.hasUpvoted = false;
+    } else {
+      doubt.upvotes += 1;
+      doubt.hasUpvoted = true;
     }
+    this.saveState(state);
   },
 
   acceptAnswer(groupId: string, doubtId: string, answerId: string) {
     const state = this.getState();
     const doubts = state.doubts[groupId] || [];
-    const d = doubts.find((item) => item.id === doubtId);
-    if (d) {
-      d.isResolved = true;
-      d.answers.forEach((ans) => {
-        ans.isAccepted = ans.id === answerId;
-      });
-      // Increment group resolved doubts
-      const grp = state.groups.find((g) => g.id === groupId);
-      if (grp) grp.solvedDoubtsCount += 1;
-      this.saveState(state);
+    const doubt = doubts.find((d) => d.id === doubtId);
+    if (!doubt) return;
+    doubt.answers.forEach((a) => {
+      a.isAccepted = a.id === answerId;
+    });
+    doubt.isResolved = true;
+    this.saveState(state);
+  },
+
+  getActiveStudiers(): StudyParticipant[] {
+    const state = this.getState();
+    const selfName = typeof window !== "undefined"
+      ? (() => { try { const p = JSON.parse(localStorage.getItem("learnpath_profile_v2") || "{}"); return p?.name || "You"; } catch { return "You"; } })()
+      : "You";
+
+    if (state.studyTimer.isRunning) {
+      return [
+        {
+          id: "u-self",
+          name: `${selfName} (You)`,
+          avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(selfName)}`,
+          status: "Deep Focus Session Active",
+          minutesStudied: Math.max(1, state.studyTimer.completedSessions * 25),
+          isSelf: true,
+        },
+      ];
     }
+    return [];
   },
 
   getChallenges(groupId: string): StudyChallenge[] {
     const state = this.getState();
-    return state.challenges[groupId] || DEFAULT_CHALLENGES;
+    const path = typeof window !== "undefined" ? mockStore.getLearningPath() : null;
+    const completedLevels = path?.levels.filter((l) => l.status === "completed").length || 0;
+
+    return [
+      {
+        id: "ch-1",
+        groupId,
+        title: "Sprint Pioneer: Complete 3 DAG Milestones",
+        description: "Master 3 consecutive milestones in your curriculum path.",
+        xpReward: 300,
+        target: 3,
+        progress: Math.min(3, completedLevels),
+        type: "weekly",
+        isCompleted: completedLevels >= 3,
+      },
+      {
+        id: "ch-2",
+        groupId,
+        title: "Diagnostic Ace: Pass a Boss Level Checkpoint",
+        description: "Score theta >= 0.55 on any 1-PL Rasch CAT assessment.",
+        xpReward: 250,
+        target: 1,
+        progress: completedLevels > 0 ? 1 : 0,
+        type: "weekly",
+        isCompleted: completedLevels > 0,
+      },
+      {
+        id: "ch-3",
+        groupId,
+        title: "Focus Master: Log 50 Minutes of Deep Work",
+        description: "Complete two 25-minute Pomodoro sprints in the live focus room.",
+        xpReward: 150,
+        target: 2,
+        progress: state.studyTimer.completedSessions,
+        type: "daily",
+        isCompleted: state.studyTimer.completedSessions >= 2,
+      },
+    ];
+  },
+
+  getContributors(): Contributor[] {
+    const selfName = typeof window !== "undefined"
+      ? (() => { try { const p = JSON.parse(localStorage.getItem("learnpath_profile_v2") || "{}"); return p?.name || "You"; } catch { return "You"; } })()
+      : "You";
+    const path = typeof window !== "undefined" ? mockStore.getLearningPath() : null;
+    const completedLevels = path?.levels.filter((l) => l.status === "completed").length || 0;
+    const points = completedLevels * 150;
+
+    return [
+      {
+        id: "u-self",
+        name: `${selfName} (You)`,
+        avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(selfName)}`,
+        role: "Active Learner",
+        points: points > 0 ? points : 100,
+        doubtsAnswered: 0,
+        upvotesReceived: 0,
+        studyMinutes: 25,
+        badge: "Pioneer",
+        rank: 1,
+      },
+    ];
+  },
+
+  postDoubt(
+    groupId: string,
+    title: string,
+    description: string,
+    topicTag: string,
+    codeSnippet?: { code: string; lang: string }
+  ): DoubtItem {
+    return this.createDoubt(groupId, title, description, topicTag, codeSnippet);
+  },
+
+  upvoteAnswer(groupId: string, doubtId: string, answerId: string) {
+    const state = this.getState();
+    const doubts = state.doubts[groupId] || [];
+    const doubt = doubts.find((d) => d.id === doubtId);
+    if (!doubt) return;
+    const answer = doubt.answers.find((a) => a.id === answerId);
+    if (!answer) return;
+    if (answer.hasUpvoted) {
+      answer.upvotes = Math.max(0, answer.upvotes - 1);
+      answer.hasUpvoted = false;
+    } else {
+      answer.upvotes += 1;
+      answer.hasUpvoted = true;
+    }
+    this.saveState(state);
   },
 
   completeChallenge(groupId: string, challengeId: string) {
     const state = this.getState();
-    const challenges = state.challenges[groupId] || DEFAULT_CHALLENGES;
-    const ch = challenges.find((c) => c.id === challengeId);
-    if (ch && !ch.isCompleted) {
-      ch.progress = ch.target;
+    const list = state.challenges[groupId] || [];
+    const ch = list.find((c) => c.id === challengeId);
+    if (ch) {
       ch.isCompleted = true;
-      state.challenges[groupId] = challenges;
+      ch.progress = ch.target;
       this.saveState(state);
     }
   },
 
-  getContributors(): Contributor[] {
-    return this.getState().contributors;
+  logStudyMinutes(mins: number) {
+    const state = this.getState();
+    const sessions = Math.ceil(mins / 25);
+    state.studyTimer.completedSessions += sessions;
+    this.saveState(state);
   },
 
-  getActiveStudiers(): StudyParticipant[] {
-    return this.getState().activeStudiers;
+  getTimerState() {
+    return this.getState().studyTimer;
   },
 
-  updateStudyTimer(timer: Partial<SocialStoreState["studyTimer"]>) {
+  updateTimerState(timer: Partial<SocialStoreState["studyTimer"]>) {
     const state = this.getState();
     state.studyTimer = { ...state.studyTimer, ...timer };
     this.saveState(state);
   },
 
-  logStudyMinutes(minutes: number) {
+  completePomodoroSession() {
     const state = this.getState();
-    const self = state.activeStudiers.find((s) => s.isSelf);
-    if (self) {
-      self.minutesStudied += minutes;
-    }
-    const selfContrib = state.contributors.find((c) => c.id === "c-4");
-    if (selfContrib) {
-      selfContrib.studyMinutes += minutes;
-      selfContrib.points += minutes * 2;
-    }
+    state.studyTimer.completedSessions += 1;
     this.saveState(state);
   },
 };
+

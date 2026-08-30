@@ -127,42 +127,42 @@ export function SocraticCopilotSidecar({
         title: "SQL Fundamentals",
         phase: "Ground-Truth Base",
         desc: "Relational data extraction layer. Mastering SELECT, JOIN operations, GROUP BY aggregations, and window functions is the prerequisite ground-truth for any data pipeline.",
-        icon: "🗄️",
+        icon: "   ",
       },
       {
         num: 2,
         title: "Python for Data Analysis",
         phase: "Computational Engine",
         desc: "Core algorithmic scripting, control structures, and functional data transformations needed when workflows exceed standard SQL and spreadsheet limitations.",
-        icon: "🐍",
+        icon: "  ",
       },
       {
         num: 3,
         title: "Pandas & Data Cleaning",
         phase: "Vectorized ETL",
         desc: "High-performance vector operations on DataFrames, missing value imputation, reshaping, and feature engineering (strictly sequenced after Python).",
-        icon: "🐼",
+        icon: "  ",
       },
       {
         num: 4,
         title: "Power BI & DAX",
         phase: "Enterprise BI Layer",
         desc: "Bridges backend tabular models to executive reporting. DAX measures (CALCULATE, time intelligence) convert raw relational data into actionable business KPIs.",
-        icon: "📊",
+        icon: "  ",
       },
       {
         num: 5,
         title: "Applied Business Statistics & Rasch Checkpoint",
         phase: "Psychometric Testing",
         desc: "Eliminates false intuition through hypothesis testing and ANOVA, validated via an adaptive 1-PL Rasch Item Response Theory (IRT) boss checkpoint.",
-        icon: "🎯",
+        icon: "  ",
       },
       {
         num: 6,
         title: "Interactive Dashboards & Storytelling",
         phase: "Capstone Synthesis",
         desc: "Synthesizes all 5 upstream competencies into stakeholder-ready visual narratives, executive summaries, and business recommendations.",
-        icon: "🚀",
+        icon: "  ",
       },
     ];
 
@@ -187,7 +187,7 @@ export function SocraticCopilotSidecar({
           <div className="p-3.5 rounded-2xl bg-zinc-900/90 border border-zinc-800 flex flex-col gap-1.5 shadow-sm">
             <span className="text-xs font-bold text-emerald-400">1. Skill Delta Engine</span>
             <span className="text-[11px] font-mono font-bold text-zinc-100 bg-zinc-950 px-2 py-1 rounded-lg border border-zinc-800/80 w-fit">
-              Δ = max(0, Target - Current)
+                = max(0, Target - Current)
             </span>
             <p className="text-xs text-zinc-400 leading-relaxed mt-0.5">
               Ingested GitHub & resume data skips mastered topics and targets only true delta gaps.
@@ -251,7 +251,7 @@ export function SocraticCopilotSidecar({
 
         {/* In-Place Remediation Callout */}
         <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3 mt-1">
-          <span className="text-amber-400 text-base mt-0.5">⚡</span>
+          <span className="text-amber-400 text-base mt-0.5"> </span>
           <div className="flex-1">
             <h5 className="text-xs font-bold text-amber-300">
               Autonomous In-Place Micro-Remediation Loop
@@ -344,11 +344,11 @@ export function SocraticCopilotSidecar({
                   );
                 }
 
-                if (trimmed.startsWith("* ") || trimmed.startsWith("- ") || trimmed.startsWith("• ")) {
-                  const content = trimmed.replace(/^[\*\-•]\s+/, "");
+                if (trimmed.startsWith("* ") || trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+                  const content = trimmed.replace(/^[\*\-*]\s+/, "");
                   return (
                     <div key={lIdx} className="flex items-start gap-2.5 text-xs sm:text-sm leading-relaxed pl-2 py-0.5 text-zinc-200 w-full min-w-0">
-                      <span className="text-emerald-400 mt-0.5 shrink-0 font-bold">•</span>
+                      <span className="text-emerald-400 mt-0.5 shrink-0 font-bold">*</span>
                       <div className="flex-1 min-w-0 break-words">{formatInlineText(content)}</div>
                     </div>
                   );
@@ -375,18 +375,18 @@ export function SocraticCopilotSidecar({
       q.includes("why each level") ||
       q.includes("roadmap")
     ) {
-      return `### 🎯 Why This Specific Learning Path Was Generated Instead of a Generic Syllabus
+      return `###    Why This Specific Learning Path Was Generated Instead of a Generic Syllabus
 
 Unlike traditional static 40-week bootcamps that force every student through the same generic intro lessons, **LearnPath AI** engineered your curriculum using mathematical principles:
 
 #### 1. Mathematical Architecture & Optimization
-• **Exact Skill Delta Formulation**: Δ = max(0, Required Proficiency - Ingested Baseline). Topics you already proved mastery in on GitHub or your resume (e.g. basic spreadsheets at 85%) are skipped entirely. Only verified gaps receive dedicated modules.
-• **Kahn's Topological DAG Scheduling**: Software engineering topics are modeled as a Directed Acyclic Graph G = (V, E). Kahn's algorithm computes in-degrees to ensure foundational prerequisites strictly precede downstream applied modules in O(|V| + |E|) time without circular loops.
-• **1-PL Rasch IRT Testing**: Calibrates item difficulty against latent ability θ, dynamically adapting assessments to match your true competency.
+* **Exact Skill Delta Formulation**:   = max(0, Required Proficiency - Ingested Baseline). Topics you already proved mastery in on GitHub or your resume (e.g. basic spreadsheets at 85%) are skipped entirely. Only verified gaps receive dedicated modules.
+* **Kahn's Topological DAG Scheduling**: Software engineering topics are modeled as a Directed Acyclic Graph G = (V, E). Kahn's algorithm computes in-degrees to ensure foundational prerequisites strictly precede downstream applied modules in O(|V| + |E|) time without circular loops.
+* **1-PL Rasch IRT Testing**: Calibrates item difficulty against latent ability  , dynamically adapting assessments to match your true competency.
 
 ---
 
-#### 🗺️ Detailed Level-by-Level Rationale for Your Roadmap:
+####     Detailed Level-by-Level Rationale for Your Roadmap:
 
 * **Level 1: SQL Fundamentals (Ground-Truth Base)**
   *Why it's here*: SQL is the foundational data extraction layer for all analytical engineering. You must master relational queries, JOIN operations, filter conditions, and aggregations before attempting downstream transformations.
@@ -408,7 +408,7 @@ Unlike traditional static 40-week bootcamps that force every student through the
 
 ---
 
-⚡ **Autonomous Micro-Remediation**: If an assessment detects gaps in a specific subtopic, LearnPath AI injects targeted sub-levels (**Level 5.1, Level 5.2**) with 3D flashcards directly into your active DAG rather than making you restart the course.`;
+  **Autonomous Micro-Remediation**: If an assessment detects gaps in a specific subtopic, LearnPath AI injects targeted sub-levels (**Level 5.1, Level 5.2**) with 3D flashcards directly into your active DAG rather than making you restart the course.`;
     }
 
     return `Here is the Socratic breakdown for **${contextTitle}**:\n\n1. **Core Concept**: Focus on understanding how this directly bridges your target skill gap.\n2. **Video Timestamp**: Review the core syntax around [Jump to 05:45] and the hands-on implementation at [Jump to 12:20].\n\n\`\`\`${contextTitle.toLowerCase().includes("sql") ? "sql" : "python"}\n-- Example implementation\nSELECT category, AVG(sales) AS avg_sales\nFROM transactions\nGROUP BY category\nHAVING AVG(sales) > 500;\n\`\`\`\n\nClick **"Insert to Notes"** to paste this directly into your study scratchpad!`;

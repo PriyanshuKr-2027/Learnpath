@@ -14,8 +14,6 @@ import {
   CheckCircle,
   User,
   ArrowRight,
-  Sparkle,
-  Eye,
   Sliders,
 } from "@phosphor-icons/react";
 import { useSupabase } from "@/components/providers/SupabaseProvider";
@@ -46,29 +44,33 @@ export default function SettingsPage() {
   const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
-    if (supabaseProfile?.darkMode !== undefined) {
-      setDarkMode(supabaseProfile.darkMode);
-    }
-    if (supabaseProfile?.reminders !== undefined) {
-      setDailyReminders(supabaseProfile.reminders);
-    }
-
-    try {
-      const stored = localStorage.getItem("learnpath_app_settings");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed.accentColor) setAccentColor(parsed.accentColor);
-        if (parsed.uiDensity) setUiDensity(parsed.uiDensity);
-        if (parsed.bossAlerts !== undefined) setBossAlerts(parsed.bossAlerts);
-        if (parsed.socialPings !== undefined) setSocialPings(parsed.socialPings);
-        if (parsed.soundEffects !== undefined) setSoundEffects(parsed.soundEffects);
-        if (parsed.language) setLanguage(parsed.language);
-        if (parsed.weekStart) setWeekStart(parsed.weekStart);
-        if (parsed.publicPresence !== undefined) setPublicPresence(parsed.publicPresence);
-        if (parsed.showOnLeaderboard !== undefined) setShowOnLeaderboard(parsed.showOnLeaderboard);
-        if (parsed.telemetryOptIn !== undefined) setTelemetryOptIn(parsed.telemetryOptIn);
+    const timer = setTimeout(() => {
+      if (supabaseProfile?.darkMode !== undefined) {
+        setDarkMode(supabaseProfile.darkMode);
       }
-    } catch {}
+      if (supabaseProfile?.reminders !== undefined) {
+        setDailyReminders(supabaseProfile.reminders);
+      }
+
+      try {
+        const stored = localStorage.getItem("learnpath_app_settings");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.accentColor) setAccentColor(parsed.accentColor);
+          if (parsed.uiDensity) setUiDensity(parsed.uiDensity);
+          if (parsed.bossAlerts !== undefined) setBossAlerts(parsed.bossAlerts);
+          if (parsed.socialPings !== undefined) setSocialPings(parsed.socialPings);
+          if (parsed.soundEffects !== undefined) setSoundEffects(parsed.soundEffects);
+          if (parsed.language) setLanguage(parsed.language);
+          if (parsed.weekStart) setWeekStart(parsed.weekStart);
+          if (parsed.publicPresence !== undefined) setPublicPresence(parsed.publicPresence);
+          if (parsed.showOnLeaderboard !== undefined) setShowOnLeaderboard(parsed.showOnLeaderboard);
+          if (parsed.telemetryOptIn !== undefined) setTelemetryOptIn(parsed.telemetryOptIn);
+        }
+      } catch {}
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [supabaseProfile]);
 
   const toggleDarkMode = () => {
@@ -115,7 +117,7 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-20 text-text-primary">
-      {/* ── Top Header ── */}
+      {/*    Top Header    */}
       <div className="flex flex-wrap items-center justify-between gap-4 p-6 sm:p-7 rounded-3xl border border-border bg-surface shadow-xl">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-focus/15 border border-focus/30 text-focus flex items-center justify-center shadow-lg shadow-focus/20 shrink-0">
@@ -141,10 +143,10 @@ export default function SettingsPage() {
         </Link>
       </div>
 
-      {/* ── Quick Profile Link Notice ── */}
+      {/*    Quick Profile Link Notice    */}
       <div className="p-4 rounded-2xl bg-paper/60 border border-border flex items-center justify-between gap-3 shadow-sm">
         <div className="flex items-center gap-2.5">
-          <span className="text-focus text-base">💡</span>
+          <span className="text-focus text-base">  </span>
           <p className="text-xs text-text-secondary">
             Looking to update your <strong>Name, Date of Birth, GitHub stats</strong>, or <strong>Target Career Role</strong>?
           </p>
@@ -159,7 +161,7 @@ export default function SettingsPage() {
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">
-        {/* ── 1. Appearance & Theme ── */}
+        {/*    1. Appearance & Theme    */}
         <div className="p-6 sm:p-7 rounded-3xl border border-border bg-surface shadow-xl space-y-4">
           <div className="border-b border-border/70 pb-3">
             <h2 className="text-base font-bold text-text-primary flex items-center gap-2">
@@ -234,7 +236,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* ── 2. Notifications & Alerts ── */}
+        {/*    2. Notifications & Alerts    */}
         <div className="p-6 sm:p-7 rounded-3xl border border-border bg-surface shadow-xl space-y-4">
           <div className="border-b border-border/70 pb-3">
             <h2 className="text-base font-bold text-text-primary flex items-center gap-2">
@@ -352,7 +354,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* ── 3. Language & Regional ── */}
+        {/*    3. Language & Regional    */}
         <div className="p-6 sm:p-7 rounded-3xl border border-border bg-surface shadow-xl space-y-4">
           <div className="border-b border-border/70 pb-3">
             <h2 className="text-base font-bold text-text-primary flex items-center gap-2">
@@ -373,11 +375,11 @@ export default function SettingsPage() {
                 className="w-full p-3 rounded-xl bg-paper border border-border text-xs sm:text-sm text-text-primary font-semibold focus:outline-none focus:border-focus/50 shadow-sm cursor-pointer"
               >
                 <option value="en">English (US)</option>
-                <option value="es">Español (Spanish)</option>
-                <option value="hi">हिंदी (Hindi)</option>
-                <option value="fr">Français (French)</option>
+                <option value="es">Espa ol (Spanish)</option>
+                <option value="hi">      (Hindi)</option>
+                <option value="fr">Fran ais (French)</option>
                 <option value="de">Deutsch (German)</option>
-                <option value="zh">中文 (Mandarin)</option>
+                <option value="zh">   (Mandarin)</option>
               </select>
             </div>
 
@@ -395,7 +397,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* ── 4. Privacy & Community Visibility ── */}
+        {/*    4. Privacy & Community Visibility    */}
         <div className="p-6 sm:p-7 rounded-3xl border border-border bg-surface shadow-xl space-y-4">
           <div className="border-b border-border/70 pb-3">
             <h2 className="text-base font-bold text-text-primary flex items-center gap-2">
@@ -482,7 +484,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* ── Save Bar ── */}
+        {/*    Save Bar    */}
         <div className="flex items-center justify-between pt-2">
           {isSaved && (
             <span className="text-xs font-bold text-signal flex items-center gap-1.5 animate-in fade-in">

@@ -12,8 +12,7 @@ export async function updateSession(request: NextRequest) {
   if (
     !supabaseUrl ||
     !supabaseKey ||
-    supabaseUrl.includes("your-project-id") ||
-    supabaseUrl.includes("deblsqilknaxulxqbmmm")
+    supabaseUrl.includes("your-project-id")
   ) {
     return { supabaseResponse, user: null, role: "learner" };
   }

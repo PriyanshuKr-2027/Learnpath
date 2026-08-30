@@ -15,6 +15,8 @@ import { LevelNode } from "@/types";
 
 export interface LevelMapNodeData extends LevelNode {
   onSelectNode: (node: LevelNode) => void;
+  isHighlighted?: boolean;
+  isPrerequisiteHighlighted?: boolean;
 }
 
 export const LevelMapNode = memo(({ data }: { data: any }) => {
@@ -24,6 +26,8 @@ export const LevelMapNode = memo(({ data }: { data: any }) => {
   const isLocked = node.status === "locked";
   const isRemediation = node.isRemediation;
   const isBoss = node.isBossCheckpoint;
+  const isHighlighted = node.isHighlighted;
+  const isPrerequisiteHighlighted = node.isPrerequisiteHighlighted;
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -34,7 +38,7 @@ export const LevelMapNode = memo(({ data }: { data: any }) => {
     <div
       onClick={handleClick}
       className={`group relative flex flex-col items-center cursor-pointer transition-all duration-300 ${
-        isActive ? "scale-105" : "hover:scale-105"
+        isActive || isHighlighted ? "scale-110 z-30" : "hover:scale-105"
       }`}
     >
       {/* Top Handle for incoming dependency edges */}
@@ -60,10 +64,22 @@ export const LevelMapNode = memo(({ data }: { data: any }) => {
         </div>
       )}
 
+      {/* Search Highlight Beacon */}
+      {isHighlighted && (
+        <div className="absolute -top-8 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-focus text-white flex items-center gap-1 shadow-lg shadow-focus/30 animate-pulse">
+          <Sparkles className="w-3 h-3" />
+          <span>TARGET FOUND</span>
+        </div>
+      )}
+
       {/* Main Circular Island Badge */}
       <div
         className={`w-20 h-20 rounded-full flex flex-col items-center justify-center border-4 relative transition-all duration-300 ${
-          isCompleted
+          isHighlighted
+            ? "border-focus bg-focus/25 text-focus ring-8 ring-focus/40 shadow-2xl shadow-focus/50 scale-105"
+            : isPrerequisiteHighlighted
+            ? "border-warning bg-warning/20 text-warning ring-4 ring-warning/30 shadow-xl"
+            : isCompleted
             ? "border-signal bg-signal/15 text-signal shadow-lg shadow-signal/20"
             : isActive
             ? isBoss
@@ -94,8 +110,8 @@ export const LevelMapNode = memo(({ data }: { data: any }) => {
         </span>
 
         {/* Pulsing Active Beacon */}
-        {isActive && (
-          <span className="absolute -inset-1 rounded-full border border-focus animate-ping opacity-30 pointer-events-none" />
+        {(isActive || isHighlighted) && (
+          <span className="absolute -inset-1 rounded-full border border-focus animate-ping opacity-40 pointer-events-none" />
         )}
       </div>
 
@@ -117,11 +133,13 @@ export const LevelMapNode = memo(({ data }: { data: any }) => {
 
       {/* Level Title & Estimated Time */}
       <div className="mt-1.5 flex flex-col items-center max-w-[140px] text-center">
-        <span className="text-xs font-semibold text-text-primary group-hover:text-focus transition-colors line-clamp-1">
+        <span className={`text-xs font-semibold line-clamp-1 transition-colors ${
+          isHighlighted ? "text-focus font-bold" : "text-text-primary group-hover:text-focus"
+        }`}>
           {node.title}
         </span>
         <span className="text-[10px] text-text-secondary font-mono">
-          Week {node.targetWeek} • {node.estimatedMinutes}m
+          Week {node.targetWeek} * {node.estimatedMinutes}m
         </span>
       </div>
 

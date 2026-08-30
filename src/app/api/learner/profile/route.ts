@@ -1,9 +1,5 @@
-/**
- * /api/learner/profile — GET (load) / POST (upsert)
- * Persists LearnerProfile to Supabase with localStorage as local cache fallback.
- */
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 
 export async function GET(req: NextRequest) {
   try {
@@ -17,11 +13,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Not authenticated", profile: null }, { status: 401 });
     }
 
-    const { data, error } = await supabase
+    const db = (await createAdminClient()) || supabase;
+
+    const { data, error } = await db
       .from("learner_profiles")
       .select("profile_data, updated_at")
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
     if (error && error.code !== "PGRST116") {
       throw error;
@@ -53,7 +51,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, persisted: false, reason: "not-authenticated" });
     }
 
-    const { error } = await supabase
+    const db = (await createAdminClient()) || supabase;
+
+    const { error } = await db
       .from("learner_profiles")
       .upsert(
         { user_id: user.id, profile_data: profile, updated_at: new Date().toISOString() },
@@ -68,3 +68,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: err.message, ok: false }, { status: 500 });
   }
 }
+

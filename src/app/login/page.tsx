@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Mail,
@@ -9,13 +9,9 @@ import {
   User,
   Sparkles,
   Loader2,
-  Zap,
-  Rocket,
-  ShieldCheck,
 } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { useSupabase } from "@/components/providers/SupabaseProvider";
-import { mockStore, DEMO_DATA_ANALYST_PROFILE } from "@/lib/services/mockStore";
 
 const emptySubscribe = () => () => {};
 function useIsMounted() {
@@ -28,15 +24,46 @@ function useIsMounted() {
 
 export default function LoginPage() {
   const router = useRouter();
-  const { signIn, signUp, signInWithGoogle, updateProfile } = useSupabase();
+  const { signIn, signUp, signInWithGoogle } = useSupabase();
   const mounted = useIsMounted();
   const [isSignUp, setIsSignUp] = useState(false);
-  const [name, setName] = useState("Alex Dev");
-  const [email, setEmail] = useState("alex@example.com");
-  const [password, setPassword] = useState("password123");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const urlError = params.get("error");
+      if (urlError) {
+        if (urlError === "oauth_failed" || urlError === "no_auth_code") {
+          setError("Google sign-in was canceled or could not be completed. Please try again.");
+        } else {
+          setError(decodeURIComponent(urlError));
+        }
+      }
+    }
+  }, []);
+
+
+  const checkDestinationAndRedirect = async () => {
+    try {
+      const res = await fetch("/api/learner/path");
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.path) {
+          router.push("/roadmap");
+          return;
+        }
+      }
+      router.push("/onboarding");
+    } catch {
+      router.push("/onboarding");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +88,7 @@ export default function LoginPage() {
         if (signInError) {
           setError(signInError.message || "Invalid login credentials.");
         } else {
-          router.push("/dashboard");
+          await checkDestinationAndRedirect();
         }
       }
     } catch (err) {
@@ -78,58 +105,12 @@ export default function LoginPage() {
       const { error: gError } = await signInWithGoogle();
       if (gError) {
         setError(gError.message || "Google authentication failed.");
-      } else {
-        router.push("/dashboard");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Google authentication failed.");
     } finally {
       setGoogleLoading(false);
     }
-  };
-
-  // 1-Click Mock Logins for Testing & Evaluation
-  const handleQuickMockLogin = async (type: "active-dashboard" | "new-onboarding" | "admin") => {
-    setLoading(true);
-    setError("");
-
-    if (type === "active-dashboard") {
-      mockStore.saveProfile(DEMO_DATA_ANALYST_PROFILE);
-      await signIn("alex@example.com", "password123");
-      await updateProfile({
-        name: "Alex Dev",
-        email: "alex@example.com",
-        role: "learner",
-        hasCompletedSetup: true,
-      });
-      router.push("/dashboard");
-    } else if (type === "new-onboarding") {
-      const freshProf = {
-        ...DEMO_DATA_ANALYST_PROFILE,
-        name: "Alex Learner",
-        email: "alex.learner@example.com",
-        hasCompletedOnboarding: false,
-      };
-      mockStore.saveProfile(freshProf);
-      await signIn("alex.learner@example.com", "password123");
-      await updateProfile({
-        name: "Alex Learner",
-        email: "alex.learner@example.com",
-        role: "learner",
-        hasCompletedSetup: false,
-      });
-      router.push("/onboarding");
-    } else if (type === "admin") {
-      await signIn("admin@learnpath.ai", "admin123");
-      await updateProfile({
-        name: "Platform Admin",
-        email: "admin@learnpath.ai",
-        role: "admin",
-        hasCompletedSetup: true,
-      });
-      router.push("/admin");
-    }
-    setLoading(false);
   };
 
   if (!mounted) {
@@ -152,7 +133,7 @@ export default function LoginPage() {
             <Sparkles className="w-5 h-5" />
           </div>
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-text-primary">
-            {isSignUp ? "Create your LearnPath Account" : "Welcome back to LearnPath AI"}
+            {isSignUp ? "Create your LearnPath Account" : "Welcome to LearnPath AI"}
           </h1>
           <p className="text-xs text-text-secondary">
             AI-powered personalized career roadmaps and adaptive mastery.
@@ -164,75 +145,6 @@ export default function LoginPage() {
             {error}
           </div>
         )}
-
-        {/* 1-Click Instant Demo Accounts */}
-        <div className="p-3.5 rounded-2xl border border-focus/30 bg-focus/5 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-focus uppercase tracking-wider flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5" />
-              1-Click Demo Accounts (Instant Access)
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 gap-2">
-            <button
-              type="button"
-              onClick={() => handleQuickMockLogin("active-dashboard")}
-              className="w-full p-2.5 rounded-xl bg-surface hover:bg-surface/80 border border-focus/40 text-left flex items-center justify-between group transition-all shadow-sm cursor-pointer"
-            >
-              <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-focus/15 text-focus flex items-center justify-center font-bold text-xs">
-                  <Zap className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="text-xs font-bold text-text-primary block group-hover:text-focus transition-colors">
-                    Demo Learner (Active Roadmap)
-                  </span>
-                  <span className="text-[10px] text-text-secondary">Pre-populated DAG map, levels 1 & 2 done</span>
-                </div>
-              </div>
-              <ArrowRight className="w-3.5 h-3.5 text-focus opacity-0 group-hover:opacity-100 transition-opacity" />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleQuickMockLogin("new-onboarding")}
-              className="w-full p-2.5 rounded-xl bg-surface hover:bg-surface/80 border border-border text-left flex items-center justify-between group transition-all shadow-sm cursor-pointer"
-            >
-              <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-signal/15 text-signal flex items-center justify-center font-bold text-xs">
-                  <Rocket className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="text-xs font-bold text-text-primary block group-hover:text-signal transition-colors">
-                    New Learner (Launch AI Wizard)
-                  </span>
-                  <span className="text-[10px] text-text-secondary">Directly runs 4-Step Onboarding Wizard</span>
-                </div>
-              </div>
-              <ArrowRight className="w-3.5 h-3.5 text-signal opacity-0 group-hover:opacity-100 transition-opacity" />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleQuickMockLogin("admin")}
-              className="w-full p-2.5 rounded-xl bg-surface hover:bg-surface/80 border border-border text-left flex items-center justify-between group transition-all shadow-sm cursor-pointer"
-            >
-              <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-warning/15 text-warning flex items-center justify-center font-bold text-xs">
-                  <ShieldCheck className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="text-xs font-bold text-text-primary block group-hover:text-warning transition-colors">
-                    Platform Admin Dashboard
-                  </span>
-                  <span className="text-[10px] text-text-secondary">Learner progress directory & chat monitor</span>
-                </div>
-              </div>
-              <ArrowRight className="w-3.5 h-3.5 text-warning opacity-0 group-hover:opacity-100 transition-opacity" />
-            </button>
-          </div>
-        </div>
 
         {/* Google OAuth Button */}
         <button
@@ -269,7 +181,7 @@ export default function LoginPage() {
                   required={isSignUp}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Alex Dev"
+                  placeholder="Your Full Name"
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-paper border border-border text-xs text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-focus/50 shadow-sm"
                 />
               </div>
@@ -285,7 +197,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="alex@example.com"
+                placeholder="name@example.com"
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-paper border border-border text-xs text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-focus/50 shadow-sm"
               />
             </div>
@@ -300,7 +212,7 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="********"
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-paper border border-border text-xs text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-focus/50 shadow-sm"
               />
             </div>
@@ -339,3 +251,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

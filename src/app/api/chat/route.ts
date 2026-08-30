@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
       ? `The user is studying Level ${dayInfo.id}: "${dayInfo.topic}" (Skill Focus: ${dayInfo.pattern}).`
       : "";
 
-    const systemPrompt = `You are CogniPath Socratic AI Copilot — an expert AI learning architect and 24/7 technical tutor.
+    const systemPrompt = `You are CogniPath Socratic AI Copilot  -  an expert AI learning architect and 24/7 technical tutor.
 Your job is to guide the user step-by-step through their personalized learning path.
 ${levelContext}
 
@@ -48,18 +48,18 @@ Pedagogical Rules:
         q.includes("why each level") ||
         q.includes("roadmap")
       ) {
-        return `### 🎯 Why This Specific Learning Path Was Generated Instead of a Generic Syllabus
+        return `###  -  -  Why This Specific Learning Path Was Generated Instead of a Generic Syllabus
 
 Unlike traditional static 40-week bootcamps that force every student through the same generic intro lessons, **LearnPath AI** engineered your curriculum using mathematical principles:
 
 #### 1. Mathematical Architecture & Optimization
-• **Exact Skill Delta Formulation**: Δ = max(0, Required Proficiency - Ingested Baseline). Topics you already proved mastery in on GitHub or your resume (e.g. basic spreadsheets at 85%) are skipped entirely. Only verified gaps receive dedicated modules.
-• **Kahn's Topological DAG Scheduling**: Software engineering topics are modeled as a Directed Acyclic Graph G = (V, E). Kahn's algorithm computes in-degrees to ensure foundational prerequisites strictly precede downstream applied modules in O(|V| + |E|) time without circular loops.
-• **1-PL Rasch IRT Testing**: Calibrates item difficulty against latent ability θ, dynamically adapting assessments to match your true competency.
+ -  **Exact Skill Delta Formulation**:  -  = max(0, Required Proficiency - Ingested Baseline). Topics you already proved mastery in on GitHub or your resume (e.g. basic spreadsheets at 85%) are skipped entirely. Only verified gaps receive dedicated modules.
+ -  **Kahn's Topological DAG Scheduling**: Software engineering topics are modeled as a Directed Acyclic Graph G = (V, E). Kahn's algorithm computes in-degrees to ensure foundational prerequisites strictly precede downstream applied modules in O(|V| + |E|) time without circular loops.
+ -  **1-PL Rasch IRT Testing**: Calibrates item difficulty against latent ability  - , dynamically adapting assessments to match your true competency.
 
 ---
 
-#### 🗺️ Detailed Level-by-Level Rationale for Your Roadmap:
+####  -  -  -  Detailed Level-by-Level Rationale for Your Roadmap:
 
 * **Level 1: SQL Fundamentals (Ground-Truth Base)**
   *Why it's here*: SQL is the foundational data extraction layer for all analytical engineering. You must master relational queries, JOIN operations, filter conditions, and aggregations before attempting downstream transformations.
@@ -81,7 +81,7 @@ Unlike traditional static 40-week bootcamps that force every student through the
 
 ---
 
-⚡ **Autonomous Micro-Remediation**: If an assessment detects gaps in a specific subtopic, LearnPath AI injects targeted sub-levels (**Level 5.1, Level 5.2**) with 3D flashcards directly into your active DAG rather than making you restart the course.`;
+ -  **Autonomous Micro-Remediation**: If an assessment detects gaps in a specific subtopic, LearnPath AI injects targeted sub-levels (**Level 5.1, Level 5.2**) with 3D flashcards directly into your active DAG rather than making you restart the course.`;
       }
 
       return `Here is the Socratic breakdown for **${dayInfo?.topic || "your learning topic"}**:\n\n1. **Core Mechanism**: Focus on foundational principles and edge-case handling.\n2. **Hands-On Practice**: Implement a minimal reproducible example to test your comprehension.\n\n\`\`\`python\n# Example Implementation\ndef process_data(records):\n    return [r for r in records if r.get('valid')]\n\`\`\`\n\nClick **"Insert to Notes"** to paste this directly into your study scratchpad!`;
@@ -89,7 +89,7 @@ Unlike traditional static 40-week bootcamps that force every student through the
 
     const lastUserMsg = messages[messages.length - 1]?.content || "";
 
-    // ── 1. Try Groq (primary, streaming) ────────────────────────────────────
+    //  -  -  1. Try Groq (primary, streaming)  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
     const groqKey = await getNextGroqApiKey(clientApiKey);
 
     if (groqKey) {
@@ -105,7 +105,7 @@ Unlike traditional static 40-week bootcamps that force every student through the
           Authorization: `Bearer ${groqKey}`,
         },
         body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
+          model: "openai/gpt-oss-120b",
           messages: formattedMessages,
           temperature: 0.5,
           max_tokens: 1024,
@@ -126,13 +126,14 @@ Unlike traditional static 40-week bootcamps that force every student through the
       console.warn("[chat] Groq failed, falling back to Gemini.");
     }
 
-    // ── 2. Gemini fallback (non-streaming, wrapped as SSE) ──────────────────
+    //  -  -  2. Gemini fallback (non-streaming, wrapped as SSE)  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
     const geminiKey = await getNextGeminiApiKey(clientApiKey);
     if (geminiKey) {
       try {
-        const model = await getGeminiModel("gemini-1.5-flash", geminiKey);
+        const model = await getGeminiModel("gemini-3.1-flash-lite", geminiKey);
         if (model) {
           const userMessages = messages.filter((m: any) => m.role !== "system");
+
           const history = userMessages.slice(0, -1).map((m: any) => ({
             role: m.role === "assistant" ? "model" : "user",
             parts: [{ text: m.content }],
@@ -167,7 +168,7 @@ Unlike traditional static 40-week bootcamps that force every student through the
       }
     }
 
-    // ── 3. Specialized offline fallback for zero-config judging ─────────────
+    //  -  -  3. Specialized offline fallback for zero-config judging  -  -  -  -  -  -  -  -  -  -  -  -  - 
     const fallbackContent = getSpecializedFallback(lastUserMsg);
 
     const fallbackStream = new ReadableStream({

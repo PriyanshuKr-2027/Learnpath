@@ -91,7 +91,7 @@ export default function AdminPage() {
             email: p.email,
             role: p.role,
             joinedDate,
-            lastActive: p.last_active_date || "—",
+            lastActive: p.last_active_date || " - ",
             solvedCount,
             totalProblems,
             percentage,
@@ -255,7 +255,7 @@ export default function AdminPage() {
     const total = users.length;
     const avgProgress = Math.round(users.reduce((sum, u) => sum + u.percentage, 0) / total);
     const active = users.filter(u => {
-      if (!u.lastActive || u.lastActive === "—") return false;
+      if (!u.lastActive || u.lastActive === " - ") return false;
       const lastActiveDate = new Date(u.lastActive);
       const oneWeekAgo = new Date();
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);

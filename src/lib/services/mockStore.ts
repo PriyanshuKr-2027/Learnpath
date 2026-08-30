@@ -30,9 +30,19 @@ const DIFF_KEY = "learnpath_last_diff_v2";
  * Calculates fine-grained skill gaps: Gap = max(0, Required - Current)
  */
 export function computeSkillGaps(profile: LearnerProfile): SkillGap[] {
-  const role =
-    PRESEEDED_CAREER_ROLES.find((r) => r.id === profile.targetRoleId) ||
-    PRESEEDED_CAREER_ROLES[0];
+  const role = PRESEEDED_CAREER_ROLES.find((r) => r.id === profile.targetRoleId);
+
+  const targetRequirements = role
+    ? role.skills
+    : profile.skills.length > 0
+    ? profile.skills.map((s, idx) => ({
+        skillName: s.name,
+        requiredProficiency: 80,
+        category: "Core Competency",
+        importanceWeight: 1.0,
+        prerequisites: idx === 0 ? [] : [profile.skills[idx - 1].name],
+      }))
+    : PRESEEDED_CAREER_ROLES[0].skills;
 
   const gaps: SkillGap[] = [];
   const userSkillMap = new Map<string, number>();
@@ -41,7 +51,7 @@ export function computeSkillGaps(profile: LearnerProfile): SkillGap[] {
     userSkillMap.set(s.name.toLowerCase().trim(), s.currentProficiency);
   }
 
-  for (const req of role.skills) {
+  for (const req of targetRequirements) {
     const currentProf = userSkillMap.get(req.skillName.toLowerCase().trim()) ?? 15;
     const delta = Math.max(0, req.requiredProficiency - currentProf);
 
@@ -50,7 +60,7 @@ export function computeSkillGaps(profile: LearnerProfile): SkillGap[] {
     else if (delta >= 25) severity = "moderate";
     else if (delta > 0) severity = "minor";
 
-    // Estimate hours: 10% gap ≈ 2 hours of study
+    // Estimate hours: 10% gap   2 hours of study
     const estimatedHours = Math.max(1, Math.round((delta / 10) * 2));
 
     gaps.push({
@@ -64,6 +74,7 @@ export function computeSkillGaps(profile: LearnerProfile): SkillGap[] {
       prerequisites: req.prerequisites,
     });
   }
+
 
   // Sort gaps by severity (critical first) and deltaGap
   return gaps.sort((a, b) => b.deltaGap - a.deltaGap);
@@ -94,8 +105,7 @@ export function generateLearningPathFromProfile(profile: LearnerProfile): Learni
     const curated = getOrCreateCuratedResource(s.skillName);
     const isBoss = (idx + 1) % 5 === 0;
 
-    const isCompletedByDefault = idx < 2;
-    const isActiveByDefault = idx === 2;
+    const isActiveByDefault = idx === 0;
 
     return {
       id: s.id,
@@ -106,8 +116,8 @@ export function generateLearningPathFromProfile(profile: LearnerProfile): Learni
       phase: s.phase,
       targetWeek: s.targetWeek,
       estimatedMinutes: s.estimatedMinutes,
-      status: isCompletedByDefault ? "completed" : isActiveByDefault ? "active" : "locked",
-      starsEarned: isCompletedByDefault ? 3 : 0,
+      status: isActiveByDefault ? "active" : "locked",
+      starsEarned: 0,
       isBossCheckpoint: isBoss,
       isRemediation: false,
       video: curated.video,
@@ -130,7 +140,7 @@ export function generateLearningPathFromProfile(profile: LearnerProfile): Learni
     });
   }
 
-  const completedCount = levels.filter((l) => l.status === "completed").length;
+  const completedCount = 0;
 
   const path: LearningPath = {
     id: `path-${Date.now()}`,
@@ -141,8 +151,8 @@ export function generateLearningPathFromProfile(profile: LearnerProfile): Learni
     totalWeeks: scheduled[scheduled.length - 1]?.targetWeek || 6,
     weeklyHours: profile.weeklyHoursBudget || 10,
     totalLevelsCount: levels.length,
-    completedLevelsCount: completedCount,
-    completionPercentage: Math.round((completedCount / levels.length) * 100),
+    completedLevelsCount: 0,
+    completionPercentage: 0,
     levels,
     edges,
     createdAt: new Date().toISOString(),
@@ -197,16 +207,39 @@ export function injectRemedialLevelsIntoPath(
       isBossCheckpoint: false,
       isRemediation: true,
       flashcards: flashcardDeck,
-      video: {
-        youtubeId: "rfscVS0vtbw",
-        title: `${subtopic} — Concept & Syntax Deep Dive`,
-        channelTitle: "LearnPath AI Remediation Lab",
-        durationSeconds: 900,
-        durationFormatted: "15:00",
-        relevantStartSeconds: 0,
-        relevantEndSeconds: 900,
-        pruningReason: `Dynamically injected because Mistake #${mistakeIndex} in assessment was in '${subtopic}'.`,
-      },
+      video: (() => {
+        // Try to use the prefetched YouTube video from sessionStorage
+        try {
+          if (typeof window !== "undefined") {
+            const prefetched = sessionStorage.getItem(`remediation_video_${subtopic.replace(/\s+/g, "_")}`);
+            if (prefetched) {
+              const v = JSON.parse(prefetched);
+              sessionStorage.removeItem(`remediation_video_${subtopic.replace(/\s+/g, "_")}`);
+              return {
+                youtubeId: v.youtubeId,
+                title: v.title || `${subtopic}  -  Remediation Tutorial`,
+                channelTitle: v.channelTitle || "Educational",
+                durationSeconds: 900,
+                durationFormatted: "15:00",
+                relevantStartSeconds: 0,
+                relevantEndSeconds: 900,
+                pruningReason: `Dynamically fetched for Mistake #${mistakeIndex}: weak area in '${subtopic}'.`,
+              };
+            }
+          }
+        } catch {}
+        return {
+          youtubeId: `REMEDIATION_PENDING_${subtopic.replace(/\s+/g, "_")}`,
+          title: `${subtopic}  -  Targeted Remediation Lesson`,
+          channelTitle: "LearnPath AI Remediation Engine",
+          durationSeconds: 900,
+          durationFormatted: "15:00",
+          relevantStartSeconds: 0,
+          relevantEndSeconds: 900,
+          pruningReason: `Dynamically injected for Mistake #${mistakeIndex}: weak area in '${subtopic}'.`,
+        };
+      })(),
+
       doc: {
         title: `${subtopic} High-Yield Flashcard Cheat Sheet`,
         url: "https://devdocs.io/",
@@ -262,7 +295,7 @@ export function injectRemedialLevelsIntoPath(
     injectedLevels,
     modifiedLevelIds: [parentLevel.id, ...injectedLevels.map((l) => l.id)],
     remedialTopic: weakSubtopics.join(", "),
-    summaryMessage: `⚠️ Autonomous Adaptive Recalibration: Detected ${weakSubtopics.length} question mistake(s) ➔ Injected ${subLevelNames} with Interactive Flashcard Decks.`,
+    summaryMessage: `   Autonomous Adaptive Recalibration: Detected ${weakSubtopics.length} question mistake(s)   Injected ${subLevelNames} with Interactive Flashcard Decks.`,
     timestamp: new Date().toISOString(),
   };
 
@@ -278,50 +311,26 @@ export function injectRemedialLevelsIntoPath(
   return { updatedPath, diff };
 }
 
-// Default Seed Profile for instant 1-click judging review
-export const DEMO_DATA_ANALYST_PROFILE: LearnerProfile = {
-  name: "Alex Dev",
-  email: "alex@example.com",
-  goalPrompt: "Transition from Junior Developer to Senior Data Analyst with strong Power BI and SQL expertise in 10 weeks.",
-  targetRoleId: "data-analyst",
-  targetRoleTitle: "Data Analyst & Business Intelligence Specialist",
+export const EMPTY_LEARNER_PROFILE: LearnerProfile = {
+  name: "",
+  email: "",
+  goalPrompt: "",
+  targetRoleId: "full-stack",
+  targetRoleTitle: "Full-Stack Software Engineer",
   weeklyHoursBudget: 10,
   totalWeeksBudget: 10,
-  hasCompletedOnboarding: true,
-  skills: [
-    { name: "SQL", source: "resume", currentProficiency: 40, evidence: "Used basic queries in previous role" },
-    { name: "Excel & Advanced Formulas", source: "resume", currentProficiency: 80, evidence: "VLOOKUP & Pivot Tables" },
-    { name: "Python for Data Analysis", source: "github", currentProficiency: 60, evidence: "Analyzed in GitHub repos" },
-    { name: "Pandas & Data Cleaning", source: "github", currentProficiency: 55, evidence: "Found in repo data-scripts" },
-    { name: "Power BI & DAX", source: "inferred", currentProficiency: 20, evidence: "Zero previous experience" },
-    { name: "Applied Business Statistics", source: "resume", currentProficiency: 30, evidence: "College course" },
-    { name: "Data Modeling & Star Schema", source: "inferred", currentProficiency: 25, evidence: "Basic relational understanding" },
-  ],
-  certifications: ["Google Data Analytics Professional Certificate"],
-  pastProjects: [
-    {
-      title: "E-Commerce Customer Churn Analysis",
-      techStack: ["Python", "Pandas", "Matplotlib"],
-      description: "Cleaned 50k customer records and visualized retention trends.",
-    },
-  ],
-  githubStats: {
-    username: "alex-analyst",
-    publicReposCount: 14,
-    topLanguages: { Python: 62, SQL: 24, JavaScript: 14 },
-    detectedSkills: ["Python", "SQL", "Pandas", "Git"],
-    recentRepos: [
-      { name: "data-pipeline-etl", description: "Automated ETL script", language: "Python", stars: 12, isFork: false },
-      { name: "sql-case-studies", description: "LeetCode SQL problem solutions", language: "SQL", stars: 8, isFork: false },
-    ],
-  },
-  currentStreak: 5,
+  hasCompletedOnboarding: false,
+  skills: [],
+  certifications: [],
+  pastProjects: [],
+  githubStats: undefined,
+  currentStreak: 0,
   darkMode: true,
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Supabase sync helper — fire-and-forget (never blocks the UI)
-// ─────────────────────────────────────────────────────────────────────────────
+//                                                                              
+// Supabase sync helper  -  fire-and-forget (never blocks the UI)
+//                                                                              
 async function syncToSupabase(route: string, payload: Record<string, unknown>) {
   if (typeof window === "undefined") return;
   try {
@@ -331,7 +340,7 @@ async function syncToSupabase(route: string, payload: Record<string, unknown>) {
       body: JSON.stringify(payload),
     });
   } catch {
-    // Supabase sync is best-effort — localStorage is the source of truth for UX
+    // Supabase sync is best-effort
   }
 }
 
@@ -347,32 +356,31 @@ async function loadFromSupabase<T>(route: string): Promise<T | null> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+//                                                                              
 // Client-safe Store with dual localStorage + Supabase persistence
-// ─────────────────────────────────────────────────────────────────────────────
+//                                                                              
 export const mockStore = {
-  getProfile(): LearnerProfile {
-    if (typeof window === "undefined") return DEMO_DATA_ANALYST_PROFILE;
+  getProfile(): LearnerProfile | null {
+    if (typeof window === "undefined") return null;
     try {
       const stored = localStorage.getItem(PROFILE_KEY);
       if (stored) return JSON.parse(stored);
     } catch {}
-    return DEMO_DATA_ANALYST_PROFILE;
+    return null;
   },
 
   saveProfile(profile: LearnerProfile) {
     if (typeof window === "undefined") return;
     localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
-    // Fire-and-forget cloud sync
+    // Cloud sync
     syncToSupabase("/api/learner/profile", { profile });
   },
 
   /** Hydrates profile from Supabase if localStorage is empty */
-  async hydrateProfile(): Promise<LearnerProfile> {
-    if (typeof window === "undefined") return DEMO_DATA_ANALYST_PROFILE;
+  async hydrateProfile(): Promise<LearnerProfile | null> {
+    if (typeof window === "undefined") return null;
     const local = this.getProfile();
-    // If we already have real data locally, use it immediately
-    if (local.email && local.email !== "alex@example.com") return local;
+    if (local?.email) return local;
 
     const remote = await loadFromSupabase<{ profile: LearnerProfile }>("/api/learner/profile");
     if (remote?.profile) {
@@ -382,46 +390,75 @@ export const mockStore = {
     return local;
   },
 
-  getLearningPath(): LearningPath {
-    if (typeof window === "undefined") {
-      return generateLearningPathFromProfile(DEMO_DATA_ANALYST_PROFILE);
-    }
+  getLearningPath(): LearningPath | null {
+    if (typeof window === "undefined") return null;
     try {
       const stored = localStorage.getItem(PATH_KEY);
       if (stored) return JSON.parse(stored);
     } catch {}
-    const defaultPath = generateLearningPathFromProfile(this.getProfile());
-    this.saveLearningPath(defaultPath);
-    return defaultPath;
+    return null;
   },
 
   saveLearningPath(path: LearningPath) {
     if (typeof window === "undefined") return;
     localStorage.setItem(PATH_KEY, JSON.stringify(path));
-    // Fire-and-forget cloud sync
+    // Cloud sync
     syncToSupabase("/api/learner/path", { path });
   },
 
-  /** Hydrates learning path from Supabase if localStorage is empty */
-  async hydrateLearningPath(): Promise<LearningPath> {
-    if (typeof window === "undefined") {
-      return generateLearningPathFromProfile(DEMO_DATA_ANALYST_PROFILE);
-    }
+  /** Hydrates learning path from Supabase with conflict-free status merge */
+  async hydrateLearningPath(): Promise<LearningPath | null> {
+    if (typeof window === "undefined") return null;
     const local = this.getLearningPath();
 
     const remote = await loadFromSupabase<{ path: LearningPath }>("/api/learner/path");
-    if (remote?.path && remote.path.version >= (local.version ?? 0)) {
+    if (!remote?.path) return local;
+
+    if (!local) {
       localStorage.setItem(PATH_KEY, JSON.stringify(remote.path));
       return remote.path;
     }
-    return local;
+
+    // Monotonic level status reconciliation (merges completed progress across devices)
+    const remotePath = remote.path;
+    const mergedLevels = local.levels.map((locLvl) => {
+      const remLvl = remotePath.levels.find((r) => r.id === locLvl.id);
+      if (!remLvl) return locLvl;
+
+      const isCompleted = locLvl.status === "completed" || remLvl.status === "completed";
+      const isActive = !isCompleted && (locLvl.status === "active" || remLvl.status === "active");
+      const status: LevelNode["status"] = isCompleted ? "completed" : isActive ? "active" : "locked";
+
+      return {
+        ...locLvl,
+        status,
+        starsEarned: Math.max(locLvl.starsEarned || 0, remLvl.starsEarned || 0),
+      };
+    });
+
+    const completedCount = mergedLevels.filter((l) => l.status === "completed").length;
+    const percentage = Math.round((completedCount / mergedLevels.length) * 100);
+    const newVersion = Math.max(local.version ?? 1, remotePath.version ?? 1) + 1;
+
+    const reconciledPath: LearningPath = {
+      ...local,
+      version: newVersion,
+      levels: mergedLevels,
+      completedLevelsCount: completedCount,
+      completionPercentage: percentage,
+      updatedAt: new Date().toISOString(),
+    };
+
+    localStorage.setItem(PATH_KEY, JSON.stringify(reconciledPath));
+    return reconciledPath;
   },
 
   updateLevelProgress(
     levelId: string,
     updates: { status?: LevelNode["status"]; starsEarned?: number }
-  ): LearningPath {
+  ): LearningPath | null {
     const path = this.getLearningPath();
+    if (!path) return null;
     let completedCount = 0;
 
     const updatedLevels = path.levels.map((lvl) => {
@@ -457,11 +494,20 @@ export const mockStore = {
     };
 
     this.saveLearningPath(updatedPath);
+
+    // Log activity for dashboard tracking
+    if (updates.status === "completed") {
+      const level = updatedLevels.find((l) => l.id === levelId);
+      this.logActivityDay(level?.estimatedMinutes || 30);
+    }
+
     return updatedPath;
   },
 
-  injectRemediation(parentLevelId: string, weakSubtopics: string | string[]): { updatedPath: LearningPath; diff: RoadmapDiff } {
+
+  injectRemediation(parentLevelId: string, weakSubtopics: string | string[]): { updatedPath: LearningPath | null; diff: RoadmapDiff | null } {
     const currentPath = this.getLearningPath();
+    if (!currentPath) return { updatedPath: null, diff: null };
     const subtopicsArray = Array.isArray(weakSubtopics) ? weakSubtopics : [weakSubtopics];
     const result = injectRemedialLevelsIntoPath(currentPath, parentLevelId, subtopicsArray);
     this.saveLearningPath(result.updatedPath);
@@ -481,10 +527,7 @@ export const mockStore = {
   },
 
   getAllNotes(): Record<string, string> {
-    const defaults: Record<string, string> = {
-      "lvl-1": `# SQL Window Functions & Analytics Notes\n\n### Key Concepts Mastered:\n1. **ROW_NUMBER() vs RANK() vs DENSE_RANK()**:\n   - ROW_NUMBER assigns sequential integers without ties.\n   - DENSE_RANK does not skip numbers after ties (1, 2, 2, 3).\n\n2. **Moving 7-Day Running Averages**:\n\`\`\`sql\nSELECT \n  transaction_date,\n  daily_revenue,\n  AVG(daily_revenue) OVER (\n    ORDER BY transaction_date \n    ROWS BETWEEN 6 PRECEDING AND CURRENT ROW\n  ) AS running_7d_avg\nFROM sales_records;\n\`\`\``,
-      "lvl-2": `# Relational Data Modeling & Star Schema\n\n### Core Architecture:\n- **Fact Tables**: Contain numeric business metrics (order_amount, discount_rate, quantity) and foreign keys to dimension tables.\n- **Dimension Tables**: Contain contextual business attributes (DimCustomer, DimProduct, DimDate).\n- **Star vs Snowflake**: Star schema minimizes join overhead for columnar OLAP databases like Power BI VertiPaq.`,
-    };
+    const defaults: Record<string, string> = {};
 
     if (typeof window === "undefined") return defaults;
 
@@ -513,7 +556,7 @@ export const mockStore = {
       localStorage.setItem(NOTES_KEY, JSON.stringify(notesMap));
       window.dispatchEvent(new CustomEvent("learnpath_notes_updated", { detail: { levelId, content } }));
     } catch {}
-    // Fire-and-forget cloud sync
+    // Cloud sync
     syncToSupabase("/api/learner/notes", { levelId, content });
   },
 
@@ -525,7 +568,6 @@ export const mockStore = {
 
     const remote = await loadFromSupabase<{ content: string }>(`/api/learner/notes?levelId=${encodeURIComponent(levelId)}`);
     if (remote?.content) {
-      // Cache in localStorage
       try {
         const stored = localStorage.getItem(NOTES_KEY);
         const notesMap = stored ? JSON.parse(stored) : {};
@@ -536,5 +578,60 @@ export const mockStore = {
     }
     return "";
   },
+
+  /**
+   * Logs a lesson completion into the 14-day activity log.
+   * Key: "learnpath_activity_log_v1"   { [dateKey: string]: { minutes: number; lessons: number } }
+   */
+  logActivityDay(minutesStudied: number) {
+    if (typeof window === "undefined") return;
+    try {
+      const KEY = "learnpath_activity_log_v1";
+      const stored = localStorage.getItem(KEY);
+      const log: Record<string, { minutes: number; lessons: number }> = stored ? JSON.parse(stored) : {};
+      const today = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+      const existing = log[today] || { minutes: 0, lessons: 0 };
+      log[today] = { minutes: existing.minutes + minutesStudied, lessons: existing.lessons + 1 };
+      localStorage.setItem(KEY, JSON.stringify(log));
+    } catch {}
+  },
+
+  /**
+   * Returns activity for the last N days (default 14).
+   * Returns array of { dateKey, shortDay, hours, completedLessons, streakActive }
+   */
+  getActivityLog(days = 14): Array<{ day: string; shortDay: string; hours: number; completedLessons: number; streakActive: boolean }> {
+    const KEY = "learnpath_activity_log_v1";
+    let log: Record<string, { minutes: number; lessons: number }> = {};
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem(KEY);
+        if (stored) log = JSON.parse(stored);
+      } catch {}
+    }
+    const result = [];
+    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateKey = d.toISOString().slice(0, 10);
+      const entry = log[dateKey] || { minutes: 0, lessons: 0 };
+      const hours = parseFloat((entry.minutes / 60).toFixed(1));
+      const isToday = i === 0;
+      result.push({
+        day: isToday ? "Today" : d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        shortDay: isToday ? "Today" : dayNames[d.getDay()],
+        hours,
+        completedLessons: entry.lessons,
+        streakActive: entry.minutes > 0,
+      });
+    }
+    return result;
+  },
 };
+
+
+
+
+
 

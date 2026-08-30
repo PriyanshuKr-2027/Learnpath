@@ -13,7 +13,7 @@ export function getRedis(): Redis | null {
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
 
   if (!url || !token) {
-    console.warn("[Redis] UPSTASH_REDIS_REST_URL or TOKEN not set — running without Redis cache.");
+    console.warn("[Redis] UPSTASH_REDIS_REST_URL or TOKEN not set  -  running without Redis cache.");
     return null;
   }
 
@@ -43,7 +43,7 @@ export async function getNextIndexAtomic(key: string, poolSize: number): Promise
 }
 
 /**
- * Cache-aside helper — returns cached JSON or calls fetcher and caches result.
+ * Cache-aside helper  -  returns cached JSON or calls fetcher and caches result.
  */
 export async function cachedFetch<T>(
   cacheKey: string,

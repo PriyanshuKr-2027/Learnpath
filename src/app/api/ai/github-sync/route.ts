@@ -6,12 +6,16 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     let { username = "", githubToken } = body;
 
-    // Clean username if user pasted full URL e.g. "https://github.com/username"
-    if (username.includes("github.com/")) {
-      const parts = username.split("github.com/")[1].split("/").filter(Boolean);
-      username = parts[0] || username;
-    }
-    username = username.replace(/[@/]/g, "").trim();
+    // Clean username if user pasted full URL or prefix
+    username = (username || "")
+      .replace(/^https?:\/\//i, "")
+      .replace(/^www\./i, "")
+      .replace(/^github(\.com)?\/?/i, "")
+      .replace(/^@/, "")
+      .replace(/\/.*$/, "")
+      .replace(/[^a-zA-Z0-9-_]/g, "")
+      .trim();
+
 
     if (!username) {
       return NextResponse.json({ error: "GitHub username is required" }, { status: 400 });
@@ -90,30 +94,22 @@ export async function POST(req: NextRequest) {
       console.warn("GitHub API request failed, serving heuristic fallback:", apiErr);
     }
 
-    // 2. Deterministic Fallback if user is offline or GitHub API rate limited
-    const mockTelemetry: GitHubTelemetry = {
+    // Deterministic Clean Fallback if user is offline or has no public repos
+    const emptyTelemetry: GitHubTelemetry = {
       username,
-      publicReposCount: 8,
-      topLanguages: { Python: 60, SQL: 25, JavaScript: 15 },
-      detectedSkills: ["Python", "SQL", "JavaScript", "Git"],
-      recentRepos: [
-        { name: "data-analysis-sandbox", description: "Jupyter notebooks and data cleaning scripts", language: "Python", stars: 6, isFork: false },
-        { name: "sql-queries-repo", description: "Analytical queries and star schema models", language: "SQL", stars: 4, isFork: false },
-      ],
+      publicReposCount: 0,
+      topLanguages: {},
+      detectedSkills: [],
+      recentRepos: [],
     };
 
-    const fallbackSkills: SkillEntry[] = [
-      { name: "Python", source: "github", currentProficiency: 65, evidence: `Found in ${username}'s public Python repos` },
-      { name: "SQL", source: "github", currentProficiency: 50, evidence: `Found in ${username}'s data query scripts` },
-      { name: "Git", source: "github", currentProficiency: 70, evidence: `Active repository commit history` },
-    ];
-
     return NextResponse.json({
-      telemetry: mockTelemetry,
-      skills: fallbackSkills,
+      telemetry: emptyTelemetry,
+      skills: [],
     });
   } catch (error: any) {
     console.error("Error in github-sync route:", error);
     return NextResponse.json({ error: error.message || "Failed to analyze GitHub profile" }, { status: 500 });
   }
 }
+

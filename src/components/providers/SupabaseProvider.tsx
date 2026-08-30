@@ -1,16 +1,15 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { getProfile as getMockProfile, saveProfile as saveMockProfile } from "@/lib/store";
 import { Profile, Day } from "@/types";
 import { SupabaseClient, User, AuthError, Session } from "@supabase/supabase-js";
 
 interface SupabaseContextType {
   supabase: SupabaseClient | null;
   user: User | null;
-  profile: Profile;
+  profile: Profile | null;
   days: Day[];
   planProgress: Record<string, boolean>;
   dayManualDone: Record<number, boolean>;
@@ -31,174 +30,192 @@ interface SupabaseContextType {
 
 const SupabaseContext = createContext<SupabaseContextType | undefined>(undefined);
 
-const MOCK_ACTIVE_USER = {
-  id: "mock-alex-dev-id",
-  email: "alex@example.com",
-  user_metadata: { name: "Alex Dev" },
-  app_metadata: { provider: "google" },
-  created_at: "2026-01-01T00:00:00.000Z",
-} as unknown as User;
-
 export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const supabase = createClient();
 
-  // Detect mock mode (if keys are missing or placeholders)
-  const isMockMode =
-    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    process.env.NEXT_PUBLIC_SUPABASE_URL.includes("your-project-id") ||
-    process.env.NEXT_PUBLIC_SUPABASE_URL.includes("deblsqilknaxulxqbmmm") ||
-    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.includes("your-anon-public-key");
-
-  const supabase = isMockMode ? null : createClient();
-
-  const [user, setUser] = useState<User | null>(MOCK_ACTIVE_USER);
-  const [profile, setProfile] = useState<Profile>({
-    name: "Alex Dev",
-    email: "alex@example.com",
-    darkMode: true,
-    reminders: true,
-    role: "learner",
-    current_streak: 6,
-    last_active_date: new Date().toISOString().split("T")[0],
-    hasCompletedSetup: true,
-    dob: "2000-01-01",
-    mobileNo: "9876543210",
-  });
-
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [days] = useState<Day[]>([]);
   const [planProgress] = useState<Record<string, boolean>>({});
   const [dayManualDone] = useState<Record<number, boolean>>({});
   const [dayNotes] = useState<Record<number, string>>({});
   const [completedProblems] = useState<Record<string, boolean>>({});
-  const [streak, setStreak] = useState(6);
-  const [loading, setLoading] = useState(false);
+  const [streak, setStreak] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  // Initialize data (Supabase or LocalStorage)
+  const fetchUserProfile = useCallback(async (userId: string, userEmail?: string, userName?: string) => {
+    try {
+      const res = await fetch("/api/learner/profile");
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.profile) {
+          const lp = data.profile;
+          setProfile({
+            name: lp.name || userName || "Learner",
+            email: lp.email || userEmail || "",
+            darkMode: lp.darkMode ?? true,
+            reminders: true,
+            role: "learner",
+            current_streak: lp.currentStreak || 0,
+            last_active_date: new Date().toISOString().split("T")[0],
+            hasCompletedSetup: lp.hasCompletedOnboarding ?? false,
+          });
+          setStreak(lp.currentStreak || 0);
+          return;
+        }
+      }
+
+      setProfile({
+        name: userName || userEmail?.split("@")[0] || "Learner",
+        email: userEmail || "",
+        darkMode: true,
+        reminders: true,
+        role: "learner",
+        current_streak: 0,
+        last_active_date: new Date().toISOString().split("T")[0],
+        hasCompletedSetup: false,
+      });
+    } catch (err) {
+      console.error("[SupabaseProvider] profile load error:", err);
+      setProfile({
+        name: userName || "Learner",
+        email: userEmail || "",
+        darkMode: true,
+        reminders: true,
+        role: "learner",
+        current_streak: 0,
+        last_active_date: new Date().toISOString().split("T")[0],
+        hasCompletedSetup: false,
+      });
+    }
+  }, []);
+
   useEffect(() => {
-    async function init() {
-      if (isMockMode) {
-        const mockP = getMockProfile();
-        setProfile(mockP);
-        setUser(MOCK_ACTIVE_USER);
-        setStreak(mockP.current_streak || 6);
-        setLoading(false);
+    let mounted = true;
+
+    async function initAuth() {
+      if (!supabase) {
+        if (mounted) setLoading(false);
         return;
       }
 
       try {
-        const { data: { session } } = await supabase!.auth.getSession();
-        if (!session) {
-          // Keep mock user active for UI exploration
-          setUser(MOCK_ACTIVE_USER);
-          setLoading(false);
-          return;
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.warn("[SupabaseProvider] getSession error:", error.message);
         }
 
-        setUser(session.user);
-
-        const { data: profData, error: profError } = await supabase!
-          .from("profiles")
-          .select("*")
-          .eq("id", session.user.id)
-          .single();
-
-        if (profError) {
-          console.error("Error fetching profile:", profError);
-        } else if (profData) {
-          setProfile({
-            name: profData.name,
-            email: profData.email,
-            darkMode: profData.dark_mode ?? true,
-            reminders: profData.reminders ?? true,
-            role: profData.role || "learner",
-            current_streak: profData.current_streak || 6,
-            last_active_date: profData.last_active_date,
-            hasCompletedSetup: true,
-            dob: profData.dob || "",
-            mobileNo: profData.mobile_no || "",
-          });
-          setStreak(profData.current_streak || 6);
-          if (profData.dark_mode) {
-            document.documentElement.classList.add("dark");
+        if (mounted) {
+          if (session?.user) {
+            setUser(session.user);
+            await fetchUserProfile(
+              session.user.id,
+              session.user.email,
+              session.user.user_metadata?.name || session.user.user_metadata?.full_name
+            );
+          } else {
+            setUser(null);
+            setProfile(null);
           }
         }
       } catch (err) {
-        console.warn("Supabase initialization using mock mode:", err);
-        const mockP = getMockProfile();
-        setProfile(mockP);
-        setUser(MOCK_ACTIVE_USER);
-        setStreak(6);
+        console.error("[SupabaseProvider] auth init exception:", err);
+        if (mounted) {
+          setUser(null);
+          setProfile(null);
+        }
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     }
 
-    init();
-  }, [isMockMode, supabase]);
+    initAuth();
+
+    if (!supabase) return;
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+      if (session?.user) {
+        setUser(session.user);
+        await fetchUserProfile(
+          session.user.id,
+          session.user.email,
+          session.user.user_metadata?.name || session.user.user_metadata?.full_name
+        );
+      } else {
+        setUser(null);
+        setProfile(null);
+      }
+      setLoading(false);
+    });
+
+    return () => {
+      mounted = false;
+      subscription?.unsubscribe();
+    };
+  }, [supabase, fetchUserProfile]);
 
   const updateProfile = async (profileData: Partial<Profile>) => {
-    const updated = { ...profile, ...profileData, hasCompletedSetup: true };
+    if (!profile) return;
+    const updated = { ...profile, ...profileData };
     setProfile(updated);
 
-    if (isMockMode) {
-      saveMockProfile(updated);
-      return;
-    }
-
-    if (!user) return;
-
     try {
-      const updatePayload: Record<string, unknown> = {};
-      if (profileData.name !== undefined) updatePayload.name = profileData.name;
-      if (profileData.darkMode !== undefined) updatePayload.dark_mode = profileData.darkMode;
-      if (profileData.reminders !== undefined) updatePayload.reminders = profileData.reminders;
-      if (profileData.dob !== undefined) updatePayload.dob = profileData.dob;
-      if (profileData.mobileNo !== undefined) updatePayload.mobile_no = profileData.mobileNo;
-      updatePayload.has_completed_setup = true;
-
-      await supabase!
-        .from("profiles")
-        .update(updatePayload)
-        .eq("id", user.id);
+      await fetch("/api/learner/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          profile: {
+            name: updated.name,
+            email: updated.email,
+            darkMode: updated.darkMode,
+            hasCompletedOnboarding: updated.hasCompletedSetup,
+            currentStreak: updated.current_streak,
+          },
+        }),
+      });
     } catch (err) {
-      console.error("Error updating profile in Supabase:", err);
+      console.error("[SupabaseProvider] updateProfile error:", err);
     }
   };
 
   const refreshProgress = async () => {
-    // Local mock state refresh
+    if (user) {
+      await fetchUserProfile(user.id, user.email, profile?.name);
+    }
   };
 
   const signIn = async (email: string, password: string) => {
-    if (isMockMode) {
-      const role: "learner" | "admin" = email.toLowerCase().includes("admin") ? "admin" : "learner";
-      const updated: Profile = { ...profile, email, role, hasCompletedSetup: true };
-      setProfile(updated);
-      setUser({ ...MOCK_ACTIVE_USER, email });
-      saveMockProfile(updated);
-      return { error: null };
-    }
-
+    if (!supabase) return { error: new Error("Supabase client not initialized") };
     try {
-      const { error } = await supabase!.auth.signInWithPassword({ email, password });
-      return { error };
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) return { error };
+      if (data?.user) {
+        setUser(data.user);
+        await fetchUserProfile(
+          data.user.id,
+          data.user.email,
+          data.user.user_metadata?.name
+        );
+      }
+      return { error: null };
     } catch (err) {
       return { error: err as AuthError };
     }
   };
 
   const signInWithGoogle = async () => {
-    if (isMockMode) {
-      setUser(MOCK_ACTIVE_USER);
-      return { error: null };
-    }
-
+    if (!supabase) return { error: new Error("Supabase client not initialized") };
     try {
-      const { error } = await supabase!.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback`,
+          queryParams: {
+            access_type: "offline",
+            prompt: "consent",
+          },
         },
       });
       return { error };
@@ -207,21 +224,19 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string, name: string) => {
-    if (isMockMode) {
-      const updated = { ...profile, email, name, hasCompletedSetup: true };
-      setProfile(updated);
-      setUser({ ...MOCK_ACTIVE_USER, email, user_metadata: { name } });
-      saveMockProfile(updated);
-      return { data: { user: MOCK_ACTIVE_USER, session: null }, error: null };
-    }
 
+  const signUp = async (email: string, password: string, name: string) => {
+    if (!supabase) return { data: null, error: new Error("Supabase client not initialized") };
     try {
-      const res = await supabase!.auth.signUp({
+      const res = await supabase.auth.signUp({
         email,
         password,
         options: { data: { name } },
       });
+      if (res.data?.user) {
+        setUser(res.data.user);
+        await fetchUserProfile(res.data.user.id, email, name);
+      }
       return res;
     } catch (err) {
       return { data: null, error: err as AuthError };
@@ -229,29 +244,42 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    if (isMockMode) {
-      router.push("/dashboard");
-      return;
-    }
-
+    if (!supabase) return;
     try {
-      await supabase!.auth.signOut();
-      setUser(MOCK_ACTIVE_USER);
-      router.push("/dashboard");
+      await supabase.auth.signOut();
+      setUser(null);
+      setProfile(null);
+      if (typeof window !== "undefined") {
+        localStorage.clear();
+      }
+      router.push("/login");
     } catch (err) {
-      console.error("Error signing out:", err);
+
+      console.error("[SupabaseProvider] signOut error:", err);
+      setUser(null);
+      setProfile(null);
+      router.push("/login");
     }
   };
 
-  const createPortalUser = async (_email: string, _password: string, _name: string) => {};
-  const deletePortalUser = async (_userId: string) => {};
+  const createPortalUser = async () => {};
+  const deletePortalUser = async () => {};
 
   return (
     <SupabaseContext.Provider
       value={{
         supabase,
         user,
-        profile,
+        profile: profile || {
+          name: "Guest",
+          email: "",
+          darkMode: true,
+          reminders: true,
+          role: "learner",
+          current_streak: 0,
+          last_active_date: "",
+          hasCompletedSetup: false,
+        },
         days,
         planProgress,
         dayManualDone,
@@ -259,7 +287,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         completedProblems,
         streak,
         loading,
-        isMockMode,
+        isMockMode: false,
         signIn,
         signUp,
         signInWithGoogle,
@@ -282,3 +310,4 @@ export function useSupabase() {
   }
   return context;
 }
+

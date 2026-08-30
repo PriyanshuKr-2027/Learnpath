@@ -1,14 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import Link from "next/link";
+import Image from "next/image";
 import {
   Users,
   ChatCircleText,
   Question,
   Timer,
   Trophy,
-  ChartLineUp,
   Plus,
   MagnifyingGlass,
   CheckCircle,
@@ -17,17 +16,12 @@ import {
   PaperPlaneTilt,
   Sparkle,
   Fire,
-  Star,
   Crown,
   SpeakerHigh,
   SpeakerSlash,
-  Clock,
-  ArrowRight,
   X,
   Copy,
   Check,
-  GameController,
-  BookOpen,
   ArrowsClockwise,
   UserPlus,
   UserCheck,
@@ -41,14 +35,12 @@ import {
   Contributor,
   StudyParticipant,
 } from "@/lib/services/socialStore";
-import { useSupabase } from "@/components/providers/SupabaseProvider";
 
 type SocialTab = "chat" | "doubts" | "study-together" | "challenges" | "leaderboard";
 
 export default function SocialStudyRoomPage() {
-  const { profile, user } = useSupabase();
   const [groups, setGroups] = useState<StudyGroup[]>([]);
-  const [selectedGroupId, setSelectedGroupId] = useState<string>("grp-python");
+  const [selectedGroupId, setSelectedGroupId] = useState<string>("");
   const [activeTab, setActiveTab] = useState<SocialTab>("chat");
 
   // Chat states
@@ -78,7 +70,7 @@ export default function SocialStudyRoomPage() {
   const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [isSoundOn, setIsSoundOn] = useState(false);
-  const [sessionsCompleted, setSessionsCompleted] = useState(3);
+  const [sessionsCompleted, setSessionsCompleted] = useState(0);
   const [copiedSnippetId, setCopiedSnippetId] = useState<string | null>(null);
 
   // Challenges & Leaderboard states
@@ -87,24 +79,29 @@ export default function SocialStudyRoomPage() {
 
   // Create Group Modal
   const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
-  const [isDiscoverModalOpen, setIsDiscoverModalOpen] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
-  const [newGroupTopic, setNewGroupTopic] = useState("Data Analytics");
+  const [newGroupTopic, setNewGroupTopic] = useState("General");
   const [newGroupDesc, setNewGroupDesc] = useState("");
-  const [newGroupIcon, setNewGroupIcon] = useState("🚀");
+  const [newGroupIcon, setNewGroupIcon] = useState("code");
 
   // Load state from socialStore
   const refreshData = useCallback(() => {
     const grps = socialStore.getGroups();
     setGroups(grps);
 
-    const msgs = socialStore.getMessages(selectedGroupId);
+    let activeGId = selectedGroupId;
+    if (grps.length > 0 && (!activeGId || !grps.some((g) => g.id === activeGId))) {
+      activeGId = grps[0].id;
+      setSelectedGroupId(activeGId);
+    }
+
+    const msgs = socialStore.getMessages(activeGId);
     setMessages(msgs);
 
-    const dbts = socialStore.getDoubts(selectedGroupId);
+    const dbts = socialStore.getDoubts(activeGId);
     setDoubts(dbts);
 
-    const chs = socialStore.getChallenges(selectedGroupId);
+    const chs = socialStore.getChallenges(activeGId);
     setChallenges(chs);
 
     const cnts = socialStore.getContributors();
@@ -112,10 +109,16 @@ export default function SocialStudyRoomPage() {
 
     const stds = socialStore.getActiveStudiers();
     setActiveStudiers(stds);
+
+    const timer = socialStore.getTimerState();
+    setSessionsCompleted(timer.completedSessions);
   }, [selectedGroupId]);
 
+
   useEffect(() => {
-    refreshData();
+    const timer = setTimeout(() => {
+      refreshData();
+    }, 0);
 
     const handleSocialUpdate = () => {
       refreshData();
@@ -123,6 +126,7 @@ export default function SocialStudyRoomPage() {
 
     window.addEventListener("learnpath_social_updated", handleSocialUpdate);
     return () => {
+      clearTimeout(timer);
       window.removeEventListener("learnpath_social_updated", handleSocialUpdate);
     };
   }, [refreshData]);
@@ -139,16 +143,19 @@ export default function SocialStudyRoomPage() {
     let interval: NodeJS.Timeout | null = null;
     if (isTimerRunning && timeLeft > 0) {
       interval = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            setIsTimerRunning(false);
+            const minutes = timerMode === "25" ? 25 : 50;
+            socialStore.logStudyMinutes(minutes);
+            setSessionsCompleted((s) => s + 1);
+            alert(`   Awesome! You completed a ${minutes}-minute collaborative focus session and earned +${minutes * 2} XP!`);
+            refreshData();
+            return timerMode === "25" ? 25 * 60 : 50 * 60;
+          }
+          return prev - 1;
+        });
       }, 1000);
-    } else if (timeLeft === 0 && isTimerRunning) {
-      setIsTimerRunning(false);
-      const minutes = timerMode === "25" ? 25 : 50;
-      socialStore.logStudyMinutes(minutes);
-      setSessionsCompleted((prev) => prev + 1);
-      setTimeLeft(timerMode === "25" ? 25 * 60 : 50 * 60);
-      alert(`🎉 Awesome! You completed a ${minutes}-minute collaborative focus session and earned +${minutes * 2} XP!`);
-      refreshData();
     }
     return () => {
       if (interval) clearInterval(interval);
@@ -250,17 +257,19 @@ export default function SocialStudyRoomPage() {
       <div className="p-6 sm:p-7 rounded-3xl border border-border bg-surface shadow-xl flex flex-col gap-5">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-focus/15 border border-focus/30 text-focus flex items-center justify-center text-2xl shadow-lg shadow-focus/20 shrink-0">
-              {activeGroup?.icon || "👥"}
+            <div className="w-12 h-12 rounded-2xl bg-focus/15 border border-focus/30 text-focus flex items-center justify-center shadow-lg shadow-focus/20 shrink-0">
+              <Users className="w-6 h-6" weight="duotone" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-xl sm:text-2xl font-bold text-text-primary flex items-center gap-2">
                   {activeGroup?.name || "Social Study Room"}
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-focus/10 text-focus border border-focus/20">
-                  {activeGroup?.levelBadge}
-                </span>
+                {activeGroup?.levelBadge && (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-focus/10 text-focus border border-focus/20">
+                    {activeGroup.levelBadge}
+                  </span>
+                )}
                 {activeGroup?.isMember ? (
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-signal/15 text-signal border border-signal/30 flex items-center gap-1">
                     <UserCheck className="w-3 h-3" /> Member
@@ -269,7 +278,7 @@ export default function SocialStudyRoomPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      socialStore.joinGroup(selectedGroupId);
+                      if (activeGroup) socialStore.joinGroup(activeGroup.id);
                       refreshData();
                     }}
                     className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-focus text-white hover:bg-focus/90 flex items-center gap-1 cursor-pointer transition-colors shadow-sm"
@@ -279,7 +288,7 @@ export default function SocialStudyRoomPage() {
                 )}
               </div>
               <p className="text-xs sm:text-sm text-text-secondary mt-1">
-                {activeGroup?.description}
+                {activeGroup?.description || "Collaborative study room for peer discussions and focus sprints."}
               </p>
             </div>
           </div>
@@ -293,7 +302,7 @@ export default function SocialStudyRoomPage() {
             >
               {groups.map((grp) => (
                 <option key={grp.id} value={grp.id}>
-                  {grp.icon} {grp.name} ({grp.membersCount})
+                  {grp.name} ({grp.membersCount})
                 </option>
               ))}
             </select>
@@ -327,10 +336,10 @@ export default function SocialStudyRoomPage() {
             </div>
             <div>
               <span className="text-xs font-bold text-text-primary block">
-                {activeGroup?.activeNowCount} Online Now
+                {activeGroup?.activeNowCount || 1} Online Now
               </span>
               <span className="text-[10px] text-text-secondary font-mono">
-                {activeGroup?.membersCount} Total Members
+                {activeGroup?.membersCount || 1} Total Members
               </span>
             </div>
           </div>
@@ -341,7 +350,7 @@ export default function SocialStudyRoomPage() {
             </div>
             <div>
               <span className="text-xs font-bold text-text-primary block">
-                {activeGroup?.solvedDoubtsCount} Doubts Solved
+                {activeGroup?.solvedDoubtsCount || 0} Doubts Solved
               </span>
               <span className="text-[10px] text-text-secondary font-mono">Q&A Verified</span>
             </div>
@@ -355,26 +364,27 @@ export default function SocialStudyRoomPage() {
               <span className="text-xs font-bold text-text-primary block">
                 {sessionsCompleted * 25} Mins Focused
               </span>
-              <span className="text-[10px] text-text-secondary font-mono">Today's Sprint</span>
+              <span className="text-[10px] text-text-secondary font-mono">Today&apos;s Sprint</span>
             </div>
           </div>
 
           <div className="p-3 rounded-2xl bg-paper/60 border border-border flex flex-col justify-center gap-1.5">
             <div className="flex items-center justify-between text-[11px]">
               <span className="font-semibold text-text-secondary">Cohort Velocity</span>
-              <span className="font-bold text-focus font-mono">{activeGroup?.progressPercentage}%</span>
+              <span className="font-bold text-focus font-mono">{activeGroup?.progressPercentage || 0}%</span>
             </div>
             <div className="w-full h-2 rounded-full bg-border overflow-hidden">
               <div
                 className="h-full bg-focus rounded-full transition-all duration-500"
-                style={{ width: `${activeGroup?.progressPercentage}%` }}
+                style={{ width: `${activeGroup?.progressPercentage || 0}%` }}
               />
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── 2. Tab Switcher Navigation Bar ── */}
+
+      {/*    2. Tab Switcher Navigation Bar    */}
       <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-surface border border-border shadow-sm overflow-x-auto">
         {[
           { id: "chat", label: "Live Discussion", icon: ChatCircleText, count: messages.length },
@@ -415,96 +425,137 @@ export default function SocialStudyRoomPage() {
         })}
       </div>
 
-      {/* ── 3. TAB 1: Live Discussion ── */}
+      {/*    3. TAB 1: Live Discussion    */}
       {activeTab === "chat" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Main Chat Stream (8 cols) */}
           <div className="lg:col-span-8 flex flex-col h-[600px] rounded-3xl border border-border bg-surface shadow-xl overflow-hidden">
             {/* Chat Messages */}
             <div className="flex-1 p-4 sm:p-5 overflow-y-auto space-y-4">
-              {messages.map((msg) => (
-                <div key={msg.id} className="flex items-start gap-3 group">
-                  <img
-                    src={msg.authorAvatar}
-                    alt=""
-                    className="w-9 h-9 rounded-2xl bg-paper p-0.5 border border-border shrink-0 shadow-sm"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-text-primary">{msg.authorName}</span>
-                      <span
-                        className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full font-mono uppercase ${
-                          msg.authorRole === "mentor"
-                            ? "bg-focus/15 text-focus border border-focus/30"
-                            : "bg-paper text-text-secondary"
-                        }`}
+              {messages.length === 0 ? (
+
+                <div className="h-full flex flex-col items-center justify-center p-8 text-center space-y-4 my-auto">
+                  <div className="w-14 h-14 rounded-2xl bg-focus/10 border border-focus/25 text-focus flex items-center justify-center mx-auto shadow-md">
+                    <ChatCircleText className="w-7 h-7" weight="duotone" />
+                  </div>
+                  <div className="space-y-1 max-w-sm">
+                    <h4 className="text-sm font-bold text-text-primary">No Messages in this Study Circle</h4>
+                    <p className="text-xs text-text-secondary leading-relaxed">
+                      Be the first to kick off the discussion or ask for help on a milestone.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+                    {[
+                      "   Hi everyone! Working on today's milestones.",
+                      "   Anyone have tips for optimizing these exercises?",
+                      "   Starting a 25m Pomodoro focus session now!",
+                    ].map((prompt, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setMessageInput(prompt)}
+                        className="px-3 py-1.5 rounded-xl bg-paper hover:bg-border border border-border text-xs text-text-secondary hover:text-text-primary transition-colors cursor-pointer text-left"
                       >
-                        {msg.authorRole}
-                      </span>
-                      <span className="text-[10px] text-text-secondary font-mono">{msg.timestamp}</span>
-                    </div>
-
-                    <div className="mt-1 p-3 rounded-2xl bg-paper border border-border text-xs sm:text-sm text-text-primary leading-relaxed break-words space-y-2">
-                      <p>{msg.content}</p>
-
-                      {/* Code Snippet Box */}
-                      {msg.codeSnippet && (
-                        <div className="rounded-xl border border-border bg-surface overflow-hidden font-mono text-xs shadow-inner">
-                          <div className="flex items-center justify-between px-3 py-1.5 bg-paper border-b border-border text-[10px] text-text-secondary">
-                            <span className="font-semibold uppercase font-mono">{msg.codeSnippet.lang}</span>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                navigator.clipboard.writeText(msg.codeSnippet!.code);
-                                setCopiedSnippetId(msg.id);
-                                setTimeout(() => setCopiedSnippetId(null), 2000);
-                              }}
-                              className="hover:text-text-primary flex items-center gap-1 text-[10px] cursor-pointer"
-                            >
-                              {copiedSnippetId === msg.id ? (
-                                <Check className="w-3 h-3 text-signal" />
-                              ) : (
-                                <Copy className="w-3 h-3" />
-                              )}
-                              <span>{copiedSnippetId === msg.id ? "Copied" : "Copy"}</span>
-                            </button>
-                          </div>
-                          <pre className="p-3 text-text-primary overflow-x-auto whitespace-pre leading-relaxed">
-                            {msg.codeSnippet.code}
-                          </pre>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Emoji Reactions */}
-                    <div className="flex items-center gap-1.5 mt-1.5">
-                      {["🔥", "👏", "💡", "🚀"].map((emoji) => {
-                        const count = msg.reactions?.[emoji] || 0;
-                        return (
-                          <button
-                            key={emoji}
-                            type="button"
-                            onClick={() => {
-                              socialStore.toggleReaction(selectedGroupId, msg.id, emoji);
-                              refreshData();
-                            }}
-                            className={`px-2 py-0.5 rounded-lg text-xs flex items-center gap-1 border transition-colors cursor-pointer ${
-                              count > 0
-                                ? "bg-focus/10 border-focus/30 text-text-primary"
-                                : "bg-transparent border-transparent hover:bg-paper text-text-secondary"
-                            }`}
-                          >
-                            <span>{emoji}</span>
-                            {count > 0 && <span className="font-mono text-[10px] font-bold">{count}</span>}
-                          </button>
-                        );
-                      })}
-                    </div>
+                        &ldquo;{prompt}&rdquo;
+                      </button>
+                    ))}
                   </div>
                 </div>
-              ))}
+              ) : (
+                messages.map((msg) => (
+                  <div key={msg.id} className="flex items-start gap-3 group">
+                    <Image
+                      src={msg.authorAvatar}
+                      alt=""
+                      width={36}
+                      height={36}
+                      unoptimized
+                      className="w-9 h-9 rounded-2xl bg-paper p-0.5 border border-border shrink-0 shadow-sm"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-text-primary">{msg.authorName}</span>
+                        <span
+                          className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full font-mono uppercase ${
+                            msg.authorRole === "mentor"
+                              ? "bg-focus/15 text-focus border border-focus/30"
+                              : "bg-paper text-text-secondary"
+                          }`}
+                        >
+                          {msg.authorRole}
+                        </span>
+                        <span className="text-[10px] text-text-secondary font-mono">{msg.timestamp}</span>
+                      </div>
+
+                      <div className="mt-1 p-3 rounded-2xl bg-paper border border-border text-xs sm:text-sm text-text-primary leading-relaxed break-words space-y-2">
+                        <p>{msg.content}</p>
+
+                        {/* Code Snippet Box */}
+                        {msg.codeSnippet && (
+                          <div className="rounded-xl border border-border bg-surface overflow-hidden font-mono text-xs shadow-inner">
+                            <div className="flex items-center justify-between px-3 py-1.5 bg-paper border-b border-border text-[10px] text-text-secondary">
+                              <span className="font-semibold uppercase font-mono">{msg.codeSnippet.lang}</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(msg.codeSnippet!.code);
+                                  setCopiedSnippetId(msg.id);
+                                  setTimeout(() => setCopiedSnippetId(null), 2000);
+                                }}
+                                className="hover:text-text-primary flex items-center gap-1 text-[10px] cursor-pointer"
+                              >
+                                {copiedSnippetId === msg.id ? (
+                                  <Check className="w-3 h-3 text-signal" />
+                                ) : (
+                                  <Copy className="w-3 h-3" />
+                                )}
+                                <span>{copiedSnippetId === msg.id ? "Copied" : "Copy"}</span>
+                              </button>
+                            </div>
+                            <pre className="p-3 text-text-primary overflow-x-auto whitespace-pre leading-relaxed">
+                              {msg.codeSnippet.code}
+                            </pre>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Emoji Reactions */}
+                      <div className="flex items-center gap-1.5 mt-1.5">
+                        {[
+                          { key: "+1", label: "👍" },
+                          { key: "fire", label: "🔥" },
+                          { key: "rocket", label: "🚀" },
+                          { key: "heart", label: "❤️" },
+                        ].map((rx) => {
+                          const count = msg.reactions?.[rx.key] || 0;
+                          return (
+                            <button
+                              key={rx.key}
+                              type="button"
+                              onClick={() => {
+                                socialStore.toggleReaction(selectedGroupId, msg.id, rx.key);
+                                refreshData();
+                              }}
+                              className={`px-2 py-0.5 rounded-lg text-xs flex items-center gap-1 border transition-colors cursor-pointer ${
+                                count > 0
+                                  ? "bg-focus/10 border-focus/30 text-text-primary"
+                                  : "bg-transparent border-transparent hover:bg-paper text-text-secondary"
+                              }`}
+                            >
+                              <span>{rx.label}</span>
+                              {count > 0 && <span className="font-mono text-[10px] font-bold">{count}</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+
               <div ref={messagesEndRef} />
             </div>
+
 
             {/* Code Attachment Drawer */}
             {isCodeInputOpen && (
@@ -594,7 +645,14 @@ export default function SocialStudyRoomPage() {
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className="relative shrink-0">
-                        <img src={learner.avatar} alt="" className="w-8 h-8 rounded-full bg-surface" />
+                        <Image
+                          src={learner.avatar}
+                          alt=""
+                          width={32}
+                          height={32}
+                          unoptimized
+                          className="w-8 h-8 rounded-full bg-surface"
+                        />
                         <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-signal ring-2 ring-paper" />
                       </div>
                       <div className="min-w-0">
@@ -634,7 +692,7 @@ export default function SocialStudyRoomPage() {
                     }}
                     className="w-full text-left p-2.5 rounded-xl bg-paper/60 hover:bg-paper border border-border text-[11px] text-text-secondary hover:text-text-primary transition-colors cursor-pointer line-clamp-2"
                   >
-                    💡 {prompt}
+                       {prompt}
                   </button>
                 ))}
               </div>
@@ -643,7 +701,7 @@ export default function SocialStudyRoomPage() {
         </div>
       )}
 
-      {/* ── 4. TAB 2: Doubt Board (Q&A with Upvoting & Solutions) ── */}
+      {/*    4. TAB 2: Doubt Board (Q&A with Upvoting & Solutions)    */}
       {activeTab === "doubts" && (
         <div className="space-y-5">
           {/* Action Bar */}
@@ -743,7 +801,7 @@ export default function SocialStudyRoomPage() {
                           </span>
                         )}
                         <span className="text-[10px] text-text-secondary font-mono">
-                          Asked by {doubt.authorName} • {doubt.createdAt}
+                          Asked by {doubt.authorName} * {doubt.createdAt}
                         </span>
                       </div>
 
@@ -797,12 +855,19 @@ export default function SocialStudyRoomPage() {
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <img src={ans.authorAvatar} alt="" className="w-6 h-6 rounded-full bg-surface" />
+                          <Image
+                            src={ans.authorAvatar}
+                            alt=""
+                            width={24}
+                            height={24}
+                            unoptimized
+                            className="w-6 h-6 rounded-full bg-surface"
+                          />
                           <span className="text-xs font-bold text-text-primary">{ans.authorName}</span>
                           <span className="text-[10px] px-1.5 py-0.2 rounded bg-surface border border-border text-text-secondary font-mono">
                             {ans.authorRole}
                           </span>
-                          <span className="text-[10px] text-text-secondary font-mono">• {ans.timestamp}</span>
+                          <span className="text-[10px] text-text-secondary font-mono">* {ans.timestamp}</span>
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -914,7 +979,7 @@ export default function SocialStudyRoomPage() {
         </div>
       )}
 
-      {/* ── 5. TAB 3: Study Together (Live Collaborative Focus Room) ── */}
+      {/*    5. TAB 3: Study Together (Live Collaborative Focus Room)    */}
       {activeTab === "study-together" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Focus Timer Arena (7 cols) */}
@@ -1007,7 +1072,7 @@ export default function SocialStudyRoomPage() {
 
             {isSoundOn && (
               <p className="text-[11px] text-focus font-mono animate-pulse">
-                🎵 Simulating Lo-Fi Study Ambience (Binaural Beats for Deep Flow)
+                   Simulating Lo-Fi Study Ambience (Binaural Beats for Deep Flow)
               </p>
             )}
           </div>
@@ -1025,43 +1090,63 @@ export default function SocialStudyRoomPage() {
             </div>
 
             <div className="space-y-3">
-              {activeStudiers.map((learner) => (
-                <div
-                  key={learner.id}
-                  className="p-3.5 rounded-2xl bg-paper border border-border flex items-center justify-between shadow-sm"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <img src={learner.avatar} alt="" className="w-10 h-10 rounded-2xl bg-surface p-0.5 border border-border" />
-                      <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-signal ring-2 ring-paper" />
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-text-primary flex items-center gap-1.5">
-                        <span>{learner.name}</span>
-                        {learner.isSelf && (
-                          <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-focus/10 text-focus border border-focus/20">
-                            YOU
-                          </span>
-                        )}
-                      </h4>
-                      <p className="text-[11px] text-text-secondary line-clamp-1 font-mono">
-                        {learner.status}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="text-right shrink-0">
-                    <span className="text-xs font-mono font-bold text-focus block">
-                      {learner.minutesStudied}m
-                    </span>
-                    <span className="text-[9px] text-text-secondary uppercase">logged</span>
+              {activeStudiers.length === 0 ? (
+                <div className="p-8 rounded-2xl bg-paper/60 border border-border text-center space-y-3">
+                  <Timer className="w-8 h-8 text-text-secondary mx-auto" />
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold text-text-primary">No Active Studiers In This Room</p>
+                    <p className="text-[11px] text-text-secondary">
+                      Start your focus timer on the left to log your session and invite peers.
+                    </p>
                   </div>
                 </div>
-              ))}
+              ) : (
+                activeStudiers.map((learner) => (
+                  <div
+                    key={learner.id}
+                    className="p-3.5 rounded-2xl bg-paper border border-border flex items-center justify-between shadow-sm"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <Image
+                          src={learner.avatar}
+                          alt=""
+                          width={40}
+                          height={40}
+                          unoptimized
+                          className="w-10 h-10 rounded-2xl bg-surface p-0.5 border border-border"
+                        />
+                        <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-signal ring-2 ring-paper" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-text-primary flex items-center gap-1.5">
+                          <span>{learner.name}</span>
+                          {learner.isSelf && (
+                            <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-focus/10 text-focus border border-focus/20">
+                              YOU
+                            </span>
+                          )}
+                        </h4>
+                        <p className="text-[11px] text-text-secondary line-clamp-1 font-mono">
+                          {learner.status}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="text-right shrink-0">
+                      <span className="text-xs font-mono font-bold text-focus block">
+                        {learner.minutesStudied}m
+                      </span>
+                      <span className="text-[9px] text-text-secondary uppercase">logged</span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
 
+
             <div className="p-4 rounded-2xl bg-focus/5 border border-focus/20 space-y-1">
-              <h4 className="text-xs font-bold text-focus">⚡ Focus Rewards</h4>
+              <h4 className="text-xs font-bold text-focus">  Focus Rewards</h4>
               <p className="text-xs text-text-secondary leading-relaxed">
                 Completing a 25-minute Pomodoro earns <strong>+50 XP</strong> and raises your ranking on the contributor leaderboard.
               </p>
@@ -1070,86 +1155,96 @@ export default function SocialStudyRoomPage() {
         </div>
       )}
 
-      {/* ── 6. TAB 4: Study Challenges & Group Velocity ── */}
+      {/*    6. TAB 4: Study Challenges & Group Velocity    */}
       {activeTab === "challenges" && (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {challenges.map((ch) => {
-              const pct = Math.round((ch.progress / ch.target) * 100);
-              return (
-                <div
-                  key={ch.id}
-                  className={`p-6 rounded-3xl border transition-all flex flex-col justify-between gap-4 shadow-lg ${
-                    ch.isCompleted
-                      ? "bg-signal/5 border-signal/30"
-                      : "bg-surface border-border hover:border-focus/40"
-                  }`}
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span
-                        className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full font-mono ${
-                          ch.type === "daily"
-                            ? "bg-focus/10 text-focus border border-focus/20"
-                            : "bg-amber-500/10 text-amber-500 border border-amber-500/20"
-                        }`}
-                      >
-                        {ch.type} challenge
-                      </span>
-                      <span className="text-xs font-bold text-focus font-mono">
-                        +{ch.xpReward} XP
-                      </span>
-                    </div>
-
-                    <h3 className="text-base font-bold text-text-primary">{ch.title}</h3>
-                    <p className="text-xs text-text-secondary leading-relaxed">
-                      {ch.description}
-                    </p>
-                  </div>
-
-                  <div className="space-y-2 pt-2 border-t border-border/60">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-semibold text-text-secondary">Progress</span>
-                      <span className="font-bold text-text-primary font-mono">
-                        {ch.progress} / {ch.target} ({pct}%)
-                      </span>
-                    </div>
-                    <div className="w-full h-2.5 rounded-full bg-paper overflow-hidden border border-border">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          ch.isCompleted ? "bg-signal" : "bg-focus"
-                        }`}
-                        style={{ width: `${Math.min(100, pct)}%` }}
-                      />
-                    </div>
-
-                    <div className="flex justify-end pt-1">
-                      {ch.isCompleted ? (
-                        <span className="text-xs font-bold text-signal flex items-center gap-1">
-                          <CheckCircle className="w-4 h-4" weight="fill" /> Claimed Reward
-                        </span>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            socialStore.completeChallenge(selectedGroupId, ch.id);
-                            refreshData();
-                          }}
-                          className="px-3.5 py-1.5 rounded-xl bg-focus hover:bg-focus/90 text-white text-xs font-bold transition-all shadow-md shadow-focus/25 cursor-pointer"
+          {challenges.length === 0 ? (
+            <div className="p-12 rounded-3xl border border-border bg-surface text-center space-y-3">
+              <Trophy className="w-10 h-10 text-text-secondary mx-auto" />
+              <h3 className="text-base font-bold text-text-primary">No Active Challenges in this Circle</h3>
+              <p className="text-xs text-text-secondary max-w-sm mx-auto">
+                Challenges are posted weekly to boost cohort velocity. Check back tomorrow or switch to another study circle.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {challenges.map((ch) => {
+                const pct = Math.round((ch.progress / ch.target) * 100);
+                return (
+                  <div
+                    key={ch.id}
+                    className={`p-6 rounded-3xl border transition-all flex flex-col justify-between gap-4 shadow-lg ${
+                      ch.isCompleted
+                        ? "bg-signal/5 border-signal/30"
+                        : "bg-surface border-border hover:border-focus/40"
+                    }`}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span
+                          className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full font-mono ${
+                            ch.type === "daily"
+                              ? "bg-focus/10 text-focus border border-focus/20"
+                              : "bg-amber-500/10 text-amber-500 border border-amber-500/20"
+                          }`}
                         >
-                          Mark Done (+{ch.xpReward} XP)
-                        </button>
-                      )}
+                          {ch.type} challenge
+                        </span>
+                        <span className="text-xs font-bold text-focus font-mono">
+                          +{ch.xpReward} XP
+                        </span>
+                      </div>
+
+                      <h3 className="text-base font-bold text-text-primary">{ch.title}</h3>
+                      <p className="text-xs text-text-secondary leading-relaxed">
+                        {ch.description}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2 pt-2 border-t border-border/60">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-semibold text-text-secondary">Progress</span>
+                        <span className="font-bold text-text-primary font-mono">
+                          {ch.progress} / {ch.target} ({pct}%)
+                        </span>
+                      </div>
+                      <div className="w-full h-2.5 rounded-full bg-paper overflow-hidden border border-border">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            ch.isCompleted ? "bg-signal" : "bg-focus"
+                          }`}
+                          style={{ width: `${Math.min(100, pct)}%` }}
+                        />
+                      </div>
+
+                      <div className="flex justify-end pt-1">
+                        {ch.isCompleted ? (
+                          <span className="text-xs font-bold text-signal flex items-center gap-1">
+                            <CheckCircle className="w-4 h-4" weight="fill" /> Claimed Reward
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              socialStore.completeChallenge(selectedGroupId, ch.id);
+                              refreshData();
+                            }}
+                            className="px-3.5 py-1.5 rounded-xl bg-focus hover:bg-focus/90 text-white text-xs font-bold transition-all shadow-md shadow-focus/25 cursor-pointer"
+                          >
+                            Mark Done (+{ch.xpReward} XP)
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
-      {/* ── 7. TAB 5: Contributor Leaderboard ── */}
+      {/*    7. TAB 5: Contributor Leaderboard    */}
       {activeTab === "leaderboard" && (
         <div className="p-6 sm:p-8 rounded-3xl border border-border bg-surface shadow-2xl space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-4">
@@ -1169,70 +1264,88 @@ export default function SocialStudyRoomPage() {
           </div>
 
           <div className="space-y-3">
-            {contributors.map((contrib) => (
-              <div
-                key={contrib.id}
-                className={`p-4 sm:p-5 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all ${
-                  contrib.rank === 1
-                    ? "bg-amber-500/10 border-amber-500/40 shadow-md"
-                    : contrib.rank === 2
-                    ? "bg-zinc-200/10 border-zinc-400/30"
-                    : "bg-paper/70 border-border"
-                }`}
-              >
-                <div className="flex items-center gap-3.5">
-                  <div
-                    className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 ${
-                      contrib.rank === 1
-                        ? "bg-amber-500 text-zinc-950 shadow-md shadow-amber-500/30"
-                        : contrib.rank === 2
-                        ? "bg-zinc-300 text-zinc-900"
-                        : contrib.rank === 3
-                        ? "bg-amber-700 text-white"
-                        : "bg-surface text-text-secondary border border-border"
-                    }`}
-                  >
-                    #{contrib.rank}
-                  </div>
-
-                  <img src={contrib.avatar} alt="" className="w-10 h-10 rounded-2xl bg-surface p-0.5 border border-border shrink-0" />
-
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-bold text-text-primary">{contrib.name}</h4>
-                      <span className="px-2 py-0.2 rounded-full text-[10px] font-semibold bg-surface border border-border text-text-secondary font-mono">
-                        {contrib.badge}
-                      </span>
-                    </div>
-                    <span className="text-[11px] text-text-secondary font-mono">{contrib.role}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4 sm:gap-6 self-end sm:self-auto text-xs font-mono">
-                  <div className="text-right">
-                    <span className="text-text-secondary block text-[10px]">Answers</span>
-                    <span className="font-bold text-text-primary">{contrib.doubtsAnswered}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-text-secondary block text-[10px]">Upvotes</span>
-                    <span className="font-bold text-signal">+{contrib.upvotesReceived}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-text-secondary block text-[10px]">Focus Time</span>
-                    <span className="font-bold text-focus">{contrib.studyMinutes}m</span>
-                  </div>
-                  <div className="text-right pl-2 border-l border-border">
-                    <span className="text-text-secondary block text-[10px]">Points</span>
-                    <span className="font-bold text-base text-text-primary">{contrib.points}</span>
-                  </div>
-                </div>
+            {contributors.length === 0 ? (
+              <div className="p-12 rounded-2xl bg-paper/60 border border-border text-center space-y-3">
+                <Crown className="w-10 h-10 text-text-secondary mx-auto" />
+                <h3 className="text-base font-bold text-text-primary">No Contributors Ranked Yet</h3>
+                <p className="text-xs text-text-secondary max-w-sm mx-auto">
+                  Be the first learner in this cohort to log study minutes or answer peer doubts to claim #1 rank!
+                </p>
               </div>
-            ))}
+            ) : (
+              contributors.map((contrib) => (
+                <div
+                  key={contrib.id}
+                  className={`p-4 sm:p-5 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all ${
+                    contrib.rank === 1
+                      ? "bg-amber-500/10 border-amber-500/40 shadow-md"
+                      : contrib.rank === 2
+                      ? "bg-zinc-200/10 border-zinc-400/30"
+                      : "bg-paper/70 border-border"
+                  }`}
+                >
+                  <div className="flex items-center gap-3.5">
+                    <div
+                      className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 ${
+                        contrib.rank === 1
+                          ? "bg-amber-500 text-zinc-950 shadow-md shadow-amber-500/30"
+                          : contrib.rank === 2
+                          ? "bg-zinc-300 text-zinc-900"
+                          : contrib.rank === 3
+                          ? "bg-amber-700 text-white"
+                          : "bg-surface text-text-secondary border border-border"
+                      }`}
+                    >
+                      #{contrib.rank}
+                    </div>
+
+                    <Image
+                      src={contrib.avatar}
+                      alt=""
+                      width={40}
+                      height={40}
+                      unoptimized
+                      className="w-10 h-10 rounded-2xl bg-surface p-0.5 border border-border shrink-0"
+                    />
+
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-sm font-bold text-text-primary">{contrib.name}</h4>
+                        <span className="px-2 py-0.2 rounded-full text-[10px] font-semibold bg-surface border border-border text-text-secondary font-mono">
+                          {contrib.badge}
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-text-secondary font-mono">{contrib.role}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 sm:gap-6 self-end sm:self-auto text-xs font-mono">
+                    <div className="text-right">
+                      <span className="text-text-secondary block text-[10px]">Answers</span>
+                      <span className="font-bold text-text-primary">{contrib.doubtsAnswered}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-text-secondary block text-[10px]">Upvotes</span>
+                      <span className="font-bold text-signal">+{contrib.upvotesReceived}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-text-secondary block text-[10px]">Focus Time</span>
+                      <span className="font-bold text-focus">{contrib.studyMinutes}m</span>
+                    </div>
+                    <div className="text-right pl-2 border-l border-border">
+                      <span className="text-text-secondary block text-[10px]">Points</span>
+                      <span className="font-bold text-base text-text-primary">{contrib.points}</span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}
 
-      {/* ── Modal: Ask a Doubt ── */}
+
+      {/*    Modal: Ask a Doubt    */}
       {isAskDoubtModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="w-full max-w-xl p-6 rounded-3xl bg-surface border border-border shadow-2xl space-y-4">
@@ -1326,7 +1439,7 @@ export default function SocialStudyRoomPage() {
         </div>
       )}
 
-      {/* ── Modal: Create Study Group ── */}
+      {/*    Modal: Create Study Group    */}
       {isCreateGroupModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="w-full max-w-md p-6 rounded-3xl bg-surface border border-border shadow-2xl space-y-4">

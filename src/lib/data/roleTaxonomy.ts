@@ -328,4 +328,57 @@ export const PRESEEDED_CAREER_ROLES: CareerRole[] = [
       },
     ],
   },
+  {
+    id: "cybersecurity-engineer",
+    title: "Cybersecurity Specialist & Penetration Tester",
+    category: "Security & Networking",
+    icon: "shield",
+    description: "Master vulnerability assessment, Linux hardening, network security, penetration testing, and defensive SOC analysis.",
+    skills: [
+      {
+        skillName: "Network Security & Protocols",
+        requiredProficiency: 85,
+        category: "Core",
+        importanceWeight: 1.0,
+        prerequisites: [],
+      },
+      {
+        skillName: "Linux CLI & System Hardening",
+        requiredProficiency: 80,
+        category: "Core",
+        importanceWeight: 0.9,
+        prerequisites: [],
+      },
+      {
+        skillName: "Web Application Penetration Testing",
+        requiredProficiency: 85,
+        category: "Architecture",
+        importanceWeight: 1.0,
+        prerequisites: ["Network Security & Protocols", "Linux CLI & System Hardening"],
+      },
+      {
+        skillName: "Cryptography & Public Key Infrastructure",
+        requiredProficiency: 75,
+        category: "Core",
+        importanceWeight: 0.85,
+        prerequisites: ["Network Security & Protocols"],
+      },
+      {
+        skillName: "Incident Response & SIEM Analysis",
+        requiredProficiency: 80,
+        category: "Tool",
+        importanceWeight: 0.9,
+        prerequisites: ["Linux CLI & System Hardening"],
+      },
+      {
+        skillName: "Ethical Hacking & Vulnerability Assessment",
+        requiredProficiency: 85,
+        category: "Architecture",
+        importanceWeight: 0.95,
+        prerequisites: ["Web Application Penetration Testing"],
+      },
+    ],
+  },
 ];
+
+

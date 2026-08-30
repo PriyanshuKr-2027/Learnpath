@@ -74,7 +74,7 @@ export function FlashcardDeck({ flashcards = [], title = "Remedial Concept Flash
               {title}
             </h3>
             <span className="text-[10px] text-orange-400/90 font-medium">
-              Surgical Remediation • Click card or press Space to flip
+              Surgical Remediation * Click card or press Space to flip
             </span>
           </div>
         </div>
@@ -157,7 +157,7 @@ export function FlashcardDeck({ flashcards = [], title = "Remedial Concept Flash
                   }`}
                 >
                   <CheckCircle className="w-3.5 h-3.5" weight="bold" />
-                  <span>{isCurrentMastered ? "Mastered ✅" : "Mark Mastered"}</span>
+                  <span>{isCurrentMastered ? "Mastered  " : "Mark Mastered"}</span>
                 </button>
               </div>
 

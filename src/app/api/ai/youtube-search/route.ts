@@ -1,7 +1,6 @@
 /**
- * /api/ai/youtube-search — Real YouTube Data API v3 video search
- * Returns top relevant video with enriched metadata for a given skill/topic query.
- * Falls back to corpus video if API unavailable.
+ * /api/ai/youtube-search  -  Real YouTube Data API v3 video search with intelligent chapter segmentation
+ * Returns top relevant video with enriched metadata, dynamic chapter pruning, and 24h Redis caching.
  */
 import { NextRequest, NextResponse } from "next/server";
 import { cachedFetch } from "@/lib/redis";
@@ -11,6 +10,7 @@ interface YouTubeSearchItem {
   id: { videoId: string };
   snippet: {
     title: string;
+    description: string;
     channelTitle: string;
     publishedAt: string;
     thumbnails: { medium: { url: string } };
@@ -19,6 +19,7 @@ interface YouTubeSearchItem {
 
 interface YouTubeVideoDetails {
   id: string;
+  snippet?: { description?: string };
   contentDetails: { duration: string }; // ISO 8601 e.g. PT1H23M45S
   statistics: { viewCount: string; likeCount?: string };
 }
@@ -38,6 +39,70 @@ function formatDuration(seconds: number): string {
   const s = seconds % 60;
   if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+/**
+ * Parses timestamps in video description (e.g. 04:15 or 1:12:30) to compute chapter boundaries
+ */
+function extractChapterBoundaries(
+  description: string,
+  totalDuration: number,
+  level: string
+): { start: number; end: number; chapterName: string } {
+  const timestampRegex = /(?:^|\n)\s*(?:(\d{1,2}):)?(\d{1,2}):(\d{2})\s*[- -  - :]?\s*(.+?)(?=\n|$)/g;
+  const chapters: Array<{ seconds: number; title: string }> = [];
+
+  let match;
+  while ((match = timestampRegex.exec(description)) !== null) {
+    const hours = match[1] ? parseInt(match[1], 10) : 0;
+    const minutes = parseInt(match[2], 10);
+    const seconds = parseInt(match[3], 10);
+    const title = match[4].trim();
+    const totalSec = hours * 3600 + minutes * 60 + seconds;
+    if (totalSec < totalDuration) {
+      chapters.push({ seconds: totalSec, title });
+    }
+  }
+
+  if (chapters.length >= 3) {
+    if (level === "advanced" && chapters.length >= 4) {
+      const startIdx = Math.floor(chapters.length * 0.6);
+      return {
+        start: chapters[startIdx].seconds,
+        end: totalDuration,
+        chapterName: chapters[startIdx].title,
+      };
+    } else if (level === "intermediate" && chapters.length >= 3) {
+      const startIdx = Math.floor(chapters.length * 0.25);
+      const endIdx = Math.floor(chapters.length * 0.85);
+      return {
+        start: chapters[startIdx].seconds,
+        end: chapters[endIdx]?.seconds || totalDuration,
+        chapterName: chapters[startIdx].title,
+      };
+    }
+  }
+
+  // Heuristic segment defaults if chapters not listed in description
+  if (level === "advanced") {
+    return {
+      start: Math.round(totalDuration * 0.45),
+      end: totalDuration,
+      chapterName: "Advanced Architecture & Practical Deep Dive",
+    };
+  } else if (level === "intermediate") {
+    return {
+      start: Math.round(totalDuration * 0.15),
+      end: Math.round(totalDuration * 0.85),
+      chapterName: "Core Mechanics & Implementation",
+    };
+  }
+
+  return {
+    start: 0,
+    end: totalDuration,
+    chapterName: "Foundations & Implementation",
+  };
 }
 
 export async function GET(req: NextRequest) {
@@ -75,9 +140,9 @@ export async function GET(req: NextRequest) {
         return corpus.video;
       }
 
-      // Fetch video details for duration + stats
+      // Fetch video details for duration + stats + description
       const videoIds = items.map((i) => i.id.videoId).join(",");
-      const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,statistics&id=${videoIds}&key=${apiKey}`;
+      const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${videoIds}&key=${apiKey}`;
 
       const detailsRes = await fetch(detailsUrl);
       const detailsData = await detailsRes.json();
@@ -100,6 +165,8 @@ export async function GET(req: NextRequest) {
         }
       }
 
+      const description = bestDetails?.snippet?.description || bestItem.snippet.description || "";
+      const segmentation = extractChapterBoundaries(description, bestDuration, level);
       const pubYear = new Date(bestItem.snippet.publishedAt).getFullYear();
 
       return {
@@ -109,9 +176,9 @@ export async function GET(req: NextRequest) {
         thumbnailUrl: bestItem.snippet.thumbnails.medium.url,
         durationSeconds: bestDuration,
         durationFormatted: formatDuration(bestDuration),
-        relevantStartSeconds: 0,
-        relevantEndSeconds: bestDuration,
-        pruningReason: `Live search via YouTube Data API v3 — top result for "${skill}" (${level} level, published ${pubYear})`,
+        relevantStartSeconds: segmentation.start,
+        relevantEndSeconds: segmentation.end,
+        pruningReason: `Pruned for ${level} level: auto-jumps to [${formatDuration(segmentation.start)}] ("${segmentation.chapterName}") to maximize learning density.`,
         viewCount: parseInt(bestDetails?.statistics?.viewCount || "0"),
       };
     });
@@ -119,7 +186,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ video });
   } catch (err: any) {
     console.error("[youtube-search]", err);
-    // Hard fallback — corpus resource
     const corpus = getOrCreateCuratedResource(skill);
     return NextResponse.json({ video: corpus.video, fallback: true });
   }

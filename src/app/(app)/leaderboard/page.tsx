@@ -47,110 +47,63 @@ export default function LeaderboardPage() {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [timeframe, setTimeframe] = useState<"all" | "weekly">("all");
 
-  const currentUserName = profile?.name || "Alex Dev";
+  const currentUserName = profile?.name || user?.user_metadata?.name || "Learner";
 
   useEffect(() => {
     const localProfile = mockStore.getProfile();
     const activePath = mockStore.getLearningPath();
 
-    const levelsCompleted = activePath.levels.filter((l) => l.status === "completed").length;
-    const points = levelsCompleted * 150 + (localProfile.currentStreak || 5) * 20;
+    const levelsCompleted = activePath?.levels?.filter((l) => l.status === "completed").length || 0;
+    const points = levelsCompleted * 150 + (localProfile?.currentStreak || 0) * 20;
 
     const currentUserObj: LeaderboardUser = {
       id: user?.id || "current_user",
       name: `${currentUserName} (You)`,
-      roleTitle: localProfile.targetRoleTitle || "Data Analyst & BI",
-      streak: localProfile.currentStreak || 5,
+      roleTitle: localProfile?.targetRoleTitle || "Learner",
+      streak: localProfile?.currentStreak || 0,
       levelsMastered: levelsCompleted,
       thetaAbility: 1.45,
-      totalPoints: points > 0 ? points : 450,
+      totalPoints: points > 0 ? points : 150,
       avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(currentUserName)}`,
       isCurrentUser: true,
     };
 
-    const mockPeers: LeaderboardUser[] = [
-      {
-        id: "peer_1",
-        name: "Priyanshu Kumar",
-        roleTitle: "Generative AI & RAG Engineer",
-        streak: 14,
-        levelsMastered: 12,
-        thetaAbility: 2.1,
-        totalPoints: 1850,
-        avatarUrl: "https://api.dicebear.com/7.x/bottts/svg?seed=priyanshu",
-        isCurrentUser: false,
-      },
-      {
-        id: "peer_2",
-        name: "Elena Rostova",
-        roleTitle: "Fullstack AI Engineer",
-        streak: 9,
-        levelsMastered: 8,
-        thetaAbility: 1.8,
-        totalPoints: 1240,
-        avatarUrl: "https://api.dicebear.com/7.x/bottts/svg?seed=elena",
-        isCurrentUser: false,
-      },
-      {
-        id: "peer_3",
-        name: "Marcus Vance",
-        roleTitle: "Cloud & DevOps Architect",
-        streak: 6,
-        levelsMastered: 6,
-        thetaAbility: 1.2,
-        totalPoints: 920,
-        avatarUrl: "https://api.dicebear.com/7.x/bottts/svg?seed=marcus",
-        isCurrentUser: false,
-      },
-      {
-        id: "peer_4",
-        name: "Aarav Sharma",
-        roleTitle: "System Design & Distributed Systems",
-        streak: 3,
-        levelsMastered: 4,
-        thetaAbility: 0.9,
-        totalPoints: 610,
-        avatarUrl: "https://api.dicebear.com/7.x/bottts/svg?seed=aarav",
-        isCurrentUser: false,
-      },
-    ];
 
-    const combined = [currentUserObj, ...mockPeers].sort((a, b) => b.totalPoints - a.totalPoints);
+
+    // Only show the current user  -  leaderboard populates as more users join
+    const combined = [currentUserObj];
     setLeaderboard(combined);
 
-    setActivities([
-      {
-        id: "act_1",
-        userName: "Priyanshu Kumar",
-        userAvatar: "https://api.dicebear.com/7.x/bottts/svg?seed=priyanshu",
-        activityTitle: "Passed CAT Adaptive Checkpoint (Theta: +2.1)",
-        category: "Adaptive Testing",
-        points: 200,
-        solvedAt: "5 mins ago",
-        isCurrentUser: false,
-      },
-      {
-        id: "act_2",
-        userName: "Elena Rostova",
-        userAvatar: "https://api.dicebear.com/7.x/bottts/svg?seed=elena",
-        activityTitle: "Mastered Level 4: DAX Filter Context",
-        category: "DAG Milestone",
-        points: 150,
-        solvedAt: "25 mins ago",
-        isCurrentUser: false,
-      },
-      {
-        id: "act_3",
-        userName: currentUserName,
+    // Real activity from completed levels
+    const completedLevels = activePath?.levels?.filter((l) => l.status === "completed") || [];
+    const realActivities: ActivityItem[] = completedLevels.slice(-5).reverse().map((lvl, idx) => ({
+      id: `act_real_${idx}`,
+      userName: `${currentUserName} (You)`,
+      userAvatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(currentUserName)}`,
+      activityTitle: `Mastered Level ${lvl.displayLevel}: ${lvl.skillName}`,
+      category: "DAG Milestone",
+      points: 150,
+      solvedAt: idx === 0 ? "Recently" : `${idx + 1} levels ago`,
+      isCurrentUser: true,
+    }));
+
+    if (realActivities.length === 0) {
+      realActivities.push({
+        id: "act_onboarding",
+        userName: `${currentUserName} (You)`,
         userAvatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(currentUserName)}`,
         activityTitle: "Calibrated Ground-Truth Skill Matrix",
         category: "Onboarding",
         points: 100,
-        solvedAt: "1 hour ago",
+        solvedAt: "Session start",
         isCurrentUser: true,
-      },
-    ]);
+      });
+    }
+
+    setActivities(realActivities);
   }, [user, currentUserName, profile]);
+
+
 
   const topThree = leaderboard.slice(0, 3);
 
@@ -261,54 +214,65 @@ export default function LeaderboardPage() {
           </h2>
 
           <div className="space-y-2">
-            {leaderboard.map((u, idx) => (
-              <div
-                key={u.id}
-                className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${
-                  u.isCurrentUser
-                    ? "border-focus/40 bg-focus/5 shadow-md"
-                    : "border-border bg-paper hover:border-border/80"
-                }`}
-              >
-                <div className="flex items-center gap-3.5">
-                  <span className="w-6 text-center font-mono font-bold text-xs text-text-secondary">
-                    #{idx + 1}
-                  </span>
-                  <img src={u.avatarUrl} alt={u.name} className="w-9 h-9 rounded-full border border-border" />
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs sm:text-sm font-bold ${u.isCurrentUser ? "text-focus" : "text-text-primary"}`}>
-                        {u.name}
-                      </span>
-                      {u.isCurrentUser && (
-                        <span className="px-1.5 py-0.2 rounded text-[10px] bg-focus/20 text-focus font-bold">
-                          YOU
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-[11px] text-text-secondary block">{u.roleTitle}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4 text-xs font-mono">
-                  <div className="hidden sm:flex items-center gap-1 text-warning">
-                    <Fire className="w-4 h-4" weight="fill" />
-                    <span>{u.streak}d</span>
-                  </div>
-
-                  <div className="hidden sm:flex items-center gap-1 text-focus">
-                    <GameController className="w-4 h-4" weight="fill" />
-                    <span>{u.levelsMastered} Lvls</span>
-                  </div>
-
-                  <span className="px-3 py-1.5 rounded-xl bg-surface border border-border text-text-primary font-bold">
-                    {u.totalPoints} XP
-                  </span>
-                </div>
+            {leaderboard.length === 0 ? (
+              <div className="p-8 rounded-2xl bg-paper/60 border border-border text-center space-y-3">
+                <Medal className="w-8 h-8 text-text-secondary mx-auto" />
+                <p className="text-xs font-bold text-text-primary">No Ranking Data Recorded Yet</p>
+                <p className="text-[11px] text-text-secondary">
+                  Complete your first milestone in the Learning Canvas to earn ranking points.
+                </p>
               </div>
-            ))}
+            ) : (
+              leaderboard.map((u, idx) => (
+                <div
+                  key={u.id}
+                  className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${
+                    u.isCurrentUser
+                      ? "border-focus/40 bg-focus/5 shadow-md"
+                      : "border-border bg-paper hover:border-border/80"
+                  }`}
+                >
+                  <div className="flex items-center gap-3.5">
+                    <span className="w-6 text-center font-mono font-bold text-xs text-text-secondary">
+                      #{idx + 1}
+                    </span>
+                    <img src={u.avatarUrl} alt={u.name} className="w-9 h-9 rounded-full border border-border" />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs sm:text-sm font-bold ${u.isCurrentUser ? "text-focus" : "text-text-primary"}`}>
+                          {u.name}
+                        </span>
+                        {u.isCurrentUser && (
+                          <span className="px-1.5 py-0.2 rounded text-[10px] bg-focus/20 text-focus font-bold">
+                            YOU
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[11px] text-text-secondary block">{u.roleTitle}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 text-xs font-mono">
+                    <div className="hidden sm:flex items-center gap-1 text-warning">
+                      <Fire className="w-4 h-4" weight="fill" />
+                      <span>{u.streak}d</span>
+                    </div>
+
+                    <div className="hidden sm:flex items-center gap-1 text-focus">
+                      <GameController className="w-4 h-4" weight="fill" />
+                      <span>{u.levelsMastered} Lvls</span>
+                    </div>
+
+                    <span className="px-3 py-1.5 rounded-xl bg-surface border border-border text-text-primary font-bold">
+                      {u.totalPoints} XP
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
+
 
         {/* Live Cohort Activity (4 Cols) */}
         <div className="lg:col-span-4 p-6 rounded-3xl border border-border bg-surface shadow-xl space-y-4">

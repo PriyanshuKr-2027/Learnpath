@@ -15,23 +15,46 @@ import { CandyCrushMap } from "@/components/roadmap/CandyCrushMap";
 import { MilestoneListView } from "@/components/roadmap/MilestoneListView";
 import { LevelDetailsDrawer } from "@/components/roadmap/LevelDetailsDrawer";
 
+import { useRouter } from "next/navigation";
+
 export default function RoadmapPage() {
+  const router = useRouter();
   const [path, setPath] = useState<LearningPath | null>(null);
   const [selectedNode, setSelectedNode] = useState<LevelNode | null>(null);
   const [viewMode, setViewMode] = useState<"candyCrush" | "timeline">("candyCrush");
   const [diffBanner, setDiffBanner] = useState<RoadmapDiff | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadedPath = mockStore.getLearningPath();
-    setPath(loadedPath);
+    let mounted = true;
 
-    const diff = mockStore.getLastDiff();
-    if (diff) {
-      setDiffBanner(diff);
+    async function load() {
+      try {
+        const hydPath = await mockStore.hydrateLearningPath();
+        if (mounted) {
+          if (hydPath) {
+            setPath(hydPath);
+          } else {
+            setPath(null);
+          }
+          const diff = mockStore.getLastDiff();
+          if (diff) setDiffBanner(diff);
+        }
+      } catch (err) {
+        console.error("[RoadmapPage] load error:", err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
     }
-  }, []);
 
-  if (!path) {
+    load();
+
+    return () => {
+      mounted = false;
+    };
+  }, [router]);
+
+  if (loading) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center text-text-secondary">
         <div className="flex items-center gap-2">
@@ -42,6 +65,44 @@ export default function RoadmapPage() {
     );
   }
 
+  //    BLANK STATE: No Learning Path Generated Yet   
+  if (!path) {
+    return (
+      <div className="max-w-2xl mx-auto py-12 px-4 space-y-6">
+        <div className="p-8 sm:p-12 rounded-3xl border border-border bg-surface text-center space-y-5 shadow-2xl">
+          <div className="w-16 h-16 rounded-3xl bg-focus/15 border border-focus/30 text-focus flex items-center justify-center mx-auto shadow-xl shadow-focus/20">
+            <GitFork className="w-8 h-8" />
+          </div>
+
+          <div className="space-y-2">
+            <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-focus/10 text-focus border border-focus/25 inline-flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5" />
+              Dynamic DAG Architecture
+            </span>
+            <h2 className="text-2xl font-bold text-text-primary tracking-tight">
+              No Learning Path Synthesized Yet
+            </h2>
+            <p className="text-xs sm:text-sm text-text-secondary leading-relaxed max-w-md mx-auto">
+              Your Candy Crush DAG roadmap sequences technical competencies using Kahn&apos;s topological sort based on your exact skill gaps. Complete the quick onboarding to synthesize your first path.
+            </p>
+          </div>
+
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => router.push("/onboarding")}
+              className="px-6 py-3 rounded-2xl bg-focus hover:bg-focus/90 text-white font-bold text-xs sm:text-sm shadow-lg shadow-focus/25 flex items-center gap-2 transition-all cursor-pointer"
+            >
+              <span>Launch Curriculum Synthesizer</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+
+
   return (
     <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto pb-12">
       {/* Top Header Card */}
@@ -50,9 +111,9 @@ export default function RoadmapPage() {
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-focus/10 text-focus border border-focus/20 flex items-center gap-1">
               <Sparkles className="w-3.5 h-3.5" />
-              Dynamic Kahn&apos;s DAG • Version {path.version}.0
+              Dynamic Kahn&apos;s DAG * Version {path.version}.0
             </span>
-            <span className="text-xs text-text-secondary">•</span>
+            <span className="text-xs text-text-secondary">*</span>
             <span className="text-xs text-text-secondary font-medium">
               {path.totalWeeks} Weeks ({path.weeklyHours}h/wk)
             </span>

@@ -132,22 +132,7 @@ export function ResumeDropzone({ onParsed, apiKey }: ResumeDropzoneProps) {
           </div>
         )}
       </div>
-
-      {/* Quick Sample Button */}
-      <div className="flex items-center justify-between px-1">
-        <span className="text-xs text-text-secondary">Don&apos;t have a PDF ready?</span>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleSampleResume();
-          }}
-          className="text-xs font-medium text-focus hover:text-focus/80 flex items-center gap-1.5 py-1 px-2.5 rounded-lg bg-focus/10 hover:bg-focus/20 border border-focus/20 transition-colors cursor-pointer"
-        >
-          <Sparkles className="w-3.5 h-3.5" />
-          Use 1-Click Sample Resume
-        </button>
-      </div>
     </div>
   );
 }
+

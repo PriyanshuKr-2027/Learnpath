@@ -33,7 +33,7 @@ Return STRICT JSON matching:
 
     const userPrompt = `Resume text (${fileName}):\n${truncatedText}`;
 
-    // ── 1. Try Gemini (primary — supports 6k token resume, JSON mode) ────────
+    //  -  -  1. Try Gemini (primary  -  supports 6k token resume, JSON mode)  -  -  -  -  -  -  -  - 
     const geminiKey = await getNextGeminiApiKey(apiKey);
     if (geminiKey) {
       const result = await geminiExtractJSON<ResumeParseResult>(systemPrompt, userPrompt, geminiKey);
@@ -53,7 +53,7 @@ Return STRICT JSON matching:
       }
     }
 
-    // ── 2. Try Groq (secondary — 4k token cap) ───────────────────────────────
+    //  -  -  2. Try Groq (secondary  -  4k token cap)  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
     const groqKey = await getNextGroqApiKey(apiKey);
     if (groqKey) {
       try {
@@ -64,7 +64,7 @@ Return STRICT JSON matching:
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "llama-3.3-70b-versatile",
+            model: "openai/gpt-oss-120b",
             response_format: { type: "json_object" },
             messages: [
               { role: "system", content: systemPrompt },
@@ -72,6 +72,7 @@ Return STRICT JSON matching:
             ],
             temperature: 0.1,
           }),
+
         });
 
         if (response.ok) {
@@ -97,7 +98,7 @@ Return STRICT JSON matching:
       }
     }
 
-    // ── 3. Heuristic keyword scanner fallback ────────────────────────────────
+    //  -  -  3. Heuristic keyword scanner fallback  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
     const textLower = resumeText.toLowerCase();
     const detectedSkills: SkillEntry[] = [];
     const knownSkillsList = [

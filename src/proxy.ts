@@ -11,7 +11,6 @@ export async function proxy(request: NextRequest) {
     !supabaseUrl ||
     !supabaseKey ||
     supabaseUrl.includes("your-project-id") ||
-    supabaseUrl.includes("deblsqilknaxulxqbmmm") ||
     supabaseKey.includes("your-anon-public-key");
 
   // In mock/demo mode, allow all authenticated routes (dashboard, notes, etc.)

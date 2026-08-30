@@ -13,13 +13,11 @@ import {
   Plus,
   Trash,
   DownloadSimple,
-  FileCode,
   Sparkle,
   FloppyDisk,
   X,
 } from "@phosphor-icons/react";
 import { mockStore } from "@/lib/services/mockStore";
-import { LevelNode, LearningPath } from "@/types";
 
 interface StudyNoteItem {
   levelId: string;
@@ -31,61 +29,66 @@ interface StudyNoteItem {
   content: string;
 }
 
+function getNotesItems(): StudyNoteItem[] {
+  const activePath = mockStore.getLearningPath();
+  const allNotesMap = mockStore.getAllNotes();
+  const levels = activePath?.levels || [];
+
+  const items: StudyNoteItem[] = [];
+
+  // First map notes for known levels in the DAG
+  levels.forEach((lvl) => {
+    const noteContent = allNotesMap[lvl.id];
+    if (noteContent && noteContent.trim() !== "") {
+      items.push({
+        levelId: lvl.id,
+        title: lvl.title,
+        skillName: lvl.skillName,
+        targetWeek: lvl.targetWeek,
+        phase: lvl.phase,
+        displayLevel: String(lvl.displayLevel || lvl.levelNumber),
+        content: noteContent,
+      });
+    }
+  });
+
+  // Also include any notes stored with custom IDs not in default levels
+  Object.entries(allNotesMap).forEach(([id, content]) => {
+    if (content && content.trim() !== "" && !levels.some((l) => l.id === id)) {
+      items.push({
+        levelId: id,
+        title: id.replace("lvl-", "Level ").replace("-", " "),
+        skillName: "Study Scratchpad",
+        targetWeek: 1,
+        phase: "Independent Study",
+        displayLevel: id.replace("lvl-", "").toUpperCase(),
+        content: content,
+      });
+    }
+  });
+
+  return items;
+}
+
 export default function NotesPage() {
   const [search, setSearch] = useState("");
   const [notes, setNotes] = useState<StudyNoteItem[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [editingNote, setEditingNote] = useState<StudyNoteItem | null>(null);
   const [editContent, setEditContent] = useState("");
-  const [editTitle, setEditTitle] = useState("");
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
   const [selectedLevelId, setSelectedLevelId] = useState("all");
 
   const loadNotes = useCallback(() => {
-    const activePath = mockStore.getLearningPath();
-    const allNotesMap = mockStore.getAllNotes();
-    const levels = activePath?.levels || [];
-
-    const items: StudyNoteItem[] = [];
-
-    // First map notes for known levels in the DAG
-    levels.forEach((lvl) => {
-      const noteContent = allNotesMap[lvl.id];
-      if (noteContent && noteContent.trim() !== "") {
-        items.push({
-          levelId: lvl.id,
-          title: lvl.title,
-          skillName: lvl.skillName,
-          targetWeek: lvl.targetWeek,
-          phase: lvl.phase,
-          displayLevel: String(lvl.displayLevel || lvl.levelNumber),
-          content: noteContent,
-        });
-      }
-    });
-
-    // Also include any notes stored with custom IDs not in default levels
-    Object.entries(allNotesMap).forEach(([id, content]) => {
-      if (content && content.trim() !== "" && !levels.some((l) => l.id === id)) {
-        items.push({
-          levelId: id,
-          title: id.replace("lvl-", "Level ").replace("-", " "),
-          skillName: "Study Scratchpad",
-          targetWeek: 1,
-          phase: "Independent Study",
-          displayLevel: id.replace("lvl-", "").toUpperCase(),
-          content: content,
-        });
-      }
-    });
-
-    setNotes(items);
+    setNotes(getNotesItems());
   }, []);
 
   useEffect(() => {
-    loadNotes();
+    const timer = setTimeout(() => {
+      loadNotes();
+    }, 0);
 
     const handleUpdate = () => {
       loadNotes();
@@ -95,6 +98,7 @@ export default function NotesPage() {
     window.addEventListener("storage", handleUpdate);
 
     return () => {
+      clearTimeout(timer);
       window.removeEventListener("learnpath_notes_updated", handleUpdate);
       window.removeEventListener("storage", handleUpdate);
     };
@@ -110,7 +114,7 @@ export default function NotesPage() {
     const allContent = notes
       .map(
         (n) =>
-          `# ${n.title} (Level ${n.displayLevel} • ${n.skillName})\n\n${n.content}\n\n---\n`
+          `# ${n.title} (Level ${n.displayLevel} * ${n.skillName})\n\n${n.content}\n\n---\n`
       )
       .join("\n");
 
@@ -242,11 +246,11 @@ export default function NotesPage() {
         return;
       }
 
-      if (trimmed.startsWith("- ") || trimmed.startsWith("* ") || trimmed.startsWith("• ")) {
-        const itemText = trimmed.replace(/^[-*•]\s+/, "");
+      if (trimmed.startsWith("- ") || trimmed.startsWith("* ") || trimmed.startsWith("* ")) {
+        const itemText = trimmed.replace(/^[-**]\s+/, "");
         elements.push(
           <div key={`li-${idx}`} className="flex items-start gap-2 text-xs text-text-primary pl-2 py-0.5 leading-relaxed">
-            <span className="text-focus mt-0.5 shrink-0 font-bold">•</span>
+            <span className="text-focus mt-0.5 shrink-0 font-bold">*</span>
             <div className="flex-1">{formatInline(itemText)}</div>
           </div>
         );
@@ -494,7 +498,7 @@ export default function NotesPage() {
                 </span>
                 <h2 className="text-sm sm:text-base font-bold text-text-primary">{item.title}</h2>
                 <span className="text-[11px] text-text-secondary font-mono">
-                  • {item.skillName} (Week {item.targetWeek})
+                  * {item.skillName} (Week {item.targetWeek})
                 </span>
               </div>
 

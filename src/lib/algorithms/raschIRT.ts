@@ -1,4 +1,4 @@
-import { CATQuestion, DifficultyTier } from "@/types";
+import { CATQuestion, DifficultyTier, LearnerProfile } from "@/types";
 
 export const DEFAULT_INITIAL_THETA = 0.50; // Initial ability parameter (Intermediate tier)
 export const IRT_LEARNING_RATE_ALPHA = 0.20; // Stochastic step rate
@@ -6,10 +6,10 @@ export const IRT_DISCRIMINATION_SCALING = 3.0; // Steepness scaling factor
 
 /**
  * 1-Parameter Logistic (1-PL / Rasch) IRT Probability Function
- * Calculates the theoretical probability that a learner with ability θ
+ * Calculates the theoretical probability that a learner with ability  
  * correctly answers a question of calibrated difficulty D.
  *
- * P(correct | θ, D) = 1 / (1 + exp(-3.0 * (θ - D)))
+ * P(correct |  , D) = 1 / (1 + exp(-3.0 * (  - D)))
  */
 export function calculateProbabilityOfSuccess(theta: number, difficulty: number): number {
   const logit = -IRT_DISCRIMINATION_SCALING * (theta - difficulty);
@@ -17,9 +17,36 @@ export function calculateProbabilityOfSuccess(theta: number, difficulty: number)
 }
 
 /**
- * Updates the learner's latent ability parameter (θ) after an answer is submitted.
+ * Warm-starts latent ability parameter   from ingested resume/GitHub profile.
+ * Maps 0-100% baseline proficiency to psychometrically calibrated   in [0.15, 0.90].
+ */
+export function initializeThetaFromProfile(skillName: string, profile?: LearnerProfile | null): number {
+  if (!profile || !profile.skills || profile.skills.length === 0) {
+    return DEFAULT_INITIAL_THETA;
+  }
+
+  const query = skillName.toLowerCase().trim();
+  const matchingSkill = profile.skills.find(
+    (s) => s.name.toLowerCase().trim() === query || query.includes(s.name.toLowerCase().trim())
+  );
+
+  if (!matchingSkill) {
+    return DEFAULT_INITIAL_THETA;
+  }
+
+  const prof = Math.min(100, Math.max(0, Number(matchingSkill.currentProficiency) || 50));
+  // Non-linear sigmoid calibration: 15% prof -> 0.22, 50% prof -> 0.50, 85% prof -> 0.78, 100% -> 0.88
+  const normalized = (prof - 50) / 35;
+  const sigmoid = 1 / (1 + Math.exp(-normalized));
+  const calibratedTheta = 0.15 + sigmoid * 0.73;
+
+  return Number(calibratedTheta.toFixed(2));
+}
+
+/**
+ * Updates the learner's latent ability parameter ( ) after an answer is submitted.
  *
- * θ_{k+1} = θ_k + α * (y - P(correct | θ_k, D))
+ *  _{k+1} =  _k +   * (y - P(correct |  _k, D))
  * Clamped strictly to [0.10, 0.98] to prevent unbounded divergence.
  */
 export function updateLatentAbility(
@@ -51,7 +78,7 @@ export function tierToCalibratedDifficulty(tier: DifficultyTier): number {
 }
 
 /**
- * Converts continuous latent ability θ into human-readable proficiency tier and label
+ * Converts continuous latent ability   into human-readable proficiency tier and label
  */
 export function thetaToProficiencyDescription(theta: number): {
   tier: DifficultyTier;
@@ -61,21 +88,21 @@ export function thetaToProficiencyDescription(theta: number): {
 } {
   const percentage = Math.round(theta * 100);
   if (theta >= 0.85) {
-    return { tier: 5, label: "Principal / Expert", percentage, badge: "🌟 Master of Skill" };
+    return { tier: 5, label: "Principal / Expert", percentage, badge: "   Master of Skill" };
   } else if (theta >= 0.68) {
-    return { tier: 4, label: "Advanced Practitioner", percentage, badge: "💎 Advanced Verified" };
+    return { tier: 4, label: "Advanced Practitioner", percentage, badge: "   Advanced Verified" };
   } else if (theta >= 0.48) {
-    return { tier: 3, label: "Intermediate Competent", percentage, badge: "⚡ Solid Competence" };
+    return { tier: 3, label: "Intermediate Competent", percentage, badge: "  Solid Competence" };
   } else if (theta >= 0.30) {
-    return { tier: 2, label: "Developing Learner", percentage, badge: "🌱 Foundations In-Progress" };
+    return { tier: 2, label: "Developing Learner", percentage, badge: "   Foundations In-Progress" };
   } else {
-    return { tier: 1, label: "Beginner", percentage, badge: "📘 Novice" };
+    return { tier: 1, label: "Beginner", percentage, badge: "   Novice" };
   }
 }
 
 /**
  * Selects the optimal next question from available pool to maximize Fisher Information
- * (i.e. Selects item whose calibrated difficulty D is closest to current ability θ).
+ * (i.e. Selects item whose calibrated difficulty D is closest to current ability  ).
  */
 export function selectNextCalibratedQuestion(
   questionPool: CATQuestion[],
@@ -85,7 +112,7 @@ export function selectNextCalibratedQuestion(
   const unAnswered = questionPool.filter((q) => !answeredQuestionIds.includes(q.id));
   if (unAnswered.length === 0) return null;
 
-  // Find question with minimal distance |D - θ|
+  // Find question with minimal distance |D -  |
   let bestQuestion = unAnswered[0];
   let minDistance = Math.abs(bestQuestion.calibratedDifficulty - currentTheta);
 

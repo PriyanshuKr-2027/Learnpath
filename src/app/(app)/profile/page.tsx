@@ -30,17 +30,18 @@ export default function ProfilePage() {
   const { profile: supabaseProfile, updateProfile, user, signOut } = useSupabase();
 
   // Personal information
-  const [name, setName] = useState(() => mockStore.getProfile()?.name || "Alex Dev");
-  const [email, setEmail] = useState(() => mockStore.getProfile()?.email || user?.email || "alex@example.com");
-  const [dob, setDob] = useState(() => supabaseProfile?.dob || "2000-01-01");
-  const [mobileNo, setMobileNo] = useState(() => supabaseProfile?.mobileNo || "9876543210");
+  const [name, setName] = useState(() => mockStore.getProfile()?.name || supabaseProfile?.name || user?.user_metadata?.name || "");
+  const [email, setEmail] = useState(() => mockStore.getProfile()?.email || supabaseProfile?.email || user?.email || "");
+  const [dob, setDob] = useState(() => supabaseProfile?.dob || "");
+  const [mobileNo, setMobileNo] = useState(() => supabaseProfile?.mobileNo || "");
 
   // Career & Learning Recommender fields
   const [targetRoleId, setTargetRoleId] = useState(() => mockStore.getProfile()?.targetRoleId || "data-analyst");
   const [weeklyHours, setWeeklyHours] = useState(() => mockStore.getProfile()?.weeklyHoursBudget || 10);
-  const [githubUsername, setGithubUsername] = useState(() => mockStore.getProfile()?.githubStats?.username || "alex-dev");
+  const [githubUsername, setGithubUsername] = useState(() => mockStore.getProfile()?.githubStats?.username || "");
 
   const [isSaved, setIsSaved] = useState(false);
+
 
   useEffect(() => {
     if (supabaseProfile) {
@@ -71,20 +72,28 @@ export default function ProfilePage() {
 
     const existingProfile = mockStore.getProfile();
     const updatedLocal: LearnerProfile = {
-      ...existingProfile,
-      name,
-      email,
-      targetRoleId,
+      name: name || "Learner",
+      email: email || "",
+      goalPrompt: existingProfile?.goalPrompt || "",
+      targetRoleId: targetRoleId || "data-analyst",
+      targetRoleTitle: selectedRole.title,
       weeklyHoursBudget: weeklyHours,
-      githubStats: existingProfile.githubStats
+      totalWeeksBudget: existingProfile?.totalWeeksBudget || 10,
+      skills: existingProfile?.skills || [],
+      certifications: existingProfile?.certifications || [],
+      pastProjects: existingProfile?.pastProjects || [],
+      githubStats: existingProfile?.githubStats
         ? { ...existingProfile.githubStats, username: githubUsername }
         : {
             username: githubUsername,
-            publicReposCount: 12,
-            topLanguages: { Python: 60, SQL: 40 },
-            detectedSkills: ["Python", "SQL", "Pandas"],
+            publicReposCount: 0,
+            topLanguages: {},
+            detectedSkills: [],
             recentRepos: [],
           },
+      hasCompletedOnboarding: existingProfile?.hasCompletedOnboarding ?? true,
+      currentStreak: existingProfile?.currentStreak || 0,
+      darkMode: true,
     };
     mockStore.saveProfile(updatedLocal);
 
@@ -98,11 +107,13 @@ export default function ProfilePage() {
     }
 
     const currentProf = mockStore.getProfile();
-    const resetProf: LearnerProfile = {
-      ...currentProf,
-      hasCompletedOnboarding: false,
-    };
-    mockStore.saveProfile(resetProf);
+    if (currentProf) {
+      const resetProf: LearnerProfile = {
+        ...currentProf,
+        hasCompletedOnboarding: false,
+      };
+      mockStore.saveProfile(resetProf);
+    }
 
     alert("Progress has been reset. Launching Onboarding Wizard...");
     window.location.href = "/onboarding";
@@ -110,17 +121,18 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-20 text-text-primary">
-      {/* ── 1. Profile Hero Card ── */}
+      {/*    1. Profile Hero Card    */}
       <div className="p-6 sm:p-8 rounded-3xl border border-border bg-surface shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative overflow-hidden">
         <div className="flex items-center gap-5">
           <div className="relative">
             <div className="w-20 h-20 rounded-3xl bg-focus/15 border-2 border-focus/30 flex items-center justify-center text-focus font-bold text-2xl shadow-xl shadow-focus/20">
-              {name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "AD"}
+              {name ? name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2) : "LP"}
             </div>
             <span className="absolute -bottom-1 -right-1 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-signal text-white ring-2 ring-surface">
               ACTIVE
             </span>
           </div>
+
 
           <div className="space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
@@ -134,7 +146,7 @@ export default function ProfilePage() {
               <span>{email}</span>
             </p>
             <p className="text-[11px] text-text-secondary">
-              Mastering Directed Acyclic Graph (DAG) Curriculum • {learningPath?.completionPercentage || 0}% Complete
+              Mastering Directed Acyclic Graph (DAG) Curriculum * {learningPath?.completionPercentage || 0}% Complete
             </p>
           </div>
         </div>
@@ -158,7 +170,7 @@ export default function ProfilePage() {
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">
-        {/* ── 2. Personal & Account Details ── */}
+        {/*    2. Personal & Account Details    */}
         <div className="p-6 sm:p-7 rounded-3xl border border-border bg-surface shadow-xl space-y-5">
           <div className="border-b border-border/70 pb-3">
             <h2 className="text-base font-bold text-text-primary flex items-center gap-2">
@@ -221,7 +233,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* ── 3. Career Path & Learning Commitment ── */}
+        {/*    3. Career Path & Learning Commitment    */}
         <div className="p-6 sm:p-7 rounded-3xl border border-border bg-surface shadow-xl space-y-5">
           <div className="border-b border-border/70 pb-3 flex items-center justify-between flex-wrap gap-2">
             <div>
@@ -294,13 +306,76 @@ export default function ProfilePage() {
                 className="w-full p-3 rounded-xl bg-paper border border-border text-xs sm:text-sm text-text-primary focus:outline-none focus:border-focus/50 shadow-sm font-mono"
               />
               <span className="text-[11px] text-text-secondary block">
-                LearnPath AI scans your GitHub repos to formulate your baseline skill delta (<strong>Δ = max(0, Target - Current)</strong>).
+                LearnPath AI scans your GitHub repos to formulate your baseline skill delta (<strong>  = max(0, Target - Current)</strong>).
               </span>
             </div>
           </div>
         </div>
 
-        {/* ── 4. Save Changes Bar ── */}
+        {/*    3b. Calibrated Ground-Truth Skills & Evidence    */}
+        <div className="p-6 sm:p-7 rounded-3xl border border-border bg-surface shadow-xl space-y-4">
+          <div className="border-b border-border/70 pb-3 flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <h2 className="text-base font-bold text-text-primary flex items-center gap-2">
+                <Sparkle className="w-4 h-4 text-focus" weight="fill" />
+                <span>Calibrated Competency Matrix</span>
+              </h2>
+              <p className="text-xs text-text-secondary mt-0.5">
+                Ground-truth skills analyzed from your resume, GitHub repositories, and diagnostic assessments.
+              </p>
+            </div>
+            <Link
+              href="/onboarding"
+              className="text-xs text-focus hover:underline font-semibold"
+            >
+              Re-calibrate
+            </Link>
+          </div>
+
+          {(mockStore.getProfile()?.skills?.length || 0) === 0 ? (
+            <div className="p-6 rounded-2xl bg-paper/60 border border-border text-center space-y-2">
+              <p className="text-xs font-bold text-text-primary">No Skill Signals Calibrated Yet</p>
+              <p className="text-[11px] text-text-secondary max-w-sm mx-auto">
+                Upload your resume or sync GitHub repositories in the onboarding wizard to populate your competency matrix.
+              </p>
+              <div className="pt-2">
+                <Link
+                  href="/onboarding"
+                  className="px-4 py-2 rounded-xl bg-focus/10 hover:bg-focus/20 text-focus border border-focus/30 text-xs font-bold inline-flex items-center gap-1.5 transition-colors"
+                >
+                  <Sparkle className="w-3.5 h-3.5" />
+                  <span>Calibrate Skills</span>
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {mockStore.getProfile()?.skills?.map((sk, idx) => (
+                <div
+                  key={idx}
+                  className="p-3.5 rounded-2xl bg-paper border border-border flex flex-col justify-between gap-2 shadow-sm"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-text-primary">{sk.name}</span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-focus/10 text-focus font-bold">
+                      {sk.currentProficiency}% ({sk.source})
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 rounded-full bg-surface border border-border overflow-hidden">
+                    <div
+                      className="h-full bg-focus rounded-full"
+                      style={{ width: `${Math.min(100, Math.max(10, sk.currentProficiency || 50))}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+          )}
+        </div>
+
+
+        {/*    4. Save Changes Bar    */}
         <div className="flex items-center justify-between pt-2">
           {isSaved ? (
             <span className="text-xs font-bold text-signal flex items-center gap-1.5 animate-in fade-in">
@@ -321,7 +396,7 @@ export default function ProfilePage() {
           </button>
         </div>
 
-        {/* ── 5. Account Security & Danger Zone ── */}
+        {/*    5. Account Security & Danger Zone    */}
         <div className="p-6 rounded-3xl border border-alert/30 bg-alert/5 space-y-4">
           <div className="border-b border-alert/20 pb-3">
             <h2 className="text-sm font-bold text-alert flex items-center gap-2">

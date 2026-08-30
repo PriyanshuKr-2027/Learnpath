@@ -1,9 +1,5 @@
-/**
- * /api/learner/notes — GET ?levelId=xxx / POST { levelId, content }
- * Persists markdown notes per level to Supabase level_notes table.
- */
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 
 export async function GET(req: NextRequest) {
   try {
@@ -16,12 +12,14 @@ export async function GET(req: NextRequest) {
     const { data: { user }, error: authErr } = await supabase.auth.getUser();
     if (authErr || !user) return NextResponse.json({ content: null });
 
-    const { data, error } = await supabase
+    const db = (await createAdminClient()) || supabase;
+
+    const { data, error } = await db
       .from("level_notes")
       .select("content, updated_at")
       .eq("user_id", user.id)
       .eq("level_id", levelId)
-      .single();
+      .maybeSingle();
 
     if (error && error.code !== "PGRST116") throw error;
 
@@ -45,7 +43,9 @@ export async function POST(req: NextRequest) {
     const { data: { user }, error: authErr } = await supabase.auth.getUser();
     if (authErr || !user) return NextResponse.json({ ok: true, persisted: false });
 
-    const { error } = await supabase
+    const db = (await createAdminClient()) || supabase;
+
+    const { error } = await db
       .from("level_notes")
       .upsert(
         {
@@ -65,3 +65,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: err.message, ok: false }, { status: 500 });
   }
 }
+

@@ -1,139 +1,141 @@
-# Graph Report - dsa-dashboard  (2026-08-29)
+# Graph Report - dsa-dashboard  (2026-08-30)
 
 ## Corpus Check
-- 100 files · ~76,554 words
-- Verdict: corpus is large enough that graph structure adds value.
+- cluster-only mode — file stats not available
 
 ## Summary
-- 346 nodes · 613 edges · 22 communities (16 shown, 6 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 4 edges (avg confidence: 0.88)
-- Token cost: 38,692 input · 1,271 output
+- 354 nodes · 618 edges · 20 communities (17 shown, 3 thin omitted)
+- Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 1 edges (avg confidence: 0.85)
+- Token cost: 0 input · 0 output
+
+## Graph Freshness
+- Built from commit: `f35fed4c`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- Admin & User Management Views
-- User Dashboard & State Management
-- Runtime Dependencies & Libraries
-- Learning Canvas & Interactive Roadmap
-- TypeScript & Next.js Compiler Setup
-- Development Tooling & PostCSS
-- Adaptive CAT Assessments & YouTube Search
-- Onboarding Flow & GitHub Telemetry
-- AI Goal & Resume Intelligence
-- Learner Persistence & Storage APIs
-- Core Algorithms & Architectural Specs
-- Markdown Rendering Engine
-- Authentication Middleware & Session Proxy
-- Agent Workflows & Graph Visualizer
-- AI Coaching & Socratic Guidance
-- ESLint Rules & Standards
-- Next.js Application Configuration
-- PostCSS Styling Architecture
-- LearnPath AI Domain Taxonomy
+- index.ts
+- roadmap/page.tsx
+- cat/page.tsx
+- dependencies
+- useSupabase
+- compilerOptions
+- devDependencies
+- getNextGeminiApiKey
+- mockStore.ts
+- socialStore.ts
+- createClient
+- resourceBlending.ts
+- MarkdownRenderer.tsx
+- proxy.ts
+- eslint.config.mjs
+- next.config.ts
+- postcss.config.mjs
 
 ## God Nodes (most connected - your core abstractions)
-1. `useSupabase()` - 17 edges
-2. `LevelNode` - 16 edges
-3. `compilerOptions` - 16 edges
+1. `useSupabase()` - 19 edges
+2. `compilerOptions` - 16 edges
+3. `getNextGeminiApiKey()` - 13 edges
 4. `mockStore` - 13 edges
-5. `createClient()` - 12 edges
-6. `SkillEntry` - 12 edges
-7. `getNextGeminiApiKey()` - 11 edges
+5. `LevelNode` - 12 edges
+6. `createClient()` - 12 edges
+7. `SkillEntry` - 11 edges
 8. `LearningPath` - 10 edges
-9. `getNextGroqApiKey()` - 9 edges
-10. `generateLearningPathFromProfile()` - 9 edges
+9. `generateLearningPathFromProfile()` - 9 edges
+10. `getNextGroqApiKey()` - 9 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `Graph Visualizer` --implements--> `graphify`  [INFERRED]
-  public/graph.html → AGENTS.md
-- `SettingsPage()` --calls--> `useSupabase()`  [EXTRACTED]
-  src/app/(app)/settings/page.tsx → src/components/providers/SupabaseProvider.tsx
-- `Project Specification` --references--> `Kahn's Topological Sort`  [EXTRACTED]
-  docs/PROJECT_SPECIFICATION.md → README.md
-- `Project Specification` --references--> `1-PL Rasch IRT Model`  [EXTRACTED]
-  docs/PROJECT_SPECIFICATION.md → README.md
-- `LeaderboardPage()` --calls--> `useSupabase()`  [EXTRACTED]
-  src/app/(app)/leaderboard/page.tsx → src/components/providers/SupabaseProvider.tsx
+- `ProfilePage()` --calls--> `useSupabase()`  [EXTRACTED]
+  src/app/(app)/profile/page.tsx → src/components/providers/SupabaseProvider.tsx
+- `SocialStudyRoomPage()` --calls--> `useSupabase()`  [EXTRACTED]
+  src/app/(app)/social/page.tsx → src/components/providers/SupabaseProvider.tsx
+- `FlashcardDeckProps` --references--> `Flashcard`  [EXTRACTED]
+  src/components/canvas/FlashcardDeck.tsx → src/types/index.ts
+- `UnifiedOnboardingModalContent()` --calls--> `generateLearningPathFromProfile()`  [EXTRACTED]
+  src/components/layout/SetupModal.tsx → src/lib/services/mockStore.ts
+- `OnboardingPage()` --calls--> `generateLearningPathFromProfile()`  [EXTRACTED]
+  src/app/onboarding/page.tsx → src/lib/services/mockStore.ts
 
 ## Import Cycles
 - None detected.
 
-## Hyperedges (group relationships)
-- **Autonomous Adaptive Learning Loop** — kahns_topological_sort, rasch_irt_model, skill_delta_matrix [EXTRACTED 0.90]
-- **Graphify Knowledge Management** — agents_readme, graphify_tool, public_graph_html [EXTRACTED 0.95]
+## Communities (20 total, 3 thin omitted)
 
-## Communities (22 total, 6 thin omitted)
+### Community 0 - "index.ts"
+Cohesion: 0.08
+Nodes (33): ProfilePage(), inter, jetbrainsMono, metadata, OnboardingPage(), QUICK_GOAL_PRESETS, UnifiedOnboardingModalContent(), GitHubTelemetryCard() (+25 more)
 
-### Community 0 - "Admin & User Management Views"
-Cohesion: 0.06
-Nodes (40): AdminPage(), AdminUserDetailPage(), ActivityItem, LeaderboardPage(), LeaderboardUser, DBUser, Friendship, GroupChat (+32 more)
+### Community 1 - "roadmap/page.tsx"
+Cohesion: 0.08
+Nodes (23): StudyNoteItem, MarkdownNotesEditor(), MarkdownNotesEditorProps, Message, QUICK_PROMPTS, SocraticCopilotSidecar(), SocraticCopilotSidecarProps, VideoPlayerWithControls() (+15 more)
 
-### Community 1 - "User Dashboard & State Management"
-Cohesion: 0.07
-Nodes (36): DashboardPage(), SettingsPage(), FlashcardDeck(), FlashcardDeckProps, VideoPlayerWithControls(), VideoPlayerWithControlsProps, ScheduledTopoNode, scheduleNodesWithKahns() (+28 more)
+### Community 2 - "cat/page.tsx"
+Cohesion: 0.09
+Nodes (27): extractChapterBoundaries(), formatDuration(), GET(), parseISO8601Duration(), YouTubeSearchItem, YouTubeVideoDetails, CATAssessmentContent(), FlashcardDeckProps (+19 more)
 
-### Community 2 - "Runtime Dependencies & Libraries"
+### Community 3 - "dependencies"
 Cohesion: 0.06
 Nodes (35): clsx, @google/generative-ai, lucide-react, motion, next, dependencies, clsx, @google/generative-ai (+27 more)
 
-### Community 3 - "Learning Canvas & Interactive Roadmap"
-Cohesion: 0.12
-Nodes (18): MarkdownNotesEditor(), MarkdownNotesEditorProps, Message, QUICK_PROMPTS, SocraticCopilotSidecar(), SocraticCopilotSidecarProps, CandyCrushMap(), CandyCrushMapProps (+10 more)
+### Community 4 - "useSupabase"
+Cohesion: 0.09
+Nodes (25): AdminPage(), AdminUserDetailPage(), ActivityItem, LeaderboardPage(), LeaderboardUser, SettingsPage(), emptySubscribe(), LoginPage() (+17 more)
 
-### Community 4 - "TypeScript & Next.js Compiler Setup"
+### Community 5 - "compilerOptions"
 Cohesion: 0.07
 Nodes (28): dom, dom.iterable, esnext, **/*.mts, .next/dev/types/**/*.ts, next-env.d.ts, .next/types/**/*.ts, node_modules (+20 more)
 
-### Community 5 - "Development Tooling & PostCSS"
+### Community 6 - "devDependencies"
 Cohesion: 0.08
 Nodes (25): eslint, eslint-config-next, devDependencies, eslint, eslint-config-next, tailwindcss, @tailwindcss/postcss, @types/node (+17 more)
 
-### Community 6 - "Adaptive CAT Assessments & YouTube Search"
+### Community 7 - "getNextGeminiApiKey"
+Cohesion: 0.23
+Nodes (16): GoalExtractResult, POST(), POST(), ResumeParseResult, POST(), getNextIndexAtomic(), buildGeminiPool(), buildGroqPool() (+8 more)
+
+### Community 8 - "mockStore.ts"
 Cohesion: 0.15
-Nodes (18): formatDuration(), GET(), parseISO8601Duration(), YouTubeSearchItem, YouTubeVideoDetails, CATAssessmentPage(), calculateProbabilityOfSuccess(), DEFAULT_INITIAL_THETA (+10 more)
+Nodes (15): DashboardPage(), MOCK_14_DAY_ACTIVITY, ScheduledTopoNode, scheduleNodesWithKahns(), TopoNodeInput, calculateRemediationCoordinate(), Coordinate, generateSerpentineCoordinates() (+7 more)
 
-### Community 7 - "Onboarding Flow & GitHub Telemetry"
-Cohesion: 0.21
-Nodes (14): OnboardingPage(), QUICK_GOAL_PRESETS, UnifiedOnboardingModalContent(), GitHubTelemetryCard(), GitHubTelemetryCardProps, ResumeDropzone(), ResumeDropzoneProps, SkillSliderMatrix() (+6 more)
+### Community 9 - "socialStore.ts"
+Cohesion: 0.15
+Nodes (17): SocialStudyRoomPage(), SocialTab, Contributor, DEFAULT_ACTIVE_STUDIERS, DEFAULT_CHALLENGES, DEFAULT_CONTRIBUTORS, DEFAULT_DOUBTS, DEFAULT_GROUPS (+9 more)
 
-### Community 8 - "AI Goal & Resume Intelligence"
-Cohesion: 0.25
-Nodes (15): GoalExtractResult, POST(), POST(), ResumeParseResult, POST(), getNextIndexAtomic(), buildGeminiPool(), buildGroqPool() (+7 more)
-
-### Community 9 - "Learner Persistence & Storage APIs"
-Cohesion: 0.22
+### Community 10 - "createClient"
+Cohesion: 0.24
 Nodes (8): GET(), POST(), GET(), POST(), GET(), POST(), createAdminClient(), createClient()
 
-### Community 10 - "Core Algorithms & Architectural Specs"
-Cohesion: 0.53
-Nodes (5): CourseOs Split Canvas, Project Specification, Kahn's Topological Sort, 1-PL Rasch IRT Model, Skill Gap Delta Matrix
+### Community 11 - "resourceBlending.ts"
+Cohesion: 0.40
+Nodes (5): calculateBlendedScore(), calculateSemanticRelevance(), CandidateResourceInput, CONCEPT_SYNONYM_MAP, ResourceScore
 
-### Community 11 - "Markdown Rendering Engine"
+### Community 12 - "MarkdownRenderer.tsx"
 Cohesion: 0.50
 Nodes (3): MarkdownRenderer(), MarkdownRendererProps, renderFormattedText()
 
-### Community 12 - "Authentication Middleware & Session Proxy"
+### Community 13 - "proxy.ts"
 Cohesion: 0.60
 Nodes (3): updateSession(), config, proxy()
 
 ## Knowledge Gaps
-- **99 isolated node(s):** `eslintConfig`, `nextConfig`, `name`, `version`, `private` (+94 more)
+- **112 isolated node(s):** `CATSession`, `NodeStatus`, `Problem`, `RoleSkillRequirement`, `SkillSliderMatrixProps` (+107 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **6 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **3 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `dependencies` connect `Runtime Dependencies & Libraries` to `Development Tooling & PostCSS`?**
-  _High betweenness centrality (0.024) - this node is a cross-community bridge._
-- **Why does `useSupabase()` connect `Admin & User Management Views` to `User Dashboard & State Management`, `Onboarding Flow & GitHub Telemetry`?**
-  _High betweenness centrality (0.015) - this node is a cross-community bridge._
-- **What connects `eslintConfig`, `nextConfig`, `name` to the rest of the system?**
-  _99 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `Admin & User Management Views` be split into smaller, more focused modules?**
-  _Cohesion score 0.056866303690260134 - nodes in this community are weakly interconnected._
-- **Should `User Dashboard & State Management` be split into smaller, more focused modules?**
-  _Cohesion score 0.0746606334841629 - nodes in this community are weakly interconnected._
-- **Should `Runtime Dependencies & Libraries` be split into smaller, more focused modules?**
+- **Why does `useSupabase()` connect `useSupabase` to `index.ts`, `socialStore.ts`?**
+  _High betweenness centrality (0.028) - this node is a cross-community bridge._
+- **Why does `dependencies` connect `dependencies` to `devDependencies`?**
+  _High betweenness centrality (0.023) - this node is a cross-community bridge._
+- **What connects `CATSession`, `NodeStatus`, `Problem` to the rest of the system?**
+  _112 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `index.ts` be split into smaller, more focused modules?**
+  _Cohesion score 0.08081632653061224 - nodes in this community are weakly interconnected._
+- **Should `roadmap/page.tsx` be split into smaller, more focused modules?**
+  _Cohesion score 0.08232118758434548 - nodes in this community are weakly interconnected._
+- **Should `cat/page.tsx` be split into smaller, more focused modules?**
+  _Cohesion score 0.09206349206349207 - nodes in this community are weakly interconnected._
+- **Should `dependencies` be split into smaller, more focused modules?**
   _Cohesion score 0.05714285714285714 - nodes in this community are weakly interconnected._
-- **Should `Learning Canvas & Interactive Roadmap` be split into smaller, more focused modules?**
-  _Cohesion score 0.12183908045977011 - nodes in this community are weakly interconnected._

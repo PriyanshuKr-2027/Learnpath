@@ -43,13 +43,12 @@ function UnifiedOnboardingModalContent({
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
 
   // Step 1 State
-  const [name, setName] = useState(profile?.name || "Alex Dev");
-  const [goalPrompt, setGoalPrompt] = useState(
-    "Transition from Junior Developer to Senior Data Analyst with strong Power BI and SQL expertise in 10 weeks."
-  );
+  const [name, setName] = useState(profile?.name || user?.user_metadata?.name || "");
+  const [goalPrompt, setGoalPrompt] = useState("");
   const [targetRoleId, setTargetRoleId] = useState("data-analyst");
   const [weeklyHours, setWeeklyHours] = useState(10);
   const [mobileNo, setMobileNo] = useState(profile?.mobileNo || "");
+
 
   // Step 2 State (AI Extraction)
   const [isAnalyzingGoal, setIsAnalyzingGoal] = useState(false);
@@ -209,7 +208,7 @@ function UnifiedOnboardingModalContent({
             </div>
             <div>
               <h2 className="text-sm font-bold text-text-primary flex items-center gap-2">
-                LearnPath AI 2.0 • Autonomous Onboarding
+                LearnPath AI 2.0 * Autonomous Onboarding
               </h2>
               <span className="text-[11px] text-text-secondary">Step {currentStep} of 4</span>
             </div>
@@ -345,7 +344,7 @@ function UnifiedOnboardingModalContent({
                       key={skill}
                       className="px-3 py-1 rounded-lg bg-surface border border-border text-xs font-medium text-text-primary"
                     >
-                      ✓ {skill}
+                        {skill}
                     </span>
                   ))}
                 </div>

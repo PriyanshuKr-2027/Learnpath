@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -11,6 +11,10 @@ import {
   ArrowsClockwise,
   Lightning,
   WarningCircle,
+  Sparkle,
+  Target,
+  Handshake,
+  BookOpen,
 } from "@phosphor-icons/react";
 import { CATAttempt, CATQuestion, LearningPath, LevelNode } from "@/types";
 import { mockStore } from "@/lib/services/mockStore";
@@ -18,10 +22,12 @@ import { getOrCreateCuratedResource } from "@/lib/data/curatedCorpus";
 import {
   updateLatentAbility,
   selectNextCalibratedQuestion,
+  initializeThetaFromProfile,
+  thetaToProficiencyDescription,
   DEFAULT_INITIAL_THETA,
 } from "@/lib/algorithms/raschIRT";
 
-export default function CATAssessmentPage() {
+function CATAssessmentContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -52,39 +58,97 @@ export default function CATAssessmentPage() {
   const [isInjectingPath, setIsInjectingPath] = useState(false);
   const [remediationInjected, setRemediationInjected] = useState<boolean>(false);
   const [injectedSubLevelsCount, setInjectedSubLevelsCount] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
 
   const TOTAL_QUESTIONS_IN_TEST = 5;
 
   // Initialize CAT Engine
   useEffect(() => {
-    const activePath = mockStore.getLearningPath();
-    setPath(activePath);
+    let mounted = true;
 
-    const foundLevel =
-      activePath.levels.find((l) => l.id === levelIdParam) ||
-      activePath.levels.find((l) => l.skillName.toLowerCase() === skillParam.toLowerCase()) ||
-      activePath.levels[0];
+    async function initCAT() {
+      setLoading(true);
+      try {
+        const activePath = await mockStore.hydrateLearningPath();
+        const profile = await mockStore.hydrateProfile();
 
-    setLevel(foundLevel || null);
+        if (!mounted) return;
 
-    const resource = getOrCreateCuratedResource(foundLevel?.skillName || skillParam);
-    const pool = resource.catQuestions || [];
-    setQuestionPool(pool);
+        if (!activePath) {
+          router.push("/onboarding");
+          return;
+        }
 
-    const firstQ = selectNextCalibratedQuestion(pool, DEFAULT_INITIAL_THETA, []);
-    setCurrentQuestion(firstQ);
-  }, [skillParam, levelIdParam]);
+        setPath(activePath);
+
+        const foundLevel =
+          activePath.levels.find((l) => l.id === levelIdParam) ||
+          activePath.levels.find((l) => l.skillName.toLowerCase() === skillParam.toLowerCase()) ||
+          activePath.levels[0];
+
+        setLevel(foundLevel || null);
+
+        const targetSkill = foundLevel?.skillName || skillParam;
+        const initialTheta = initializeThetaFromProfile(targetSkill, profile || undefined);
+        setCurrentTheta(initialTheta);
+        setThetaHistory([initialTheta]);
+
+        const resource = getOrCreateCuratedResource(targetSkill);
+        const pool = resource.catQuestions || [];
+        setQuestionPool(pool);
+
+        const firstQ = selectNextCalibratedQuestion(pool, initialTheta, []);
+        setCurrentQuestion(firstQ);
+      } catch (err) {
+        console.error("[CAT Assessment] Init error:", err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    initCAT();
+
+    return () => {
+      mounted = false;
+    };
+  }, [skillParam, levelIdParam, router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center text-text-secondary gap-3">
+        <ArrowsClockwise className="w-6 h-6 animate-spin text-focus" />
+        <span className="text-xs font-mono">Calibrating 1-PL Rasch Item-Response Diagnostic Pool...</span>
+      </div>
+    );
+  }
 
   if (!currentQuestion && !isCompleted) {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center text-text-secondary">
-        <div className="flex items-center gap-2">
-          <ArrowsClockwise className="w-5 h-5 animate-spin text-focus" />
-          <span>Calibrating Rasch IRT Adaptive Question Pool...</span>
+      <div className="max-w-xl mx-auto py-12 px-4">
+        <div className="p-8 sm:p-10 rounded-3xl border border-warning/30 bg-surface text-center space-y-4 shadow-xl">
+          <div className="w-16 h-16 rounded-3xl bg-warning/15 border border-warning/30 text-warning flex items-center justify-center mx-auto">
+            <Sparkle className="w-8 h-8" weight="duotone" />
+          </div>
+          <div className="space-y-1.5">
+            <h2 className="text-xl font-bold text-text-primary">Diagnostic Pool Exhausted</h2>
+            <p className="text-xs sm:text-sm text-text-secondary leading-relaxed">
+              No additional calibrated item-response questions could be selected for this competency level.
+            </p>
+          </div>
+          <div className="pt-2 flex justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => router.push(level ? `/learn/${level.id}` : "/roadmap")}
+              className="px-5 py-2.5 rounded-xl bg-focus hover:bg-focus/90 text-white font-bold text-xs shadow-md shadow-focus/25 transition-all cursor-pointer"
+            >
+              <span>Return to Learning Canvas</span>
+            </button>
+          </div>
         </div>
       </div>
     );
   }
+
 
   const handleSubmitAnswer = () => {
     if (selectedOption === null || !currentQuestion || isAnswerSubmitted) return;
@@ -143,7 +207,7 @@ export default function CATAssessmentPage() {
     setIsAnswerSubmitted(false);
   };
 
-  const handleTriggerRemediation = (simulatedMistakesCount?: number) => {
+  const handleContinueToBoosterLesson = async () => {
     if (!level) return;
     setIsInjectingPath(true);
 
@@ -152,34 +216,127 @@ export default function CATAssessmentPage() {
         ? Array.from(new Set(missedQuestions.map((q) => q.topic)))
         : [currentQuestion?.topic || `${level.skillName} Sub-concept`];
 
-    const countToInject = simulatedMistakesCount || Math.max(1, missedQuestions.length || 1);
+    const countToInject = Math.max(1, missedQuestions.length || 1);
+    const topicsToInject = weakSubtopicsList.slice(0, countToInject);
 
-    const { diff } = mockStore.injectRemediation(
+    // Fetch live YouTube videos for each missed topic before injection
+    try {
+      const ytKey = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || "";
+      for (const subtopic of topicsToInject) {
+        const query = encodeURIComponent(`${subtopic} ${level.skillName} tutorial beginners`);
+        const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&type=video&videoDuration=medium&maxResults=1&key=${ytKey}&relevanceLanguage=en`;
+        if (ytKey) {
+          const ytRes = await fetch(ytUrl);
+          if (ytRes.ok) {
+            const ytData = await ytRes.json();
+            const item = ytData.items?.[0];
+            if (item?.id?.videoId) {
+              // Store prefetched video id in sessionStorage for mockStore to pick up
+              sessionStorage.setItem(
+                `remediation_video_${subtopic.replace(/\s+/g, "_")}`,
+                JSON.stringify({
+                  youtubeId: item.id.videoId,
+                  title: item.snippet?.title || `${subtopic} Tutorial`,
+                  channelTitle: item.snippet?.channelTitle || "Educational",
+                })
+              );
+            }
+          }
+        }
+      }
+    } catch {}
+
+    const result = mockStore.injectRemediation(
       level.id,
-      weakSubtopicsList.slice(0, countToInject)
+      topicsToInject
     );
 
-    setInjectedSubLevelsCount(diff.injectedLevels.length);
+    const diff = result?.diff;
+    setInjectedSubLevelsCount(diff?.injectedLevels?.length || 0);
     setRemediationInjected(true);
     setIsInjectingPath(false);
+
+    // Smoothly route to the newly injected booster lesson if available, or back to the roadmap
+    const boosterLevel = diff?.injectedLevels?.[0];
+    if (boosterLevel) {
+      router.push(`/learn/${boosterLevel.id}`);
+    } else {
+      router.push("/roadmap");
+    }
   };
+
+
 
   const correctCount = attempts.filter((a) => a.isCorrect).length;
   const isPassed = currentTheta >= 0.55 && correctCount >= 3;
+  const masteryInfo = thetaToProficiencyDescription(currentTheta);
+  const masteryPercentage = Math.round(currentTheta * 100);
+
+  const missedTopics = Array.from(new Set(missedQuestions.map((q) => q.topic)));
 
   return (
     <div className="flex flex-col gap-6 w-full max-w-5xl mx-auto pb-16 text-text-primary">
+      {/*    1. Top Mastery Speedometer & Diagnostic Header    */}
+      <div className="p-6 rounded-3xl border border-border bg-surface shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-focus/10 text-focus border border-focus/20">
+              ADAPTIVE DIAGNOSTIC
+            </span>
+            <span className="text-xs text-text-secondary font-mono">
+              Level {level?.displayLevel || "1"}: {level?.skillName || skillParam}
+            </span>
+          </div>
+          <h1 className="text-xl sm:text-2xl font-bold text-text-primary">
+            {level?.title || `${skillParam} Core Diagnostic`}
+          </h1>
+          <p className="text-xs text-text-secondary">
+            Question {Math.min(answeredQuestionIds.length + (isAnswerSubmitted ? 0 : 1), TOTAL_QUESTIONS_IN_TEST)} of {TOTAL_QUESTIONS_IN_TEST} * Dynamic difficulty calibrates to your mastery zone
+          </p>
+        </div>
 
-      {/* Main Question Arena */}
+        {/* Visual Mastery Meter (Novice -> Competent -> Expert) */}
+        <div className="flex flex-col gap-2 min-w-[260px] p-4 rounded-2xl bg-paper border border-border shadow-sm">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-semibold text-text-secondary flex items-center gap-1.5">
+              <Target className="w-3.5 h-3.5 text-focus" />
+              Skill Mastery Level
+            </span>
+            <span className="font-mono font-bold text-focus">{masteryPercentage}%</span>
+          </div>
+
+          {/* Meter Bar with 3 Visual Zones */}
+          <div className="relative w-full h-3 bg-surface rounded-full overflow-hidden border border-border">
+            <div
+              style={{ width: `${Math.min(100, Math.max(8, masteryPercentage))}%` }}
+              className={`h-full rounded-full transition-all duration-500 ${
+                masteryPercentage >= 75
+                  ? "bg-gradient-to-r from-teal-500 to-signal"
+                  : masteryPercentage >= 45
+                  ? "bg-gradient-to-r from-focus to-teal-400"
+                  : "bg-gradient-to-r from-warning to-amber-500"
+              }`}
+            />
+          </div>
+
+          <div className="flex items-center justify-between text-[10px] text-text-secondary font-mono">
+            <span className={masteryPercentage < 45 ? "text-warning font-bold" : ""}>Foundational</span>
+            <span className={masteryPercentage >= 45 && masteryPercentage < 75 ? "text-focus font-bold" : ""}>Competent</span>
+            <span className={masteryPercentage >= 75 ? "text-signal font-bold" : ""}>Role-Ready</span>
+          </div>
+        </div>
+      </div>
+
+      {/*    2. Main Question Arena    */}
       {!isCompleted && currentQuestion && (
         <div className="flex flex-col gap-5 p-6 sm:p-8 rounded-3xl border border-border bg-surface shadow-2xl">
           <div>
             <div className="flex items-center justify-between text-xs text-text-secondary mb-2">
               <span className="font-mono font-semibold text-focus uppercase tracking-wider">
-                Subtopic: {currentQuestion.topic}
+                Topic: {currentQuestion.topic}
               </span>
               <span className="font-mono text-text-secondary">
-                Calibrated Difficulty D = {currentQuestion.calibratedDifficulty.toFixed(2)}
+                Calibrated Level: Tier {currentQuestion.difficultyTier}
               </span>
             </div>
             <h3 className="text-base sm:text-lg font-bold text-text-primary leading-snug">
@@ -242,11 +399,11 @@ export default function CATAssessmentPage() {
               <div className="flex items-center gap-1.5 font-bold mb-1">
                 {selectedOption === currentQuestion.correctOptionIndex ? (
                   <span className="text-signal flex items-center gap-1">
-                    <CheckCircle className="w-4 h-4" weight="fill" /> Correct Answer! (+&theta; calibration)
+                    <CheckCircle className="w-4 h-4" weight="fill" /> Correct Answer! (+Mastery Gain)
                   </span>
                 ) : (
                   <span className="text-alert flex items-center gap-1">
-                    <WarningCircle className="w-4 h-4" weight="bold" /> Conceptual Gap Detected (-&theta; calibration)
+                    <WarningCircle className="w-4 h-4" weight="bold" /> Conceptual Gap Detected
                   </span>
                 )}
               </div>
@@ -257,7 +414,7 @@ export default function CATAssessmentPage() {
           {/* Question Action Bar */}
           <div className="flex items-center justify-between pt-3 border-t border-border">
             <span className="text-xs text-text-secondary">
-              {isAnswerSubmitted ? "Latent parameter &theta; updated" : "Select an option and submit to calibrate"}
+              {isAnswerSubmitted ? "Mastery score updated" : "Select an option and submit"}
             </span>
 
             {!isAnswerSubmitted ? (
@@ -283,7 +440,7 @@ export default function CATAssessmentPage() {
         </div>
       )}
 
-      {/* Completed Test Scorecard */}
+      {/*    3. Completed Test Scorecard    */}
       {isCompleted && (
         <div className="flex flex-col gap-6 p-6 sm:p-8 rounded-3xl border border-border bg-surface shadow-2xl animate-in zoom-in-95 duration-200">
           <div className="flex flex-col items-center text-center gap-2">
@@ -291,88 +448,113 @@ export default function CATAssessmentPage() {
               className={`w-16 h-16 rounded-3xl flex items-center justify-center shadow-2xl ${
                 isPassed
                   ? "bg-signal/15 border border-signal/30 text-signal shadow-signal/20"
-                  : "bg-alert/15 border border-alert/30 text-alert shadow-alert/20"
+                  : "bg-amber-500/15 border border-amber-500/30 text-amber-500 shadow-amber-500/20"
               }`}
             >
-              {isPassed ? <Trophy className="w-8 h-8 text-warning" weight="fill" /> : <WarningCircle className="w-8 h-8" weight="fill" />}
+              {isPassed ? <Trophy className="w-8 h-8 text-warning" weight="fill" /> : <Handshake className="w-8 h-8 text-amber-400" weight="fill" />}
             </div>
 
             <h2 className="text-2xl font-bold text-text-primary mt-2">
-              {isPassed ? "Boss Assessment Passed!" : "Diagnostic Remediation Triggered"}
+              {isPassed ? "Boss Assessment Passed!" : "Diagnostic Complete"}
             </h2>
             <p className="text-xs sm:text-sm text-text-secondary max-w-lg">
               {isPassed
-                ? `Congratulations! Your latent competency score of θ = ${currentTheta.toFixed(2)} verifies mastery over ${level?.skillName}.`
-                : `Your latent competency θ = ${currentTheta.toFixed(2)} indicates specific concept gaps in ${missedQuestions.map((q) => q.topic).join(", ") || "subtopics"}.`}
+                ? `Outstanding job! Your mastery score of ${masteryPercentage}% (${masteryInfo.label}) verifies readiness over ${level?.skillName}.`
+                : `You scored ${masteryPercentage}% on ${level?.skillName}. We diagnosed your exact concept areas to get you up to speed fast.`}
             </p>
           </div>
 
-          {/* Remediation Injection Trigger Card */}
+          {/* Empathetic Remediation Flow (User's Vision) */}
           {!isPassed && (
-            <div className="p-5 rounded-2xl border border-alert/30 bg-alert/5 flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <WarningCircle className="w-5 h-5 text-alert" weight="fill" />
-                  <span className="text-sm font-bold text-text-primary">
-                    Mistake-Proportional Sub-Level Scaling ({missedQuestions.length} Mistake{missedQuestions.length === 1 ? "" : "s"} &rarr; {missedQuestions.length} Remedial Level{missedQuestions.length === 1 ? "" : "s"})
-                  </span>
+            <div className="p-6 rounded-3xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-surface to-surface flex flex-col gap-4 shadow-xl">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0 text-xl font-bold">
+                    
                 </div>
-                <span className="text-xs font-mono font-bold text-alert">
-                  +{missedQuestions.length * 0.1 > 0 ? (missedQuestions.length * 0.1).toFixed(1) : "0.1"} Levels
-                </span>
+                <div className="space-y-1">
+                  <h3 className="text-base font-bold text-text-primary">
+                    Oh no, it seems you&apos;re having trouble with{" "}
+                    <span className="text-amber-400 font-semibold">
+                      {missedTopics.length > 0 ? missedTopics.join(" & ") : `${level?.skillName} core mechanics`}
+                    </span>
+                    , but don&apos;t worry  -  we&apos;ve got your back!
+                  </h3>
+                  <p className="text-xs text-text-secondary leading-relaxed">
+                    We&apos;ve generated a surgical booster lesson with interactive 3D flashcards and micro-drills to strengthen your foundation before moving forward.
+                  </p>
+                </div>
               </div>
 
-              <p className="text-xs text-text-secondary">
-                To master these weak spots, LearnPath AI injects {missedQuestions.length > 0 ? missedQuestions.length : 1} micro-remediation sub-level(s) (e.g. 5.1, 5.2...) equipped with 3D flashcard decks into your active Candy Crush DAG.
-              </p>
+              {/* Subtopic breakdown pills */}
+              {missedTopics.length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <span className="text-xs font-semibold text-text-secondary py-1">Focus Topics for Booster:</span>
+                  {missedTopics.map((topic) => (
+                    <span
+                      key={topic}
+                      className="px-3 py-1 rounded-xl text-xs font-medium bg-amber-500/10 text-amber-300 border border-amber-500/20 flex items-center gap-1.5"
+                    >
+                      <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+                      {topic}
+                    </span>
+                  ))}
+                </div>
+              )}
 
-              <div className="flex flex-wrap gap-2 pt-1">
+              {/* Single Clear CTA Button */}
+              <div className="flex items-center justify-end pt-2 border-t border-amber-500/20">
                 <button
                   type="button"
-                  disabled={isInjectingPath || remediationInjected}
-                  onClick={() => handleTriggerRemediation()}
-                  className="px-5 py-2.5 rounded-xl bg-alert hover:bg-alert/90 text-white font-bold text-xs flex items-center gap-2 transition-all shadow-md shadow-alert/20 cursor-pointer disabled:opacity-50"
+                  disabled={isInjectingPath}
+                  onClick={handleContinueToBoosterLesson}
+                  className="px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-zinc-950 font-bold text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-amber-500/25 transition-all cursor-pointer"
                 >
                   <Lightning className="w-4 h-4" weight="fill" />
-                  <span>
-                    {remediationInjected
-                      ? `✅ Injected ${injectedSubLevelsCount} Remedial Sub-Levels`
-                      : `Inject ${missedQuestions.length || 1} Remediation Level(s)`}
-                  </span>
+                  <span>Continue to Booster Lesson</span>
+                  <ArrowRight className="w-4 h-4" weight="bold" />
                 </button>
-
-                {remediationInjected && (
-                  <Link
-                    href="/roadmap"
-                    className="px-5 py-2.5 rounded-xl bg-focus hover:bg-focus/90 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-md shadow-focus/25"
-                  >
-                    <span>View Injected S-Curve in DAG Map</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-                )}
               </div>
             </div>
           )}
 
-          {/* Action Buttons */}
-          <div className="flex items-center justify-between pt-4 border-t border-border">
-            <Link
-              href="/roadmap"
-              className="px-5 py-2.5 rounded-xl bg-paper hover:bg-border border border-border text-text-secondary text-xs font-semibold transition-colors"
-            >
-              Back to Level Map
-            </Link>
+          {/* Action Buttons for Passed State */}
+          {isPassed && (
+            <div className="flex items-center justify-between pt-4 border-t border-border">
+              <Link
+                href="/roadmap"
+                className="px-5 py-2.5 rounded-xl bg-paper hover:bg-border border border-border text-text-secondary text-xs font-semibold transition-colors"
+              >
+                Back to Level Map
+              </Link>
 
-            <Link
-              href="/dashboard"
-              className="px-6 py-3 rounded-2xl bg-focus hover:bg-focus/90 text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-focus/25 transition-all"
-            >
-              <span>Go to Command Center</span>
-              <ArrowRight className="w-4 h-4" weight="bold" />
-            </Link>
-          </div>
+              <Link
+                href="/dashboard"
+                className="px-6 py-3 rounded-2xl bg-focus hover:bg-focus/90 text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-focus/25 transition-all"
+              >
+                <span>Go to Command Center</span>
+                <ArrowRight className="w-4 h-4" weight="bold" />
+              </Link>
+            </div>
+          )}
         </div>
       )}
     </div>
+  );
+}
+
+export default function CATAssessmentPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-[70vh] flex items-center justify-center text-text-secondary">
+          <div className="flex items-center gap-2">
+            <ArrowsClockwise className="w-5 h-5 animate-spin text-focus" />
+            <span>Loading Adaptive Assessment...</span>
+          </div>
+        </div>
+      }
+    >
+      <CATAssessmentContent />
+    </Suspense>
   );
 }

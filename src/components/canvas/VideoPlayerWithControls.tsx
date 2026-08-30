@@ -50,7 +50,7 @@ export function VideoPlayerWithControls({
           <div>
             <h3 className="text-sm font-bold text-zinc-100 leading-snug">{video.title}</h3>
             <p className="text-xs text-zinc-400 mt-0.5">
-              Channel: <strong className="text-zinc-300">{video.channelTitle}</strong> • Total Duration: {video.durationFormatted}
+              Channel: <strong className="text-zinc-300">{video.channelTitle}</strong> * Total Duration: {video.durationFormatted}
             </p>
           </div>
 

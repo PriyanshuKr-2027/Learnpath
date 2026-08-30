@@ -103,7 +103,7 @@ export function LevelDetailsDrawer({ node, onClose }: LevelDetailsModalProps) {
           <div>
             <h2 className="text-xl font-bold text-text-primary">{node.title}</h2>
             <p className="text-xs text-text-secondary mt-1">
-              Phase: {node.phase} • Estimated time: {node.estimatedMinutes} mins
+              Phase: {node.phase} * Estimated time: {node.estimatedMinutes} mins
             </p>
           </div>
 
@@ -162,7 +162,7 @@ export function LevelDetailsDrawer({ node, onClose }: LevelDetailsModalProps) {
                   </span>
                 </div>
                 <p className="text-[11px] text-text-secondary italic">
-                  💡 {node.video.pruningReason}
+                     {node.video.pruningReason}
                 </p>
               </div>
             )}
@@ -187,7 +187,7 @@ export function LevelDetailsDrawer({ node, onClose }: LevelDetailsModalProps) {
                   <ArrowSquareOut className="w-4 h-4 text-text-secondary group-hover:text-focus" />
                 </div>
                 <span className="text-[11px] text-text-secondary">
-                  {node.doc.provider} • {node.doc.summary}
+                  {node.doc.provider} * {node.doc.summary}
                 </span>
               </a>
             )}
@@ -210,7 +210,7 @@ export function LevelDetailsDrawer({ node, onClose }: LevelDetailsModalProps) {
                     </span>
                   </div>
                   <span className="text-[11px] font-mono text-warning">
-                    ★ {node.githubRepo.starsCount}
+                      {node.githubRepo.starsCount}
                   </span>
                 </div>
                 <span className="text-[11px] text-text-secondary">

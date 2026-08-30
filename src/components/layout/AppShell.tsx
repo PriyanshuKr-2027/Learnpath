@@ -88,6 +88,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </Link>
           )}
           <button
+            type="button"
+            suppressHydrationWarning
             onClick={() => setIsCollapsed(!isCollapsed)}
             className="p-2 hover:bg-surface rounded-xl transition-colors text-text-secondary hover:text-text-primary cursor-pointer"
             title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -95,6 +97,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Menu className="w-5 h-5" />
           </button>
         </div>
+
 
         {/* Navigation Items */}
         <nav
@@ -226,6 +229,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             )}
           </Link>
           <button
+            type="button"
+            suppressHydrationWarning
             onClick={handleLogout}
             className={cn(
               "w-full flex items-center rounded-xl text-xs sm:text-sm text-text-secondary hover:text-alert hover:bg-alert/10 transition-all duration-200 group relative cursor-pointer",
@@ -279,10 +284,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <span>Customize Path</span>
             </Link>
 
-            <button className="relative p-2 text-text-secondary hover:text-text-primary transition-colors">
+            <button
+              type="button"
+              suppressHydrationWarning
+              className="relative p-2 text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
+            >
               <Bell className="w-5 h-5" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-signal rounded-full ring-2 ring-paper"></span>
             </button>
+
 
             <div className="w-px h-6 bg-border"></div>
 

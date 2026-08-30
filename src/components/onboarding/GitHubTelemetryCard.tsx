@@ -15,8 +15,19 @@ export function GitHubTelemetryCard({ onSynced, githubToken }: GitHubTelemetryCa
   const [isLoading, setIsLoading] = useState(false);
   const [syncedTelemetry, setSyncedTelemetry] = useState<GitHubTelemetry | null>(null);
 
+  const sanitizeUser = (raw: string) => {
+    return raw
+      .replace(/^https?:\/\//i, "")
+      .replace(/^www\./i, "")
+      .replace(/^github(\.com)?\/?/i, "")
+      .replace(/^@/, "")
+      .replace(/\/.*$/, "")
+      .replace(/[^a-zA-Z0-9-_]/g, "")
+      .trim();
+  };
+
   const handleSync = async (targetUsername?: string) => {
-    const userToQuery = (targetUsername || username).trim();
+    const userToQuery = sanitizeUser(targetUsername || username);
     if (!userToQuery) return;
 
     setIsLoading(true);
@@ -37,11 +48,6 @@ export function GitHubTelemetryCard({ onSynced, githubToken }: GitHubTelemetryCa
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleSampleUser = () => {
-    setUsername("alex-analyst");
-    handleSync("alex-analyst");
   };
 
   return (
@@ -71,8 +77,8 @@ export function GitHubTelemetryCard({ onSynced, githubToken }: GitHubTelemetryCa
           <input
             type="text"
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="username"
+            onChange={(e) => setUsername(sanitizeUser(e.target.value))}
+            placeholder="username (e.g. PriyanshuKr-2027)"
             onKeyDown={(e) => e.key === "Enter" && handleSync()}
             className="w-full bg-surface border border-border rounded-xl pl-24 pr-4 py-2.5 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-focus/50 shadow-sm"
           />
@@ -83,6 +89,7 @@ export function GitHubTelemetryCard({ onSynced, githubToken }: GitHubTelemetryCa
           onClick={() => handleSync()}
           className="px-4 py-2.5 rounded-xl bg-focus hover:bg-focus/90 text-white text-sm font-medium disabled:opacity-40 flex items-center gap-2 transition-colors cursor-pointer shadow-sm"
         >
+
           {isLoading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin text-white" />
@@ -138,19 +145,7 @@ export function GitHubTelemetryCard({ onSynced, githubToken }: GitHubTelemetryCa
           </div>
         </div>
       )}
-
-      {/* 1-Click Sample Button */}
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-text-secondary">Want to test instantly?</span>
-        <button
-          type="button"
-          onClick={handleSampleUser}
-          className="text-xs font-medium text-focus hover:text-focus/80 flex items-center gap-1 py-1 px-2.5 rounded-lg bg-focus/10 hover:bg-focus/20 border border-focus/20 transition-colors cursor-pointer"
-        >
-          <Sparkles className="w-3.5 h-3.5" />
-          Test with Sample GitHub
-        </button>
-      </div>
     </div>
   );
 }
+
