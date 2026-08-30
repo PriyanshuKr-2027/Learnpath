@@ -5,7 +5,7 @@ import { getGeminiModel } from "@/lib/services/gemini";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { messages, dayInfo, apiKey: clientApiKey } = body;
+    const { messages, dayInfo, context, apiKey: clientApiKey } = body;
 
     if (!messages || !Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: "Messages array is required" }), {
@@ -14,31 +14,22 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Build level-aware system prompt
-    const levelContext = dayInfo
-      ? `The user is studying Level ${dayInfo.id}: "${dayInfo.topic}" (Skill Focus: ${dayInfo.pattern}).`
-      : "";
+    const levelTitle = context?.title || dayInfo?.topic || "Applied Business Statistics";
+    const skillFocus = context?.skillName || dayInfo?.pattern || "Data Analysis";
 
-    const systemPrompt = `You are CogniPath Socratic AI Copilot  -  an expert AI learning architect and 24/7 technical tutor.
-Your job is to guide the user step-by-step through their personalized learning path.
-${levelContext}
+    const systemPrompt = `You are LearnPath Socratic AI Copilot - an expert pedagogical AI learning architect and technical tutor.
+Context: The learner is currently studying "${levelTitle}" (Skill Focus: ${skillFocus}).
 
-Pedagogical Rules:
-1. If the user asks why this specific learning path was generated instead of a generic syllabus, provide a detailed mathematical & architectural breakdown:
-   - Skill Delta Formulation: Delta = max(0, Target_Required - Ingested_Baseline) eliminates redundant topics already mastered on resume/GitHub.
-   - Kahn's Topological DAG Sort: Strict prerequisite ordering in O(|V| + |E|) time without circular loops.
-   - Detailed Level-by-Level Rationale explaining why each level is in the roadmap:
-     * Level 1: SQL Fundamentals (prerequisite ground-truth relational data extraction)
-     * Level 2: Python for Data Analysis (computational scripting and algorithmic foundations)
-     * Level 3: Pandas & Data Cleaning (vectorized DataFrame transformations and ETL)
-     * Level 4: Power BI & DAX (enterprise data modeling, measures, and calculated context)
-     * Level 5: Applied Business Statistics & 1-PL Rasch Boss Checkpoint (hypothesis testing and adaptive competency theta calibration)
-     * Level 6: Interactive Dashboards & Storytelling (capstone executive presentation synthesis)
-   - Dynamic In-Place Remediation: Autonomous loop injecting sub-levels (.1, .2) with flashcards when mistakes occur.
-2. When answering conceptual questions, explain step-by-step with clear reasoning and code snippets.
-3. If explaining video timestamps, use clickable format like [Jump to MM:SS].
-4. For code implementations, always provide full syntax with language tags (e.g. \`\`\`sql, \`\`\`python, \`\`\`tsx).
-5. Encourage the user and keep explanations punchy, structured, and actionable.`;
+Pedagogical Directives:
+1. If the user asks why this specific learning path was generated instead of a generic syllabus:
+   - Explain Skill Delta Engine: Delta = max(0, Target - Baseline) skips topics already mastered on GitHub/resume.
+   - Explain Kahn's Topological DAG Sort: Strict prerequisite ordering in O(|V| + |E|) time without cyclic dependencies.
+   - Walk through the sequenced milestones from ground-truth base to capstone synthesis.
+2. For conceptual queries, provide step-by-step reasoning with practical code blocks (e.g. \`\`\`python, \`\`\`sql).
+3. If recommending timestamps in the video lecture, format as [Jump to MM:SS].
+4. Keep answers structured, encouraging, and actionable.`;
+
+    const lastUserMsg = messages[messages.length - 1]?.content || "";
 
     const getSpecializedFallback = (query: string) => {
       const q = query.toLowerCase();
@@ -48,48 +39,13 @@ Pedagogical Rules:
         q.includes("why each level") ||
         q.includes("roadmap")
       ) {
-        return `###  -  -  Why This Specific Learning Path Was Generated Instead of a Generic Syllabus
-
-Unlike traditional static 40-week bootcamps that force every student through the same generic intro lessons, **LearnPath AI** engineered your curriculum using mathematical principles:
-
-#### 1. Mathematical Architecture & Optimization
- -  **Exact Skill Delta Formulation**:  -  = max(0, Required Proficiency - Ingested Baseline). Topics you already proved mastery in on GitHub or your resume (e.g. basic spreadsheets at 85%) are skipped entirely. Only verified gaps receive dedicated modules.
- -  **Kahn's Topological DAG Scheduling**: Software engineering topics are modeled as a Directed Acyclic Graph G = (V, E). Kahn's algorithm computes in-degrees to ensure foundational prerequisites strictly precede downstream applied modules in O(|V| + |E|) time without circular loops.
- -  **1-PL Rasch IRT Testing**: Calibrates item difficulty against latent ability  - , dynamically adapting assessments to match your true competency.
-
----
-
-####  -  -  -  Detailed Level-by-Level Rationale for Your Roadmap:
-
-* **Level 1: SQL Fundamentals (Ground-Truth Base)**
-  *Why it's here*: SQL is the foundational data extraction layer for all analytical engineering. You must master relational queries, JOIN operations, filter conditions, and aggregations before attempting downstream transformations.
-
-* **Level 2: Python for Data Analysis (Computational Engine)**
-  *Why it's here*: Provides the algorithmic scripting, control flow, and data structure manipulation necessary for automated workflows that exceed spreadsheet constraints.
-
-* **Level 3: Pandas & Data Cleaning (Vectorized ETL)**
-  *Why it's here*: Ingesting enterprise datasets requires vectorized DataFrame operations, missing value imputation, and feature engineering (strictly dependent on Level 2 Python).
-
-* **Level 4: Power BI & DAX (Enterprise BI Layer)**
-  *Why it's here*: Bridges backend tabular models to executive reporting. DAX measures (CALCULATE, time-intelligence) translate complex data schemas into business KPIs.
-
-* **Level 5: Applied Business Statistics & 1-PL Rasch Boss Checkpoint**
-  *Why it's here*: Prevents false intuition by teaching hypothesis testing (p-values, confidence intervals, ANOVA), verified through an adaptive Rasch IRT boss checkpoint.
-
-* **Level 6: Interactive Dashboards & Executive Storytelling (Capstone Synthesis)**
-  *Why it's here*: Synthesizes all 5 upstream competencies into stakeholder-ready visual narratives and executive presentations.
-
----
-
- -  **Autonomous Micro-Remediation**: If an assessment detects gaps in a specific subtopic, LearnPath AI injects targeted sub-levels (**Level 5.1, Level 5.2**) with 3D flashcards directly into your active DAG rather than making you restart the course.`;
+        return `### Why This Specific Learning Path Was Generated Instead of a Generic Syllabus\n\nUnlike traditional static bootcamps that force every learner through rigid generic syllabi, **LearnPath AI** engineered your curriculum using mathematical modeling:\n\n#### 1. Mathematical Architecture & Optimization\n* **Exact Skill Delta Formulation**: Delta = max(0, Target - Baseline). Skills verified on your GitHub or resume are skipped, so you only spend time closing genuine competency gaps.\n* **Kahn's Topological DAG Scheduling**: Concepts are organized into a Directed Acyclic Graph G = (V, E). Kahn's algorithm computes in-degrees to ensure prerequisites strictly precede downstream modules in O(|V| + |E|) time.\n* **1-PL Rasch IRT Testing**: Calibrates question difficulty against learner ability theta to confirm genuine mastery before unlocking subsequent tiers.\n\n---\n\n#### 2. Adaptive Milestones\nEach milestone is sequenced so that relational extraction (SQL) precedes computational transformations (Python/Pandas), enterprise semantic modeling (Power BI/DAX), and statistical verification (Hypothesis Testing & IRT Checkpoints).\n\nIf mistakes occur during checkpoints, targeted micro-remediation levels (.1, .2) are injected dynamically into your DAG.`;
       }
 
-      return `Here is the Socratic breakdown for **${dayInfo?.topic || "your learning topic"}**:\n\n1. **Core Mechanism**: Focus on foundational principles and edge-case handling.\n2. **Hands-On Practice**: Implement a minimal reproducible example to test your comprehension.\n\n\`\`\`python\n# Example Implementation\ndef process_data(records):\n    return [r for r in records if r.get('valid')]\n\`\`\`\n\nClick **"Insert to Notes"** to paste this directly into your study scratchpad!`;
+      return `Here is the Socratic breakdown for **${levelTitle}**:\n\n1. **Core Mechanism**: Focus on foundational principles and edge-case handling.\n2. **Practical Tip**: Check [Jump to 02:30] for the core demo in the lecture.\n\n\`\`\`python\n# Example Practice\ndef process_data(records):\n    return [r for r in records if r.get('valid')]\n\`\`\`\n\nFeel free to ask for debugging assistance or click **"Insert to Notes"** to save this snippet!`;
     };
 
-    const lastUserMsg = messages[messages.length - 1]?.content || "";
-
-    //  -  -  1. Try Groq (primary, streaming)  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+    // 1. Try Groq (streaming with SSE delta extraction)
     const groqKey = await getNextGroqApiKey(clientApiKey);
 
     if (groqKey) {
@@ -113,12 +69,51 @@ Unlike traditional static 40-week bootcamps that force every student through the
         }),
       });
 
-      if (groqResponse.ok) {
-        return new Response(groqResponse.body, {
+      if (groqResponse.ok && groqResponse.body) {
+        const reader = groqResponse.body.getReader();
+        const decoder = new TextDecoder();
+        const encoder = new TextEncoder();
+        let buffer = "";
+
+        const textStream = new ReadableStream({
+          async start(controller) {
+            try {
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split("\n");
+                buffer = lines.pop() || "";
+
+                for (const line of lines) {
+                  const trimmed = line.trim();
+                  if (!trimmed || !trimmed.startsWith("data:")) continue;
+                  if (trimmed === "data: [DONE]") continue;
+
+                  const jsonStr = trimmed.replace(/^data:\s*/, "");
+                  try {
+                    const parsed = JSON.parse(jsonStr);
+                    const deltaContent = parsed.choices?.[0]?.delta?.content;
+                    if (deltaContent) {
+                      controller.enqueue(encoder.encode(deltaContent));
+                    }
+                  } catch {
+                    // ignore malformed lines
+                  }
+                }
+              }
+              controller.close();
+            } catch (err) {
+              controller.error(err);
+            }
+          },
+        });
+
+        return new Response(textStream, {
           headers: {
-            "Content-Type": "text/event-stream",
+            "Content-Type": "text/plain; charset=utf-8",
             "Cache-Control": "no-cache",
-            Connection: "keep-alive",
           },
         });
       }
@@ -126,7 +121,7 @@ Unlike traditional static 40-week bootcamps that force every student through the
       console.warn("[chat] Groq failed, falling back to Gemini.");
     }
 
-    //  -  -  2. Gemini fallback (non-streaming, wrapped as SSE)  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+    // 2. Gemini fallback
     const geminiKey = await getNextGeminiApiKey(clientApiKey);
     if (geminiKey) {
       try {
@@ -143,23 +138,10 @@ Unlike traditional static 40-week bootcamps that force every student through the
           const result = await chat.sendMessage(lastUserMsg || "Hello");
           const responseText = result.response.text();
 
-          // Wrap as SSE-compatible stream
-          const stream = new ReadableStream({
-            start(controller) {
-              const sseData = `data: ${JSON.stringify({
-                choices: [{ delta: { content: responseText }, finish_reason: null }],
-              })}\n\n`;
-              controller.enqueue(new TextEncoder().encode(sseData));
-              controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"));
-              controller.close();
-            },
-          });
-
-          return new Response(stream, {
+          return new Response(responseText, {
             headers: {
-              "Content-Type": "text/event-stream",
+              "Content-Type": "text/plain; charset=utf-8",
               "Cache-Control": "no-cache",
-              Connection: "keep-alive",
             },
           });
         }
@@ -168,25 +150,12 @@ Unlike traditional static 40-week bootcamps that force every student through the
       }
     }
 
-    //  -  -  3. Specialized offline fallback for zero-config judging  -  -  -  -  -  -  -  -  -  -  -  -  - 
+    // 3. Specialized Fallback
     const fallbackContent = getSpecializedFallback(lastUserMsg);
-
-    const fallbackStream = new ReadableStream({
-      start(controller) {
-        const sseData = `data: ${JSON.stringify({
-          choices: [{ delta: { content: fallbackContent }, finish_reason: null }],
-        })}\n\n`;
-        controller.enqueue(new TextEncoder().encode(sseData));
-        controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"));
-        controller.close();
-      },
-    });
-
-    return new Response(fallbackStream, {
+    return new Response(fallbackContent, {
       headers: {
-        "Content-Type": "text/event-stream",
+        "Content-Type": "text/plain; charset=utf-8",
         "Cache-Control": "no-cache",
-        Connection: "keep-alive",
       },
     });
   } catch (error: any) {

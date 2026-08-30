@@ -374,11 +374,32 @@ export function SocraticCopilotSidecar({
       ]);
 
       if (reader) {
+        let streamBuffer = "";
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
           const chunk = decoder.decode(value, { stream: true });
-          assistantReply += chunk;
+
+          if (chunk.includes("data:")) {
+            streamBuffer += chunk;
+            const lines = streamBuffer.split("\n");
+            streamBuffer = lines.pop() || "";
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (trimmed.startsWith("data:")) {
+                if (trimmed === "data: [DONE]") continue;
+                try {
+                  const parsed = JSON.parse(trimmed.replace(/^data:\s*/, ""));
+                  const content = parsed.choices?.[0]?.delta?.content;
+                  if (content) assistantReply += content;
+                } catch {
+                  // If not JSON, ignore
+                }
+              }
+            }
+          } else {
+            assistantReply += chunk;
+          }
 
           setMessages((prev) =>
             prev.map((msg) =>
