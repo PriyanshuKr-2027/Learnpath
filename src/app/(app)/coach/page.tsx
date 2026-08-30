@@ -7,9 +7,9 @@ import { SocraticCopilotSidecar } from "@/components/canvas/SocraticCopilotSidec
 
 export default function CoachPage() {
   return (
-    <div className="flex flex-col gap-4 w-full max-w-5xl mx-auto pb-8 text-text-primary">
+    <div className="flex flex-col gap-3 w-full max-w-4xl mx-auto text-text-primary">
       {/* 24/7 Socratic AI Copilot Expanded */}
-      <div className="w-full h-[760px] sm:h-[820px] rounded-3xl overflow-hidden shadow-2xl border border-border">
+      <div className="w-full h-[520px] max-h-[calc(100vh-160px)] min-h-[420px] rounded-2xl overflow-hidden shadow-xl border border-border">
         <SocraticCopilotSidecar
           level={{
             title: "Applied Business Statistics",
