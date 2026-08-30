@@ -93,19 +93,19 @@ export function MarkdownNotesEditor({
   };
 
   return (
-    <div className="flex flex-col h-full rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-hidden shadow-xl">
+    <div className="flex flex-col h-full rounded-3xl border border-border bg-surface overflow-hidden shadow-xl">
       {/* Editor Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-zinc-800 bg-zinc-950/80">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-surface">
         <div className="flex items-center gap-1">
           {/* Tab Switcher */}
-          <div className="flex items-center p-0.5 rounded-lg bg-zinc-900 border border-zinc-800 mr-2">
+          <div className="flex items-center p-0.5 rounded-xl bg-paper border border-border mr-2">
             <button
               type="button"
               onClick={() => setActiveTab("write")}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+              className={`flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 activeTab === "write"
-                  ? "bg-focus text-zinc-950 shadow-sm"
-                  : "text-zinc-400 hover:text-zinc-200"
+                  ? "bg-focus text-white shadow-sm shadow-focus/25"
+                  : "text-text-secondary hover:text-text-primary"
               }`}
             >
               <PencilSimple className="w-3.5 h-3.5" />
@@ -114,10 +114,10 @@ export function MarkdownNotesEditor({
             <button
               type="button"
               onClick={() => setActiveTab("preview")}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+              className={`flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 activeTab === "preview"
-                  ? "bg-focus text-zinc-950 shadow-sm"
-                  : "text-zinc-400 hover:text-zinc-200"
+                  ? "bg-focus text-white shadow-sm shadow-focus/25"
+                  : "text-text-secondary hover:text-text-primary"
               }`}
             >
               <Eye className="w-3.5 h-3.5" />
@@ -131,7 +131,7 @@ export function MarkdownNotesEditor({
               <button
                 type="button"
                 onClick={() => insertFormatting("**", "**")}
-                className="p-1.5 rounded hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors"
+                className="p-1.5 rounded-lg hover:bg-paper text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
                 title="Bold"
               >
                 <TextB className="w-4 h-4" />
@@ -139,7 +139,7 @@ export function MarkdownNotesEditor({
               <button
                 type="button"
                 onClick={() => insertFormatting("*", "*")}
-                className="p-1.5 rounded hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors"
+                className="p-1.5 rounded-lg hover:bg-paper text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
                 title="Italic"
               >
                 <TextItalic className="w-4 h-4" />
@@ -147,7 +147,7 @@ export function MarkdownNotesEditor({
               <button
                 type="button"
                 onClick={() => insertFormatting("```\n", "\n```")}
-                className="p-1.5 rounded hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors"
+                className="p-1.5 rounded-lg hover:bg-paper text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
                 title="Code Block"
               >
                 <Code className="w-4 h-4" />
@@ -155,7 +155,7 @@ export function MarkdownNotesEditor({
               <button
                 type="button"
                 onClick={() => insertFormatting("- ")}
-                className="p-1.5 rounded hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors"
+                className="p-1.5 rounded-lg hover:bg-paper text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
                 title="Bullet List"
               >
                 <ListBullets className="w-4 h-4" />
@@ -163,7 +163,7 @@ export function MarkdownNotesEditor({
               <button
                 type="button"
                 onClick={() => insertFormatting("> ")}
-                className="p-1.5 rounded hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors"
+                className="p-1.5 rounded-lg hover:bg-paper text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
                 title="Quote"
               >
                 <Quotes className="w-4 h-4" />
@@ -175,12 +175,12 @@ export function MarkdownNotesEditor({
         {/* Save Status Indicator */}
         <div className="flex items-center gap-1.5 text-xs">
           {isSaved ? (
-            <span className="text-focus flex items-center gap-1 text-[11px] font-medium">
+            <span className="text-signal flex items-center gap-1 text-[11px] font-bold">
               <CheckCircle className="w-3.5 h-3.5" weight="fill" />
               Auto-saved
             </span>
           ) : (
-            <span className="text-amber-400 flex items-center gap-1 text-[11px] font-medium">
+            <span className="text-warning flex items-center gap-1 text-[11px] font-bold">
               <FloppyDisk className="w-3.5 h-3.5 animate-pulse" />
               Saving...
             </span>
@@ -189,21 +189,22 @@ export function MarkdownNotesEditor({
       </div>
 
       {/* Editor Content Body */}
-      <div className="flex-1 p-4 overflow-y-auto min-h-[360px]">
+      <div className="flex-1 p-5 overflow-y-auto min-h-[360px] bg-paper/30">
         {activeTab === "write" ? (
           <textarea
             ref={textareaRef}
             value={content}
             onChange={handleTextChange}
             placeholder="Write your study notes, insights, and code snippets here (Markdown supported)..."
-            className="w-full h-full min-h-[340px] bg-transparent border-0 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none resize-none font-mono leading-relaxed"
+            className="w-full h-full min-h-[340px] bg-transparent border-0 text-xs sm:text-sm text-text-primary placeholder:text-text-secondary focus:outline-none resize-none font-mono leading-relaxed"
           />
         ) : (
-          <div className="prose prose-invert prose-emerald max-w-none text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-sans text-zinc-200">
-            {content || <span className="text-zinc-500 italic">No notes written yet.</span>}
+          <div className="max-w-none text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-sans text-text-primary">
+            {content || <span className="text-text-secondary italic">No notes written yet.</span>}
           </div>
         )}
       </div>
     </div>
   );
 }
+

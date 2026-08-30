@@ -58,7 +58,7 @@ export function SocraticCopilotSidecar({
 
   // Helper: Format inline text for bold, code, and timestamp seek buttons
   const formatInlineText = (text: string): React.ReactNode[] => {
-    const tokenRegex = /(\[(?:Jump to|Seek to|timestamp:?)\s*(\d{1,2}):(\d{2})\])|(\*\*[^*]+\*\*)|(`[^`]+`)/gi;
+    const tokenRegex = /([(?:Jump to|Seek to|timestamp:?)\s*(\d{1,2}):(\d{2})\])|(\bhttps?:\/\/[^\s)]+)|(\*\*[^*]+\*\*)|(`[^`]+`)/gi;
     const nodes: React.ReactNode[] = [];
     let lastIndex = 0;
     let match;
@@ -80,36 +80,50 @@ export function SocraticCopilotSidecar({
             key={`seek-${match.index}-${totalSecs}`}
             type="button"
             onClick={() => onSeekRequested?.(totalSecs)}
-            className="inline-flex items-center gap-1 px-2 py-0.5 my-0.5 mx-1 rounded-md bg-focus/20 hover:bg-focus/30 text-emerald-300 border border-focus/40 text-xs font-mono font-bold transition-colors cursor-pointer shrink-0"
+            className="inline-flex items-center gap-1 px-2.5 py-0.5 my-0.5 mx-1 rounded-lg bg-focus/10 hover:bg-focus/20 text-focus border border-focus/30 text-xs font-mono font-bold transition-colors cursor-pointer shrink-0"
           >
             <FastForward className="w-3 h-3" />
             <span>Jump to {match[2]}:{match[3]}</span>
           </button>
         );
       }
-      // Case 2: **bold text**
+      // Case 2: URLs
       else if (match[4]) {
+        nodes.push(
+          <a
+            key={`url-${match.index}`}
+            href={match[4]}
+            target="_blank"
+            rel="noreferrer"
+            className="text-focus hover:underline font-bold"
+          >
+            {match[4]}
+          </a>
+        );
+      }
+      // Case 3: **bold text**
+      else if (match[5]) {
         const boldContent = fullMatch.slice(2, -2);
         nodes.push(
-          <strong key={`b-${match.index}`} className="font-bold text-white tracking-wide">
+          <strong key={`b-${match.index}`} className="font-bold text-text-primary tracking-wide">
             {boldContent}
           </strong>
         );
       }
-      // Case 3: `code`
-      else if (match[5]) {
+      // Case 4: `code`
+      else if (match[6]) {
         const codeContent = fullMatch.slice(1, -1);
         nodes.push(
           <code
             key={`c-${match.index}`}
-            className="px-1.5 py-0.5 mx-0.5 rounded bg-zinc-800 text-emerald-300 font-mono text-[11px] border border-zinc-700/60 break-all"
+            className="bg-paper border border-border text-focus px-1.5 py-0.5 rounded font-mono text-[11px] font-bold mx-0.5"
           >
             {codeContent}
           </code>
         );
       }
 
-      lastIndex = match.index + fullMatch.length;
+      lastIndex = tokenRegex.lastIndex;
     }
 
     if (lastIndex < text.length) {
@@ -119,97 +133,147 @@ export function SocraticCopilotSidecar({
     return nodes;
   };
 
-  // Structured UI View for Roadmap & Algorithmic Architecture Response
-  const renderRoadmapArchitectureResponse = () => {
+  // Helper: Render markdown blocks & code blocks
+  const renderMessageContent = (content: string) => {
+    if (content.includes("Why This Specific Learning Path Was Generated Instead of a Generic Syllabus")) {
+      return renderCurriculumRationale();
+    }
+
+    const blocks = content.split(/(\`\`\`(?:[a-zA-Z0-9_-]+)?\n[\s\S]*?\n\`\`\`)/g);
+
+    return (
+      <div className="flex flex-col gap-2.5 w-full text-xs sm:text-sm text-text-primary leading-relaxed break-words">
+        {blocks.map((block, idx) => {
+          if (block.startsWith("```")) {
+            const lines = block.split("\n");
+            const lang = lines[0].replace("```", "").trim() || "code";
+            const code = lines.slice(1, -1).join("\n");
+
+            return (
+              <div
+                key={idx}
+                className="my-2 rounded-2xl overflow-hidden border border-border bg-paper shadow-sm"
+              >
+                <div className="flex items-center justify-between px-3.5 py-1.5 bg-surface border-b border-border text-[11px] font-mono text-text-secondary">
+                  <span className="font-bold text-focus uppercase tracking-wider">{lang}</span>
+                  {onInsertToNotes && (
+                    <button
+                      type="button"
+                      onClick={() => onInsertToNotes(`\`\`\`${lang}\n${code}\n\`\`\``)}
+                      className="inline-flex items-center gap-1 text-[11px] text-text-secondary hover:text-focus transition-colors cursor-pointer font-semibold"
+                    >
+                      <ClipboardText className="w-3.5 h-3.5" />
+                      <span>Insert to Notes</span>
+                    </button>
+                  )}
+                </div>
+                <pre className="p-3.5 text-[11px] font-mono text-text-primary overflow-x-auto whitespace-pre leading-relaxed">
+                  <code>{code}</code>
+                </pre>
+              </div>
+            );
+          }
+
+          const paragraphs = block.split("\n\n").filter(Boolean);
+          return (
+            <React.Fragment key={idx}>
+              {paragraphs.map((p, pIdx) => (
+                <p key={pIdx} className="leading-relaxed">
+                  {formatInlineText(p)}
+                </p>
+              ))}
+            </React.Fragment>
+          );
+        })}
+      </div>
+    );
+
+  };
+
+  const renderCurriculumRationale = () => {
     const levelsData = [
       {
         num: 1,
-        title: "SQL Fundamentals",
-        phase: "Ground-Truth Base",
-        desc: "Relational data extraction layer. Mastering SELECT, JOIN operations, GROUP BY aggregations, and window functions is the prerequisite ground-truth for any data pipeline.",
-        icon: "   ",
+        title: "Relational Foundations & Window Analytics",
+        phase: "Prerequisite Anchor",
+        desc: "Establishes deterministic tabular modeling, DENSE_RANK() window partitions, and Star Schema indexing before analytical transformations.",
       },
       {
         num: 2,
-        title: "Python for Data Analysis",
-        phase: "Computational Engine",
-        desc: "Core algorithmic scripting, control structures, and functional data transformations needed when workflows exceed standard SQL and spreadsheet limitations.",
-        icon: "  ",
+        title: "Vectorized Python & Pandas Pipeline Architecture",
+        phase: "Analytical Core",
+        desc: "Replaces iterative slow loops with vectorized NumPy/Pandas C-level operations. Essential for high-throughput pipeline automation.",
       },
       {
         num: 3,
-        title: "Pandas & Data Cleaning",
-        phase: "Vectorized ETL",
-        desc: "High-performance vector operations on DataFrames, missing value imputation, reshaping, and feature engineering (strictly sequenced after Python).",
-        icon: "  ",
+        title: "Star-Schema Warehouse Architecture & Dimensional Modeling",
+        phase: "Architectural Synthesis",
+        desc: "Transforms normalized transaction logs into Kimball dimensional fact tables (Surrogate keys, SCD Type-2) to ensure sub-second dashboard performance.",
       },
       {
         num: 4,
-        title: "Power BI & DAX",
-        phase: "Enterprise BI Layer",
+        title: "Enterprise Power BI & DAX Context Engine",
+        phase: "Business Semantic Layer",
         desc: "Bridges backend tabular models to executive reporting. DAX measures (CALCULATE, time intelligence) convert raw relational data into actionable business KPIs.",
-        icon: "  ",
       },
       {
         num: 5,
         title: "Applied Business Statistics & Rasch Checkpoint",
         phase: "Psychometric Testing",
         desc: "Eliminates false intuition through hypothesis testing and ANOVA, validated via an adaptive 1-PL Rasch Item Response Theory (IRT) boss checkpoint.",
-        icon: "  ",
       },
       {
         num: 6,
         title: "Interactive Dashboards & Storytelling",
         phase: "Capstone Synthesis",
         desc: "Synthesizes all 5 upstream competencies into stakeholder-ready visual narratives, executive summaries, and business recommendations.",
-        icon: "  ",
       },
     ];
 
     return (
-      <div className="flex flex-col gap-4 w-full text-zinc-200">
+      <div className="flex flex-col gap-4 w-full text-text-primary">
         {/* Title Header Card */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-950/70 via-zinc-900 to-zinc-950 border border-focus/30 shadow-lg">
+        <div className="p-4 sm:p-5 rounded-2xl bg-focus/5 border border-focus/25 shadow-sm">
           <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-focus/10 text-focus border border-focus/20 text-xs font-bold mb-2">
             <Sparkle className="w-3.5 h-3.5" weight="fill" />
             <span>AI Curriculum Rationale</span>
           </div>
-          <h3 className="text-base sm:text-lg font-bold text-white leading-tight">
+          <h3 className="text-base sm:text-lg font-bold text-text-primary leading-tight">
             Why This Specific Learning Path Was Generated Instead of a Generic Syllabus
           </h3>
-          <p className="text-xs sm:text-sm text-zinc-300 mt-1.5 leading-relaxed">
-            Traditional static bootcamps force all students through rigid 40-week generic courses. <strong>LearnPath AI</strong> dynamically synthesized your path using transparent mathematical modeling:
+          <p className="text-xs sm:text-sm text-text-secondary mt-1.5 leading-relaxed">
+            Traditional static bootcamps force all students through rigid generic syllabi. <strong>LearnPath AI</strong> dynamically synthesized your path using transparent mathematical modeling:
           </p>
         </div>
 
         {/* 3 Pillars Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="p-3.5 rounded-2xl bg-zinc-900/90 border border-zinc-800 flex flex-col gap-1.5 shadow-sm">
+          <div className="p-3.5 rounded-2xl bg-paper border border-border flex flex-col gap-1.5 shadow-sm">
             <span className="text-xs font-bold text-focus">1. Skill Delta Engine</span>
-            <span className="text-[11px] font-mono font-bold text-zinc-100 bg-zinc-950 px-2 py-1 rounded-lg border border-zinc-800/80 w-fit">
-                = max(0, Target - Current)
+            <span className="text-[11px] font-mono font-bold text-text-primary bg-surface px-2 py-1 rounded-lg border border-border w-fit">
+              Delta = max(0, Target - Current)
             </span>
-            <p className="text-xs text-zinc-400 leading-relaxed mt-0.5">
+            <p className="text-xs text-text-secondary leading-relaxed mt-0.5">
               Ingested GitHub & resume data skips mastered topics and targets only true delta gaps.
             </p>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-zinc-900/90 border border-zinc-800 flex flex-col gap-1.5 shadow-sm">
+          <div className="p-3.5 rounded-2xl bg-paper border border-border flex flex-col gap-1.5 shadow-sm">
             <span className="text-xs font-bold text-focus">2. Kahn&apos;s Topological DAG</span>
-            <span className="text-[11px] font-mono font-bold text-zinc-100 bg-zinc-950 px-2 py-1 rounded-lg border border-zinc-800/80 w-fit">
+            <span className="text-[11px] font-mono font-bold text-text-primary bg-surface px-2 py-1 rounded-lg border border-border w-fit">
               Complexity: O(|V| + |E|)
             </span>
-            <p className="text-xs text-zinc-400 leading-relaxed mt-0.5">
+            <p className="text-xs text-text-secondary leading-relaxed mt-0.5">
               Guarantees strict prerequisite ordering without circular dependencies.
             </p>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-zinc-900/90 border border-zinc-800 flex flex-col gap-1.5 shadow-sm">
+          <div className="p-3.5 rounded-2xl bg-paper border border-border flex flex-col gap-1.5 shadow-sm">
             <span className="text-xs font-bold text-focus">3. 1-PL Rasch IRT Testing</span>
-            <span className="text-[11px] font-mono font-bold text-zinc-100 bg-zinc-950 px-2 py-1 rounded-lg border border-zinc-800/80 w-fit">
-              Latent Ability: &theta; Calibration
+            <span className="text-[11px] font-mono font-bold text-text-primary bg-surface px-2 py-1 rounded-lg border border-border w-fit">
+              Latent Ability: theta Calibration
             </span>
-            <p className="text-xs text-zinc-400 leading-relaxed mt-0.5">
+            <p className="text-xs text-text-secondary leading-relaxed mt-0.5">
               Calibrates question difficulty against learner ability to confirm genuine mastery.
             </p>
           </div>
@@ -218,311 +282,125 @@ export function SocraticCopilotSidecar({
         {/* Level-by-Level Breakdown */}
         <div className="flex flex-col gap-2.5 pt-1">
           <div className="flex items-center justify-between">
-            <h4 className="text-xs sm:text-sm font-bold text-white tracking-wide flex items-center gap-2">
+            <h4 className="text-xs sm:text-sm font-bold text-text-primary tracking-wide flex items-center gap-2">
               <span>Detailed Level-by-Level Roadmap Rationale</span>
             </h4>
-            <span className="text-[11px] text-zinc-400 font-mono">6 Sequenced Milestones</span>
+            <span className="text-[11px] text-text-secondary font-mono">6 Sequenced Milestones</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {levelsData.map((lvl) => (
               <div
                 key={lvl.num}
-                className="p-3.5 rounded-2xl bg-zinc-900/80 border border-zinc-800 hover:border-zinc-700 transition-colors flex flex-col gap-2 shadow-sm"
+                className="p-3.5 rounded-2xl bg-paper border border-border hover:border-focus/40 transition-colors flex flex-col gap-2 shadow-sm"
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span className="w-6 h-6 rounded-lg bg-focus/15 border border-focus/30 text-focus font-mono font-bold text-xs flex items-center justify-center shrink-0">
                       {lvl.num}
                     </span>
-                    <span className="text-xs sm:text-sm font-bold text-zinc-100">{lvl.title}</span>
+                    <span className="text-xs sm:text-sm font-bold text-text-primary">{lvl.title}</span>
                   </div>
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700/60 shrink-0">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-surface text-text-secondary border border-border shrink-0">
                     {lvl.phase}
                   </span>
                 </div>
-                <p className="text-xs text-zinc-300 leading-relaxed pl-1">
+                <p className="text-xs text-text-secondary leading-relaxed pl-1">
                   {lvl.desc}
                 </p>
               </div>
             ))}
           </div>
         </div>
-
-        {/* In-Place Remediation Callout */}
-        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3 mt-1">
-          <span className="text-amber-400 text-base mt-0.5"> </span>
-          <div className="flex-1">
-            <h5 className="text-xs font-bold text-amber-300">
-              Autonomous In-Place Micro-Remediation Loop
-            </h5>
-            <p className="text-xs text-zinc-300 mt-0.5 leading-relaxed">
-              If an assessment detects concept gaps in any subtopic, LearnPath AI surgically injects micro-remediation sub-levels (e.g. <strong>Level 5.1</strong>, <strong>Level 5.2</strong>) equipped with 3D flashcards into your active DAG rather than forcing you to restart the curriculum.
-            </p>
-          </div>
-        </div>
       </div>
     );
   };
 
-  // Main message content renderer handling code blocks and structured text
-  const renderMessageContent = (text: string) => {
-    // Check if this message is the specific roadmap generation explanation
-    const lower = text.toLowerCase();
-    if (
-      (lower.includes("why this specific") || lower.includes("generic syllabus") || lower.includes("skill delta formulation")) &&
-      lower.includes("sql fundamentals") &&
-      lower.includes("pandas")
-    ) {
-      return renderRoadmapArchitectureResponse();
-    }
+  const handleSendMessage = async (customPrompt?: string) => {
+    const textToSend = customPrompt || input;
+    if (!textToSend.trim() || isLoading) return;
 
-    const codeBlockRegex = /```([a-zA-Z]*)\n([\s\S]*?)```/g;
-    const parts: Array<{ type: "text" | "code"; content?: string; lang?: string; code?: string }> = [];
-    let lastIndex = 0;
-    let match;
-
-    while ((match = codeBlockRegex.exec(text)) !== null) {
-      if (match.index > lastIndex) {
-        parts.push({ type: "text", content: text.substring(lastIndex, match.index) });
-      }
-      parts.push({ type: "code", lang: match[1] || "text", code: match[2].trim() });
-      lastIndex = match.index + match[0].length;
-    }
-    if (lastIndex < text.length) {
-      parts.push({ type: "text", content: text.substring(lastIndex) });
-    }
-
-    return (
-      <div className="flex flex-col gap-2 w-full min-w-0 overflow-hidden break-words">
-        {parts.map((p, idx) => {
-          if (p.type === "code" && p.code) {
-            return (
-              <div key={idx} className="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-950/95 overflow-hidden my-2 w-full min-w-0">
-                <div className="flex items-center justify-between px-3.5 py-2 bg-zinc-900 border-b border-zinc-800 text-[11px] text-zinc-400 font-mono">
-                  <span className="font-semibold uppercase tracking-wider">{p.lang}</span>
-                  <button
-                    type="button"
-                    onClick={() => onInsertToNotes?.(`\`\`\`${p.lang}\n${p.code}\n\`\`\``)}
-                    className="flex items-center gap-1 text-focus hover:text-emerald-300 font-semibold px-2 py-0.5 rounded bg-focus/10 hover:bg-focus/20 transition-colors cursor-pointer"
-                  >
-                    <ClipboardText className="w-3.5 h-3.5" />
-                    <span>Insert to Notes</span>
-                  </button>
-                </div>
-                <pre className="p-3.5 text-xs text-zinc-100 font-mono overflow-x-auto whitespace-pre-wrap leading-relaxed">
-                  {p.code}
-                </pre>
-              </div>
-            );
-          }
-
-          const rawLines = (p.content || "").split("\n");
-          return (
-            <div key={idx} className="space-y-2 w-full min-w-0 break-words">
-              {rawLines.map((line, lIdx) => {
-                const trimmed = line.trim();
-                if (!trimmed) return <div key={lIdx} className="h-1" />;
-
-                if (trimmed === "---" || trimmed === "***") {
-                  return <hr key={lIdx} className="border-zinc-800 my-3" />;
-                }
-
-                if (trimmed.startsWith("### ")) {
-                  return (
-                    <h3 key={lIdx} className="text-sm sm:text-base font-bold text-white pt-2 pb-1 flex items-center gap-2 border-b border-zinc-800 break-words">
-                      {formatInlineText(trimmed.replace(/^###\s+/, ""))}
-                    </h3>
-                  );
-                }
-
-                if (trimmed.startsWith("#### ")) {
-                  return (
-                    <h4 key={lIdx} className="text-xs sm:text-sm font-bold text-focus pt-1.5 pb-0.5 break-words">
-                      {formatInlineText(trimmed.replace(/^####\s+/, ""))}
-                    </h4>
-                  );
-                }
-
-                if (trimmed.startsWith("* ") || trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
-                  const content = trimmed.replace(/^[\*\-*]\s+/, "");
-                  return (
-                    <div key={lIdx} className="flex items-start gap-2.5 text-xs sm:text-sm leading-relaxed pl-2 py-0.5 text-zinc-200 w-full min-w-0">
-                      <span className="text-focus mt-0.5 shrink-0 font-bold">*</span>
-                      <div className="flex-1 min-w-0 break-words">{formatInlineText(content)}</div>
-                    </div>
-                  );
-                }
-
-                return (
-                  <p key={lIdx} className="text-xs sm:text-sm text-zinc-200 leading-relaxed break-words">
-                    {formatInlineText(line)}
-                  </p>
-                );
-              })}
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-
-  const getDetailedLevelResponse = (query: string) => {
-    const q = query.toLowerCase();
-    if (
-      q.includes("generic syllabus") ||
-      q.includes("specific learning") ||
-      q.includes("why each level") ||
-      q.includes("roadmap")
-    ) {
-      return `###    Why This Specific Learning Path Was Generated Instead of a Generic Syllabus
-
-Unlike traditional static 40-week bootcamps that force every student through the same generic intro lessons, **LearnPath AI** engineered your curriculum using mathematical principles:
-
-#### 1. Mathematical Architecture & Optimization
-* **Exact Skill Delta Formulation**:   = max(0, Required Proficiency - Ingested Baseline). Topics you already proved mastery in on GitHub or your resume (e.g. basic spreadsheets at 85%) are skipped entirely. Only verified gaps receive dedicated modules.
-* **Kahn's Topological DAG Scheduling**: Software engineering topics are modeled as a Directed Acyclic Graph G = (V, E). Kahn's algorithm computes in-degrees to ensure foundational prerequisites strictly precede downstream applied modules in O(|V| + |E|) time without circular loops.
-* **1-PL Rasch IRT Testing**: Calibrates item difficulty against latent ability  , dynamically adapting assessments to match your true competency.
-
----
-
-####     Detailed Level-by-Level Rationale for Your Roadmap:
-
-* **Level 1: SQL Fundamentals (Ground-Truth Base)**
-  *Why it's here*: SQL is the foundational data extraction layer for all analytical engineering. You must master relational queries, JOIN operations, filter conditions, and aggregations before attempting downstream transformations.
-
-* **Level 2: Python for Data Analysis (Computational Engine)**
-  *Why it's here*: Provides the algorithmic scripting, control flow, and data structure manipulation necessary for automated workflows that exceed spreadsheet constraints.
-
-* **Level 3: Pandas & Data Cleaning (Vectorized ETL)**
-  *Why it's here*: Ingesting enterprise datasets requires vectorized DataFrame operations, missing value imputation, and feature engineering (strictly dependent on Level 2 Python).
-
-* **Level 4: Power BI & DAX (Enterprise BI Layer)**
-  *Why it's here*: Bridges backend tabular models to executive reporting. DAX measures (CALCULATE, time-intelligence) translate complex data schemas into business KPIs.
-
-* **Level 5: Applied Business Statistics & 1-PL Rasch Boss Checkpoint**
-  *Why it's here*: Prevents false intuition by teaching hypothesis testing (p-values, confidence intervals, ANOVA), verified through an adaptive Rasch IRT boss checkpoint.
-
-* **Level 6: Interactive Dashboards & Executive Storytelling (Capstone Synthesis)**
-  *Why it's here*: Synthesizes all 5 upstream competencies into stakeholder-ready visual narratives and executive presentations.
-
----
-
-  **Autonomous Micro-Remediation**: If an assessment detects gaps in a specific subtopic, LearnPath AI injects targeted sub-levels (**Level 5.1, Level 5.2**) with 3D flashcards directly into your active DAG rather than making you restart the course.`;
-    }
-
-    return `Here is the Socratic breakdown for **${contextTitle}**:\n\n1. **Core Concept**: Focus on understanding how this directly bridges your target skill gap.\n2. **Video Timestamp**: Review the core syntax around [Jump to 05:45] and the hands-on implementation at [Jump to 12:20].\n\n\`\`\`${contextTitle.toLowerCase().includes("sql") ? "sql" : "python"}\n-- Example implementation\nSELECT category, AVG(sales) AS avg_sales\nFROM transactions\nGROUP BY category\nHAVING AVG(sales) > 500;\n\`\`\`\n\nClick **"Insert to Notes"** to paste this directly into your study scratchpad!`;
-  };
-
-  const handleSendMessage = async (promptToSend?: string) => {
-    const query = (promptToSend || input).trim();
-    if (!query || isLoading) return;
-
-    const userMsg: Message = {
-      id: `u-${Date.now()}`,
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
       sender: "user",
-      content: query,
+      content: textToSend.trim(),
       timestamp: "Just now",
     };
 
-    setMessages((prev) => [...prev, userMsg]);
-    setInput("");
+    setMessages((prev) => [...prev, userMessage]);
+    if (!customPrompt) setInput("");
     setIsLoading(true);
 
     try {
-      const res = await fetch("/api/chat", {
+      const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: [
-            {
-              role: "system",
-              content: `You are CogniPath Socratic AI Copilot for level "${contextTitle}".
-Explain concepts step-by-step. When referencing parts of the video, provide clickable seek timestamps formatted as [Jump to MM:SS].
-Provide clean code blocks with language indicators so the user can insert them into their notes.`,
-            },
-            ...messages.map((m) => ({
+            ...messages.slice(-5).map((m) => ({
               role: m.sender === "user" ? "user" : "assistant",
               content: m.content,
             })),
-            { role: "user", content: query },
+            { role: "user", content: textToSend },
           ],
-          apiKey: groqApiKey,
-          dayInfo: {
-            id: level?.levelNumber || 1,
-            topic: contextTitle,
-            pattern: contextTitle,
+          context: {
+            levelId: level?.id,
+            skillName: level?.skillName,
+            title: level?.title,
+            curriculumGoal: "Personalized Career Path Mastery",
           },
+          apiKey: groqApiKey,
         }),
       });
 
-      if (res.ok) {
-        const contentType = res.headers.get("Content-Type") || "";
-        if (contentType.includes("text/event-stream") && res.body) {
-          const reader = res.body.getReader();
-          const decoder = new TextDecoder();
-          let aiContent = "";
-
-          const botMsgId = `bot-${Date.now()}`;
-          setMessages((prev) => [
-            ...prev,
-            { id: botMsgId, sender: "copilot", content: "", timestamp: "Just now" },
-          ]);
-
-          let buffer = "";
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            buffer += decoder.decode(value, { stream: true });
-
-            const lines = buffer.split("\n");
-            buffer = lines.pop() || "";
-
-            for (const line of lines) {
-              const trimmed = line.trim();
-              if (trimmed.startsWith("data: ")) {
-                const dataStr = trimmed.replace("data: ", "").trim();
-                if (dataStr === "[DONE]") break;
-                try {
-                  const parsed = JSON.parse(dataStr);
-                  const delta = parsed.choices?.[0]?.delta?.content || "";
-                  aiContent += delta;
-                  setMessages((prev) =>
-                    prev.map((m) => (m.id === botMsgId ? { ...m, content: aiContent } : m))
-                  );
-                } catch {}
-              }
-            }
-          }
-        } else {
-          // Plain text response or JSON
-          const rawText = await res.text();
-          setMessages((prev) => [
-            ...prev,
-            { id: `bot-${Date.now()}`, sender: "copilot", content: rawText, timestamp: "Just now" },
-          ]);
-        }
-      } else {
-        const mockAiResponse = getDetailedLevelResponse(query);
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `bot-${Date.now()}`,
-            sender: "copilot",
-            content: mockAiResponse,
-            timestamp: "Just now",
-          },
-        ]);
+      if (!response.ok) {
+        throw new Error("Chat request failed");
       }
-    } catch (e) {
-      console.error("Copilot request error:", e);
-      const fallbackResponse = getDetailedLevelResponse(query);
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let assistantReply = "";
+
+      const assistantMessageId = `copilot-${Date.now()}`;
       setMessages((prev) => [
         ...prev,
         {
-          id: `bot-${Date.now()}`,
+          id: assistantMessageId,
           sender: "copilot",
-          content: fallbackResponse,
+          content: "",
+          timestamp: "Just now",
+        },
+      ]);
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value, { stream: true });
+          assistantReply += chunk;
+
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === assistantMessageId
+                ? { ...msg, content: assistantReply }
+                : msg
+            )
+          );
+        }
+      }
+    } catch {
+      // Fallback answers
+      let fallbackText = `Here is a quick guidance on **${contextTitle}**:\n\n1. **Core Concept**: Focus on the fundamental rules and edge cases.\n2. **Practical Tip**: Refer to [Jump to 02:30] for the core demo.\n\nFeel free to ask for specific code examples or debugging tips!`;
+      if (textToSend.includes("Why was this specific learning")) {
+        fallbackText = "Why This Specific Learning Path Was Generated Instead of a Generic Syllabus";
+      }
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `copilot-${Date.now()}`,
+          sender: "copilot",
+          content: fallbackText,
           timestamp: "Just now",
         },
       ]);
@@ -532,29 +410,31 @@ Provide clean code blocks with language indicators so the user can insert them i
   };
 
   return (
-    <div className="flex flex-col h-full w-full rounded-3xl border border-zinc-800 bg-zinc-900/90 overflow-hidden shadow-2xl">
+    <div className="flex flex-col h-[650px] rounded-3xl border border-border bg-surface shadow-xl overflow-hidden w-full">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-zinc-800 bg-zinc-950/90 shrink-0">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-surface shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-focus/15 border border-focus/30 text-focus flex items-center justify-center shrink-0">
-            <Sparkle className="w-4 h-4 sm:w-5 sm:h-5" weight="fill" />
+          <div className="w-9 h-9 rounded-2xl bg-focus/15 border border-focus/30 text-focus flex items-center justify-center shadow-md shadow-focus/15">
+            <Sparkle className="w-5 h-5" weight="fill" />
           </div>
           <div>
-            <h4 className="text-xs sm:text-sm font-bold text-zinc-100 flex items-center gap-1.5">
-              24/7 Socratic AI Copilot
-            </h4>
-            <span className="text-[11px] text-zinc-400">Context: {contextTitle}</span>
+            <h3 className="text-sm font-bold text-text-primary flex items-center gap-2">
+              <span>24/7 Socratic AI Copilot</span>
+            </h3>
+            <p className="text-[11px] text-text-secondary truncate max-w-[200px] sm:max-w-xs font-mono">
+              Context: {contextTitle}
+            </p>
           </div>
         </div>
 
-        <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-focus/10 text-focus border border-focus/20 flex items-center gap-1.5 shrink-0">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+        <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-signal/15 text-signal border border-signal/30 flex items-center gap-1.5 shrink-0">
+          <span className="w-2 h-2 rounded-full bg-signal animate-pulse" />
           Live
         </span>
       </div>
 
       {/* Messages Scroll Area */}
-      <div className="flex-1 p-4 sm:p-6 overflow-y-auto overflow-x-hidden flex flex-col gap-4 min-h-[300px] w-full">
+      <div className="flex-1 p-4 sm:p-5 overflow-y-auto overflow-x-hidden flex flex-col gap-3.5 min-h-[300px] w-full bg-paper/40">
         {messages.map((msg) => (
           <div
             key={msg.id}
@@ -565,18 +445,18 @@ Provide clean code blocks with language indicators so the user can insert them i
             <div
               className={`w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 text-xs mt-0.5 ${
                 msg.sender === "user"
-                  ? "bg-zinc-700 text-zinc-200"
-                  : "bg-focus/20 text-focus border border-focus/30"
+                  ? "bg-cloudy/30 text-text-primary font-bold"
+                  : "bg-focus/15 text-focus border border-focus/30"
               }`}
             >
               {msg.sender === "user" ? <User className="w-3.5 h-3.5" /> : <Robot className="w-3.5 h-3.5" />}
             </div>
 
             <div
-              className={`max-w-[88%] sm:max-w-[92%] min-w-0 p-4 sm:p-5 rounded-2xl text-xs sm:text-sm leading-relaxed break-words overflow-hidden ${
+              className={`max-w-[88%] sm:max-w-[92%] min-w-0 p-3.5 sm:p-4 rounded-2xl text-xs sm:text-sm leading-relaxed break-words overflow-hidden ${
                 msg.sender === "user"
-                  ? "bg-focus text-zinc-950 font-semibold rounded-tr-sm shadow-md"
-                  : "bg-zinc-950 border border-zinc-800/90 text-zinc-200 rounded-tl-sm shadow-md"
+                  ? "bg-focus text-white font-medium rounded-tr-sm shadow-md shadow-focus/20"
+                  : "bg-surface border border-border text-text-primary rounded-tl-sm shadow-sm"
               }`}
             >
               {msg.sender === "user" ? (
@@ -589,7 +469,7 @@ Provide clean code blocks with language indicators so the user can insert them i
         ))}
 
         {isLoading && (
-          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-zinc-950/60 border border-zinc-800 text-xs text-zinc-400 w-fit">
+          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-surface border border-border text-xs text-text-secondary w-fit shadow-sm">
             <SpinnerGap className="w-4 h-4 animate-spin text-focus" />
             <span>Copilot is reasoning...</span>
           </div>
@@ -599,13 +479,13 @@ Provide clean code blocks with language indicators so the user can insert them i
       </div>
 
       {/* Quick Prompt Chips */}
-      <div className="flex items-center gap-2 px-4 sm:px-6 py-2.5 border-t border-zinc-800/80 bg-zinc-950/60 overflow-x-auto shrink-0">
+      <div className="flex items-center gap-2 px-4 sm:px-5 py-2.5 border-t border-border bg-surface overflow-x-auto shrink-0 no-scrollbar">
         {QUICK_PROMPTS.map((prompt) => (
           <button
             key={prompt}
             type="button"
             onClick={() => handleSendMessage(prompt)}
-            className="text-[11px] font-medium text-zinc-300 hover:text-emerald-300 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 px-3 py-1.5 rounded-xl transition-colors whitespace-nowrap cursor-pointer flex-shrink-0 shadow-sm"
+            className="text-[11px] font-medium text-text-secondary hover:text-focus bg-paper hover:bg-surface border border-border hover:border-focus/40 px-3 py-1.5 rounded-xl transition-all whitespace-nowrap cursor-pointer flex-shrink-0 shadow-sm"
           >
             {prompt}
           </button>
@@ -618,19 +498,19 @@ Provide clean code blocks with language indicators so the user can insert them i
           e.preventDefault();
           handleSendMessage();
         }}
-        className="flex items-center gap-2.5 p-3.5 sm:p-4 border-t border-zinc-800 bg-zinc-950/90 shrink-0"
+        className="flex items-center gap-2.5 p-3 sm:p-4 border-t border-border bg-surface shrink-0"
       >
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask Copilot (e.g. Explain DAX syntax at 10:20)..."
-          className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-focus/50"
+          className="flex-1 bg-paper border border-border rounded-xl px-4 py-2.5 text-xs sm:text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-focus/50 transition-colors"
         />
         <button
           type="submit"
           disabled={!input.trim() || isLoading}
-          className="p-2.5 rounded-xl bg-focus hover:bg-emerald-400 text-zinc-950 disabled:opacity-40 transition-all cursor-pointer shadow-md shadow-focus/20"
+          className="p-2.5 rounded-xl bg-focus hover:bg-focus/90 text-white disabled:opacity-40 transition-all cursor-pointer shadow-md shadow-focus/25"
         >
           <PaperPlaneRight className="w-4 h-4" weight="fill" />
         </button>
