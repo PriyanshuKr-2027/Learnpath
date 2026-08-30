@@ -261,6 +261,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Search className="absolute left-3.5 w-4 h-4 text-text-secondary" />
             <input
               type="text"
+              suppressHydrationWarning
               placeholder="Search skills, topics, or documentation..."
               className="w-full pl-10 pr-4 py-2 rounded-xl bg-surface border border-border focus:outline-none focus:border-focus/50 text-xs text-text-primary placeholder:text-text-secondary transition-all"
             />

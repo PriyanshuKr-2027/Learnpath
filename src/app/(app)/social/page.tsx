@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import Image from "next/image";
 import {
   Users,
   ChatCircleText,
@@ -432,12 +431,11 @@ export default function SocialStudyRoomPage() {
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className="relative shrink-0">
-                        <Image
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
                           src={friend.avatar}
                           alt={friend.name}
-                          width={32}
-                          height={32}
-                          className="rounded-full bg-surface border border-border"
+                          className="w-8 h-8 rounded-full bg-surface border border-border"
                         />
                         <span
                           className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-surface ${
@@ -535,12 +533,11 @@ export default function SocialStudyRoomPage() {
               <div className="flex-1 p-3.5 sm:p-4 overflow-y-auto space-y-3 min-h-0 bg-paper/30">
                 {messages.map((msg) => (
                   <div key={msg.id} className="flex items-start gap-2.5 text-xs">
-                    <Image
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
                       src={msg.authorAvatar}
                       alt={msg.authorName}
-                      width={28}
-                      height={28}
-                      className="rounded-full bg-surface border border-border mt-0.5 shrink-0"
+                      className="w-7 h-7 rounded-full bg-surface border border-border mt-0.5 shrink-0"
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
