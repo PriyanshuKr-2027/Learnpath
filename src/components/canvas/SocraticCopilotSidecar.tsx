@@ -432,7 +432,7 @@ export function SocraticCopilotSidecar({
   };
 
   return (
-    <div className="flex flex-col h-[650px] rounded-3xl border border-border bg-surface shadow-xl overflow-hidden w-full">
+    <div className="flex flex-col h-full rounded-3xl border border-border bg-surface shadow-xl overflow-hidden w-full">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-surface shrink-0">
         <div className="flex items-center gap-3">

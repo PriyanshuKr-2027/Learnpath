@@ -420,9 +420,9 @@ export default function LearningCanvasPage() {
 
 
         {/* RIGHT COLUMN (5 Cols): Sidecar Tabs (Socratic Copilot & Markdown Notes) */}
-        <div className="lg:col-span-5 flex flex-col gap-3 sticky top-20">
+        <div className="lg:col-span-5 flex flex-col gap-3 lg:sticky lg:top-20">
           {/* Sidecar Tab Switcher */}
-          <div className="flex items-center p-1 rounded-2xl bg-surface border border-border shadow-sm">
+          <div className="flex items-center p-1 rounded-2xl bg-surface border border-border shadow-sm shrink-0">
             <button
               type="button"
               onClick={() => setActiveTab("copilot")}
@@ -450,7 +450,7 @@ export default function LearningCanvasPage() {
           </div>
 
           {/* Active Tab Content */}
-          <div className="min-h-[560px]">
+          <div className="h-[620px] max-h-[calc(100vh-170px)] flex flex-col">
             {activeTab === "copilot" ? (
               <SocraticCopilotSidecar
                 level={level}
@@ -469,6 +469,7 @@ export default function LearningCanvasPage() {
           </div>
         </div>
       </div>
+
 
       {/* Completion Modal */}
       {showCompletionModal && (
