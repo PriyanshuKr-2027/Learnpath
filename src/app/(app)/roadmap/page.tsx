@@ -195,14 +195,14 @@ export default function RoadmapPage() {
 
       {/* Animated Adaptive Diff Banner */}
       {diffBanner && (
-        <div className="p-4 rounded-2xl border border-warning/30 bg-warning/10 flex items-start justify-between gap-3 animate-in slide-in-from-top duration-300">
+        <div className="p-4 rounded-2xl border border-focus/20 bg-surface shadow-md flex items-start justify-between gap-3 animate-in slide-in-from-top duration-300">
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-warning/20 text-warning flex items-center justify-center flex-shrink-0 mt-0.5">
-              <AlertTriangle className="w-5 h-5" />
+            <div className="w-8 h-8 rounded-xl bg-focus/15 border border-focus/30 text-focus flex items-center justify-center shrink-0">
+              <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-text-primary">
-                Autonomous Adaptive Loop Recalibration (v{diffBanner.previousVersion} &rarr; v{diffBanner.newVersion})
+              <h4 className="text-xs font-bold text-text-primary">
+                Roadmap Personalized (v{diffBanner.previousVersion} &rarr; v{diffBanner.newVersion})
               </h4>
               <p className="text-xs text-text-secondary mt-0.5 leading-relaxed">{diffBanner.summaryMessage}</p>
             </div>
@@ -211,6 +211,7 @@ export default function RoadmapPage() {
           <button
             onClick={() => setDiffBanner(null)}
             className="text-text-secondary hover:text-text-primary p-1 rounded-lg transition-colors cursor-pointer"
+            title="Dismiss notice"
           >
             <X className="w-4 h-4" />
           </button>

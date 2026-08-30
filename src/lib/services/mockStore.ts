@@ -295,7 +295,7 @@ export function injectRemedialLevelsIntoPath(
     injectedLevels,
     modifiedLevelIds: [parentLevel.id, ...injectedLevels.map((l) => l.id)],
     remedialTopic: weakSubtopics.join(", "),
-    summaryMessage: `   Autonomous Adaptive Recalibration: Detected ${weakSubtopics.length} question mistake(s)   Injected ${subLevelNames} with Interactive Flashcard Decks.`,
+    summaryMessage: `Personalized update: Added booster practice for ${subLevelNames} to reinforce these topics before advancing.`,
     timestamp: new Date().toISOString(),
   };
 
