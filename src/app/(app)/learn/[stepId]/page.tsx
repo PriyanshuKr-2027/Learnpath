@@ -450,7 +450,7 @@ export default function LearningCanvasPage() {
           </div>
 
           {/* Active Tab Content */}
-          <div className="h-[620px] max-h-[calc(100vh-170px)] flex flex-col">
+          <div className="h-[460px] lg:h-[480px] max-h-[calc(100vh-220px)] flex flex-col">
             {activeTab === "copilot" ? (
               <SocraticCopilotSidecar
                 level={level}

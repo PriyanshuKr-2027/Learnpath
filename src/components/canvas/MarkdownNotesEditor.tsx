@@ -189,14 +189,14 @@ export function MarkdownNotesEditor({
       </div>
 
       {/* Editor Content Body */}
-      <div className="flex-1 p-5 overflow-y-auto min-h-[360px] bg-paper/30">
+      <div className="flex-1 p-3.5 sm:p-4 overflow-y-auto min-h-0 bg-paper/30">
         {activeTab === "write" ? (
           <textarea
             ref={textareaRef}
             value={content}
             onChange={handleTextChange}
             placeholder="Write your study notes, insights, and code snippets here (Markdown supported)..."
-            className="w-full h-full min-h-[340px] bg-transparent border-0 text-xs sm:text-sm text-text-primary placeholder:text-text-secondary focus:outline-none resize-none font-mono leading-relaxed"
+            className="w-full h-full min-h-[220px] bg-transparent border-0 text-xs sm:text-sm text-text-primary placeholder:text-text-secondary focus:outline-none resize-none font-mono leading-relaxed"
           />
         ) : (
           <div className="max-w-none text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-sans text-text-primary">

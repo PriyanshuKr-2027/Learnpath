@@ -432,53 +432,53 @@ export function SocraticCopilotSidecar({
   };
 
   return (
-    <div className="flex flex-col h-full rounded-3xl border border-border bg-surface shadow-xl overflow-hidden w-full">
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-surface shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-2xl bg-focus/15 border border-focus/30 text-focus flex items-center justify-center shadow-md shadow-focus/15">
-            <Sparkle className="w-5 h-5" weight="fill" />
+    <div className="flex flex-col h-full rounded-2xl border border-border bg-surface shadow-md overflow-hidden w-full">
+      {/* Compact Header */}
+      <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-border bg-surface shrink-0">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-xl bg-focus/15 border border-focus/30 text-focus flex items-center justify-center shadow-sm">
+            <Sparkle className="w-4 h-4" weight="fill" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-text-primary flex items-center gap-2">
-              <span>24/7 Socratic AI Copilot</span>
+            <h3 className="text-xs font-bold text-text-primary flex items-center gap-1.5">
+              <span>24/7 AI Socratic Copilot</span>
             </h3>
-            <p className="text-[11px] text-text-secondary truncate max-w-[200px] sm:max-w-xs font-mono">
-              Context: {contextTitle}
+            <p className="text-[10px] text-text-secondary truncate max-w-[180px] sm:max-w-xs font-mono">
+              {contextTitle}
             </p>
           </div>
         </div>
 
-        <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-signal/15 text-signal border border-signal/30 flex items-center gap-1.5 shrink-0">
-          <span className="w-2 h-2 rounded-full bg-signal animate-pulse" />
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-signal/15 text-signal border border-signal/30 flex items-center gap-1 shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-signal animate-pulse" />
           Live
         </span>
       </div>
 
       {/* Messages Scroll Area */}
-      <div className="flex-1 p-4 sm:p-5 overflow-y-auto overflow-x-hidden flex flex-col gap-3.5 min-h-[300px] w-full bg-paper/40">
+      <div className="flex-1 p-3 sm:p-3.5 overflow-y-auto overflow-x-hidden flex flex-col gap-2.5 min-h-0 w-full bg-paper/30">
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className={`flex items-start gap-3 w-full max-w-full ${
+            className={`flex items-start gap-2.5 w-full max-w-full ${
               msg.sender === "user" ? "flex-row-reverse" : "flex-row"
             }`}
           >
             <div
-              className={`w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 text-xs mt-0.5 ${
+              className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 text-xs mt-0.5 ${
                 msg.sender === "user"
                   ? "bg-cloudy/30 text-text-primary font-bold"
                   : "bg-focus/15 text-focus border border-focus/30"
               }`}
             >
-              {msg.sender === "user" ? <User className="w-3.5 h-3.5" /> : <Robot className="w-3.5 h-3.5" />}
+              {msg.sender === "user" ? <User className="w-3 h-3" /> : <Robot className="w-3 h-3" />}
             </div>
 
             <div
-              className={`max-w-[88%] sm:max-w-[92%] min-w-0 p-3.5 sm:p-4 rounded-2xl text-xs sm:text-sm leading-relaxed break-words overflow-hidden ${
+              className={`max-w-[88%] sm:max-w-[92%] min-w-0 p-2.5 sm:p-3 rounded-xl text-xs leading-relaxed break-words overflow-hidden ${
                 msg.sender === "user"
-                  ? "bg-focus text-white font-medium rounded-tr-sm shadow-md shadow-focus/20"
-                  : "bg-surface border border-border text-text-primary rounded-tl-sm shadow-sm"
+                  ? "bg-focus text-white font-medium rounded-tr-xs shadow-sm shadow-focus/20"
+                  : "bg-surface border border-border text-text-primary rounded-tl-xs shadow-xs"
               }`}
             >
               {msg.sender === "user" ? (
@@ -491,8 +491,8 @@ export function SocraticCopilotSidecar({
         ))}
 
         {isLoading && (
-          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-surface border border-border text-xs text-text-secondary w-fit shadow-sm">
-            <SpinnerGap className="w-4 h-4 animate-spin text-focus" />
+          <div className="flex items-center gap-2 p-2 rounded-lg bg-surface border border-border text-[11px] text-text-secondary w-fit shadow-xs">
+            <SpinnerGap className="w-3.5 h-3.5 animate-spin text-focus" />
             <span>Copilot is reasoning...</span>
           </div>
         )}
@@ -500,41 +500,42 @@ export function SocraticCopilotSidecar({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Quick Prompt Chips */}
-      <div className="flex items-center gap-2 px-4 sm:px-5 py-2.5 border-t border-border bg-surface overflow-x-auto shrink-0 no-scrollbar">
+      {/* Compact Quick Prompt Chips */}
+      <div className="flex items-center gap-1.5 px-3 py-1.5 border-t border-border bg-surface overflow-x-auto shrink-0 no-scrollbar">
         {QUICK_PROMPTS.map((prompt) => (
           <button
             key={prompt}
             type="button"
             onClick={() => handleSendMessage(prompt)}
-            className="text-[11px] font-medium text-text-secondary hover:text-focus bg-paper hover:bg-surface border border-border hover:border-focus/40 px-3 py-1.5 rounded-xl transition-all whitespace-nowrap cursor-pointer flex-shrink-0 shadow-sm"
+            className="text-[10px] font-medium text-text-secondary hover:text-focus bg-paper hover:bg-surface border border-border hover:border-focus/40 px-2.5 py-1 rounded-lg transition-all whitespace-nowrap cursor-pointer flex-shrink-0 shadow-2xs"
           >
             {prompt}
           </button>
         ))}
       </div>
 
-      {/* Input Bar */}
+      {/* Compact Input Bar */}
       <form
         onSubmit={(e) => {
           e.preventDefault();
           handleSendMessage();
         }}
-        className="flex items-center gap-2.5 p-3 sm:p-4 border-t border-border bg-surface shrink-0"
+        className="flex items-center gap-2 p-2 sm:p-2.5 border-t border-border bg-surface shrink-0"
       >
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask Copilot (e.g. Explain DAX syntax at 10:20)..."
-          className="flex-1 bg-paper border border-border rounded-xl px-4 py-2.5 text-xs sm:text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-focus/50 transition-colors"
+          className="flex-1 bg-paper border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-focus/50 transition-colors"
         />
         <button
           type="submit"
           disabled={!input.trim() || isLoading}
-          className="p-2.5 rounded-xl bg-focus hover:bg-focus/90 text-white disabled:opacity-40 transition-all cursor-pointer shadow-md shadow-focus/25"
+          className="p-2 rounded-lg bg-focus hover:bg-focus/90 text-white disabled:opacity-40 transition-all cursor-pointer shadow-sm shadow-focus/25 shrink-0"
+          title="Send message"
         >
-          <PaperPlaneRight className="w-4 h-4" weight="fill" />
+          <PaperPlaneRight className="w-3.5 h-3.5" weight="fill" />
         </button>
       </form>
     </div>
