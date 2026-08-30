@@ -1,15 +1,15 @@
 @import "tailwindcss";
 
 @theme {
-  /* Claude Editorial Warm Palette */
-  --color-paper: #F4F3EE;         /* Pampas - Warm Cream/Linen Canvas */
-  --color-sidebar: #ECEAE2;       /* Subtle Warm Cream */
+  /* Claude Editorial Warm Neutral Palette */
+  --color-paper: #F7F6F2;         /* Calm Warm Alabaster Canvas */
+  --color-sidebar: #EFECE6;       /* Crisp Muted Warm Sidebar */
   --color-surface: #FFFFFF;       /* Pure Crisp White Card Surface */
-  --color-border: #E2DFD7;        /* Soft Cloudy Stone Border */
+  --color-border: #E5E2DA;        /* Subtle Clean Border */
   --color-cloudy: #B1ADA1;        /* Cloudy Warm Stone */
   
-  --color-text-primary: #1F1D1A;   /* Deep Warm Ink */
-  --color-text-secondary: #706B63; /* Warm Stone Secondary */
+  --color-text-primary: #181715;   /* Crisp Deep Warm Ink */
+  --color-text-secondary: #6E695F; /* Refined Stone Secondary */
 
   /* Claude Brand Accents */
   --color-focus: #C15F3C;         /* Crail Terracotta */

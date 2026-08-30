@@ -283,25 +283,20 @@ function CandyCrushMapInner({ path, onSelectNode }: CandyCrushMapProps) {
         </div>
       </div>
 
-      {/* Prerequisite Path Notification Callout */}
+      {/* Sleek Prerequisite Toast */}
       {selectedLockedNodeId && (
-        <div className="absolute bottom-4 left-4 z-20 p-3 rounded-2xl bg-surface/95 border border-warning/40 backdrop-blur-md shadow-xl text-xs max-w-sm animate-in slide-in-from-bottom duration-300">
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-warning flex items-center gap-1.5">
-              <Navigation className="w-3.5 h-3.5 text-warning animate-pulse" />
-              Prerequisite Dependency Path Illuminated
-            </span>
-            <button
-              type="button"
-              onClick={() => setSelectedLockedNodeId(null)}
-              className="text-text-secondary hover:text-text-primary p-0.5 cursor-pointer"
-            >
-              <X className="w-3 h-3" />
-            </button>
-          </div>
-          <p className="text-[11px] text-text-secondary mt-1">
-            Follow the golden glowing edges upstream to unlock this milestone.
-          </p>
+        <div className="absolute bottom-4 left-4 z-20 px-3.5 py-2 rounded-xl bg-surface/95 border border-border backdrop-blur-md shadow-lg text-xs flex items-center gap-2.5 animate-in fade-in duration-200">
+          <Navigation className="w-3.5 h-3.5 text-focus shrink-0" />
+          <span className="text-text-primary text-[11px] font-medium">
+            Prerequisite: Complete upstream highlighted milestone first
+          </span>
+          <button
+            type="button"
+            onClick={() => setSelectedLockedNodeId(null)}
+            className="text-text-secondary hover:text-text-primary p-0.5 cursor-pointer ml-1"
+          >
+            <X className="w-3 h-3" />
+          </button>
         </div>
       )}
 
@@ -311,11 +306,12 @@ function CandyCrushMapInner({ path, onSelectNode }: CandyCrushMapProps) {
         nodeTypes={nodeTypes}
         fitView
         fitViewOptions={{ padding: 0.25 }}
-        minZoom={0.3}
-        maxZoom={1.6}
+        minZoom={0.5}
+        maxZoom={1.3}
         defaultViewport={{ x: 0, y: 0, zoom: 0.85 }}
         panOnDrag={mapMode === "interactive"}
-        zoomOnScroll={mapMode === "interactive"}
+        zoomOnScroll={false}
+        zoomOnPinch={true}
         preventScrolling={mapMode === "interactive"}
         className="touch-pan-y"
       >

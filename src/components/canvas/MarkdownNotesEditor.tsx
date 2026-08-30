@@ -45,9 +45,12 @@ export function MarkdownNotesEditor({
 
   // Handle injected code snippets from AI Copilot
   useEffect(() => {
-    if (injectedSnippet) {
+    if (injectedSnippet && injectedSnippet.trim()) {
       setContent((prev) => {
-        const updated = `${prev.trim()}\n\n${injectedSnippet}\n`;
+        if (prev.includes(injectedSnippet.trim())) {
+          return prev; // Avoid duplicating identical snippet
+        }
+        const updated = `${prev.trim()}\n\n### Copilot Snippet\n${injectedSnippet.trim()}\n`;
         mockStore.saveNote(levelId, updated);
         onContentChange?.(updated);
         return updated;

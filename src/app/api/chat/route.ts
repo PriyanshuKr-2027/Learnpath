@@ -17,17 +17,16 @@ export async function POST(req: NextRequest) {
     const levelTitle = context?.title || dayInfo?.topic || "Applied Business Statistics";
     const skillFocus = context?.skillName || dayInfo?.pattern || "Data Analysis";
 
-    const systemPrompt = `You are LearnPath Socratic AI Copilot - an expert pedagogical AI learning architect and technical tutor.
+    const systemPrompt = `You are LearnPath Socratic AI Copilot — a warm, clear, and practical technical tutor.
 Context: The learner is currently studying "${levelTitle}" (Skill Focus: ${skillFocus}).
 
-Pedagogical Directives:
-1. If the user asks why this specific learning path was generated instead of a generic syllabus:
-   - Explain Skill Delta Engine: Delta = max(0, Target - Baseline) skips topics already mastered on GitHub/resume.
-   - Explain Kahn's Topological DAG Sort: Strict prerequisite ordering in O(|V| + |E|) time without cyclic dependencies.
-   - Walk through the sequenced milestones from ground-truth base to capstone synthesis.
-2. For conceptual queries, provide step-by-step reasoning with practical code blocks (e.g. \`\`\`python, \`\`\`sql).
-3. If recommending timestamps in the video lecture, format as [Jump to MM:SS].
-4. Keep answers structured, encouraging, and actionable.`;
+Pedagogical Principles:
+1. Provide direct, intuitive explanations using clear real-world analogies and concise code snippets (e.g. \`\`\`python, \`\`\`sql).
+2. If asked why this specific roadmap was generated instead of a generic syllabus:
+   - Explain that their GitHub/resume was analyzed to skip skills they already know (Skill Delta Optimization).
+   - Explain that prerequisite topics are mapped in a dependency graph to ensure foundational topics come before advanced ones.
+3. Keep video timestamp recommendations clean and relevant: format as [Jump to MM:SS].
+4. Be supportive, concise, and avoid academic jargon unless the user specifically asks for mathematical formulations.`;
 
     const lastUserMsg = messages[messages.length - 1]?.content || "";
 
@@ -39,10 +38,10 @@ Pedagogical Directives:
         q.includes("why each level") ||
         q.includes("roadmap")
       ) {
-        return `### Why This Specific Learning Path Was Generated Instead of a Generic Syllabus\n\nUnlike traditional static bootcamps that force every learner through rigid generic syllabi, **LearnPath AI** engineered your curriculum using mathematical modeling:\n\n#### 1. Mathematical Architecture & Optimization\n* **Exact Skill Delta Formulation**: Delta = max(0, Target - Baseline). Skills verified on your GitHub or resume are skipped, so you only spend time closing genuine competency gaps.\n* **Kahn's Topological DAG Scheduling**: Concepts are organized into a Directed Acyclic Graph G = (V, E). Kahn's algorithm computes in-degrees to ensure prerequisites strictly precede downstream modules in O(|V| + |E|) time.\n* **1-PL Rasch IRT Testing**: Calibrates question difficulty against learner ability theta to confirm genuine mastery before unlocking subsequent tiers.\n\n---\n\n#### 2. Adaptive Milestones\nEach milestone is sequenced so that relational extraction (SQL) precedes computational transformations (Python/Pandas), enterprise semantic modeling (Power BI/DAX), and statistical verification (Hypothesis Testing & IRT Checkpoints).\n\nIf mistakes occur during checkpoints, targeted micro-remediation levels (.1, .2) are injected dynamically into your DAG.`;
+        return `### Why Your Learning Path is Personalized\n\nTraditional courses force everyone through the same rigid syllabus. **LearnPath AI** built your path specifically for you:\n\n1. **Skill Gap Targeting**: Topics you've already demonstrated on GitHub or your resume are bypassed so you don't waste time relearning what you know.\n2. **Prerequisite Sequencing**: Every concept is ordered so foundational skills (like SQL and Data Wrangling) directly prepare you for complex analytics and machine learning.\n3. **Adaptive Remediation**: If you encounter difficulty in a checkpoint, focused micro-lessons are automatically added to strengthen that specific concept.\n\nAsk me about any specific milestone to see how it connects to your goal!`;
       }
 
-      return `Here is the Socratic breakdown for **${levelTitle}**:\n\n1. **Core Mechanism**: Focus on foundational principles and edge-case handling.\n2. **Practical Tip**: Check [Jump to 02:30] for the core demo in the lecture.\n\n\`\`\`python\n# Example Practice\ndef process_data(records):\n    return [r for r in records if r.get('valid')]\n\`\`\`\n\nFeel free to ask for debugging assistance or click **"Insert to Notes"** to save this snippet!`;
+      return `Here is a focused breakdown for **${levelTitle}**:\n\n1. **Core Concept**: Focus on foundational logic and clean syntax.\n2. **Video Tip**: Check [Jump to 02:30] for the live walkthrough.\n\n\`\`\`python\n# Practice Pattern\ndef process_records(items):\n    return [x for x in items if x.get('status') == 'active']\n\`\`\`\n\nClick **"Insert to Notes"** below to save this snippet into your markdown notebook!`;
     };
 
     // 1. Try Groq (streaming with SSE delta extraction)

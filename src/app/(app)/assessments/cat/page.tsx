@@ -464,23 +464,22 @@ function CATAssessmentContent() {
             </p>
           </div>
 
-          {/* Empathetic Remediation Flow (User's Vision) */}
+          {/* Professional Adaptive Remediation Card */}
           {!isPassed && (
-            <div className="p-6 rounded-3xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-surface to-surface flex flex-col gap-4 shadow-xl">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0 text-xl font-bold">
-                    
+            <div className="p-5 sm:p-6 rounded-2xl border border-focus/30 bg-focus/5 flex flex-col gap-4 shadow-sm">
+              <div className="flex items-start gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-focus/15 border border-focus/30 flex items-center justify-center text-focus shrink-0 text-lg font-bold">
+                  <Sparkle className="w-5 h-5" weight="fill" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="text-base font-bold text-text-primary">
-                    Oh no, it seems you&apos;re having trouble with{" "}
-                    <span className="text-amber-400 font-semibold">
+                  <h3 className="text-sm sm:text-base font-bold text-text-primary">
+                    Targeted Concept Review:{" "}
+                    <span className="text-focus font-semibold">
                       {missedTopics.length > 0 ? missedTopics.join(" & ") : `${level?.skillName} core mechanics`}
                     </span>
-                    , but don&apos;t worry  -  we&apos;ve got your back!
                   </h3>
                   <p className="text-xs text-text-secondary leading-relaxed">
-                    We&apos;ve generated a surgical booster lesson with interactive 3D flashcards and micro-drills to strengthen your foundation before moving forward.
+                    We&apos;ve synthesized a targeted booster module with focused flashcards and video tutorials to help you lock in these prerequisites before unlocking downstream levels.
                   </p>
                 </div>
               </div>
@@ -492,9 +491,9 @@ function CATAssessmentContent() {
                   {missedTopics.map((topic) => (
                     <span
                       key={topic}
-                      className="px-3 py-1 rounded-xl text-xs font-medium bg-amber-500/10 text-amber-300 border border-amber-500/20 flex items-center gap-1.5"
+                      className="px-3 py-1 rounded-xl text-xs font-medium bg-surface text-focus border border-focus/25 flex items-center gap-1.5 shadow-2xs"
                     >
-                      <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+                      <BookOpen className="w-3.5 h-3.5 text-focus" />
                       {topic}
                     </span>
                   ))}
@@ -502,12 +501,12 @@ function CATAssessmentContent() {
               )}
 
               {/* Single Clear CTA Button */}
-              <div className="flex items-center justify-end pt-2 border-t border-amber-500/20">
+              <div className="flex items-center justify-end pt-2 border-t border-border">
                 <button
                   type="button"
                   disabled={isInjectingPath}
                   onClick={handleContinueToBoosterLesson}
-                  className="px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-zinc-950 font-bold text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-amber-500/25 transition-all cursor-pointer"
+                  className="px-6 py-2.5 rounded-xl bg-focus hover:bg-focus/90 text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-md shadow-focus/25 transition-all cursor-pointer"
                 >
                   <Lightning className="w-4 h-4" weight="fill" />
                   <span>Continue to Booster Lesson</span>
