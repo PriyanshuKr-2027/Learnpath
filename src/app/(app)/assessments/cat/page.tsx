@@ -275,7 +275,7 @@ function CATAssessmentContent() {
   const missedTopics = Array.from(new Set(missedQuestions.map((q) => q.topic)));
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-5xl mx-auto pb-16 text-text-primary">
+    <div className="flex flex-col gap-6 w-full max-w-5xl mx-auto pb-4 text-text-primary">
       {/*    1. Top Mastery Speedometer & Diagnostic Header    */}
       <div className="p-6 rounded-3xl border border-border bg-surface shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-1">

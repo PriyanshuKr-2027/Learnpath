@@ -104,7 +104,7 @@ export default function RoadmapPage() {
 
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto pb-12">
+    <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto pb-4">
       {/* Top Header Card */}
       <div className="flex flex-wrap items-center justify-between gap-4 p-6 rounded-3xl border border-border bg-surface shadow-xl">
         <div className="flex flex-col gap-1.5">

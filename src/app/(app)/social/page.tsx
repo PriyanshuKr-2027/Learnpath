@@ -252,7 +252,7 @@ export default function SocialStudyRoomPage() {
   });
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 pb-20 text-text-primary">
+    <div className="max-w-6xl mx-auto space-y-6 pb-4 text-text-primary">
       {/* ── 1. Top Header & Active Group Banner ── */}
       <div className="p-6 sm:p-7 rounded-3xl border border-border bg-surface shadow-xl flex flex-col gap-5">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -429,7 +429,7 @@ export default function SocialStudyRoomPage() {
       {activeTab === "chat" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Main Chat Stream (8 cols) */}
-          <div className="lg:col-span-8 flex flex-col h-[600px] rounded-3xl border border-border bg-surface shadow-xl overflow-hidden">
+          <div className="lg:col-span-8 flex flex-col h-[500px] max-h-[calc(100vh-240px)] min-h-[380px] rounded-3xl border border-border bg-surface shadow-xl overflow-hidden">
             {/* Chat Messages */}
             <div className="flex-1 p-4 sm:p-5 overflow-y-auto space-y-4">
               {messages.length === 0 ? (

@@ -297,7 +297,7 @@ export default function NotesPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 pb-20 text-text-primary">
+    <div className="max-w-5xl mx-auto space-y-6 pb-4 text-text-primary">
       {/* Header Banner */}
       <div className="flex flex-wrap items-center justify-between gap-4 p-6 sm:p-7 rounded-3xl border border-border bg-surface shadow-xl">
         <div className="flex items-center gap-4">

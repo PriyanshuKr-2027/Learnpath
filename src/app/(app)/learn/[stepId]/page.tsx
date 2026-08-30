@@ -222,7 +222,7 @@ export default function LearningCanvasPage() {
   const nextLevel = currentIdx !== -1 && currentIdx + 1 < path.levels.length ? path.levels[currentIdx + 1] : null;
 
   return (
-    <div className="flex flex-col gap-5 w-full max-w-7xl mx-auto pb-12 text-text-primary">
+    <div className="flex flex-col gap-5 w-full max-w-7xl mx-auto pb-4 text-text-primary">
       {/* Top Action Bar */}
       <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl border border-border bg-surface shadow-xl">
         <div className="flex items-center gap-3">

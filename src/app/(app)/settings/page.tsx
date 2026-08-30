@@ -116,7 +116,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-20 text-text-primary">
+    <div className="max-w-4xl mx-auto space-y-8 pb-4 text-text-primary">
       {/*    Top Header    */}
       <div className="flex flex-wrap items-center justify-between gap-4 p-6 sm:p-7 rounded-3xl border border-border bg-surface shadow-xl">
         <div className="flex items-center gap-4">

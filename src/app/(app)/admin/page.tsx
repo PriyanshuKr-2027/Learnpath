@@ -274,7 +274,7 @@ export default function AdminPage() {
   }, [users, searchUser]);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-20">
+    <div className="max-w-6xl mx-auto space-y-8 pb-4">
       {/* Admin Title */}
       <div className="flex items-center justify-between">
         <div className="space-y-1">

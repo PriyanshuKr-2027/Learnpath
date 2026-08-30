@@ -108,7 +108,7 @@ export default function LeaderboardPage() {
   const topThree = leaderboard.slice(0, 3);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-20 text-text-primary">
+    <div className="max-w-6xl mx-auto space-y-8 pb-4 text-text-primary">
       {/* Top Banner */}
       <div className="flex flex-wrap items-center justify-between gap-4 p-6 sm:p-8 rounded-3xl border border-border bg-surface shadow-xl">
         <div>

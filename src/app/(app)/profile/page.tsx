@@ -120,7 +120,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-20 text-text-primary">
+    <div className="max-w-4xl mx-auto space-y-8 pb-4 text-text-primary">
       {/*    1. Profile Hero Card    */}
       <div className="p-6 sm:p-8 rounded-3xl border border-border bg-surface shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative overflow-hidden">
         <div className="flex items-center gap-5">

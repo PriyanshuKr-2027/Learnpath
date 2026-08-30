@@ -147,7 +147,7 @@ function CandyCrushMapInner({ path, onSelectNode }: CandyCrushMapProps) {
   }, [path.edges, prerequisiteEdgeIds]);
 
   return (
-    <div className="w-full h-[740px] rounded-3xl border border-border bg-paper relative overflow-hidden shadow-2xl">
+    <div className="w-full h-[540px] lg:h-[580px] max-h-[calc(100vh-200px)] min-h-[420px] rounded-3xl border border-border bg-paper relative overflow-hidden shadow-2xl">
       {/* Background Top Overlay Gradient */}
       <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-paper to-transparent pointer-events-none z-10" />
 

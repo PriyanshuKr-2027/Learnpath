@@ -85,7 +85,7 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
 
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 pb-20">
+    <div className="max-w-5xl mx-auto space-y-6 pb-4">
       {/* Back button */}
       <Link
         href="/admin"

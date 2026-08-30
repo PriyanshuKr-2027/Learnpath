@@ -100,7 +100,7 @@ export default function DashboardPage() {
   const masteredCount = gaps.filter((g) => g.deltaGap === 0).length;
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto pb-12 text-text-primary">
+    <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto pb-4 text-text-primary">
       {/*    1. Top Greeting Banner    */}
       <div className="relative overflow-hidden p-6 sm:p-8 rounded-3xl border border-border bg-surface shadow-xl">
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
