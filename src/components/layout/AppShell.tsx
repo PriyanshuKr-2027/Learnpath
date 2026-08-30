@@ -313,7 +313,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
+        <main className="flex-1 p-3 sm:p-5 overflow-y-auto overflow-x-hidden w-full min-w-0 max-w-full">
           {children}
         </main>
         <SetupModal />

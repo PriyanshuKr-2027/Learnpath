@@ -258,23 +258,23 @@ export default function SocialStudyRoomPage() {
   };
 
   return (
-    <div className="flex flex-col gap-4 w-full max-w-7xl mx-auto pb-4 text-text-primary">
+    <div className="flex flex-col gap-3 w-full max-w-5xl xl:max-w-6xl mx-auto pb-3 text-text-primary min-w-0 overflow-hidden">
       {/* Toast Notification */}
       {friendToast && (
-        <div className="fixed top-20 right-8 z-50 px-4 py-2.5 rounded-2xl bg-surface border border-signal/30 text-signal shadow-2xl flex items-center gap-2 text-xs font-semibold animate-in slide-in-from-top duration-300">
+        <div className="fixed top-20 right-8 z-50 px-3.5 py-2 rounded-xl bg-surface border border-signal/30 text-signal shadow-2xl flex items-center gap-2 text-xs font-semibold animate-in slide-in-from-top duration-300">
           <CheckCircle className="w-4 h-4 text-signal" weight="fill" />
           <span>{friendToast}</span>
         </div>
       )}
 
       {/* 1. Header Bar: Hub Title & Action Buttons */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-5 rounded-2xl border border-border bg-surface shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3.5 sm:p-4 rounded-xl border border-border bg-surface shadow-xs">
         <div>
-          <h1 className="text-lg sm:text-xl font-bold text-text-primary flex items-center gap-2">
-            <Users className="w-5 h-5 text-focus" weight="fill" />
+          <h1 className="text-base sm:text-lg font-bold text-text-primary flex items-center gap-2">
+            <Users className="w-4 h-4 text-focus" weight="fill" />
             <span>Social Study & Collaboration Hub</span>
           </h1>
-          <p className="text-xs text-text-secondary mt-0.5">
+          <p className="text-[11px] text-text-secondary mt-0.5">
             Collaborate with peers, solve doubts, and join live focus sessions.
           </p>
         </div>
@@ -332,17 +332,17 @@ export default function SocialStudyRoomPage() {
       </div>
 
       {/* 3. Main 2-Column Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-start w-full min-w-0">
         {/* LEFT COLUMN (4 Cols): Active Circle Overview & Friends List */}
-        <div className="lg:col-span-4 flex flex-col gap-4">
+        <div className="lg:col-span-4 flex flex-col gap-3 min-w-0">
           {/* Active Circle Card */}
-          <div className="p-4 rounded-2xl border border-border bg-surface shadow-xs flex flex-col gap-3">
+          <div className="p-3.5 rounded-xl border border-border bg-surface shadow-xs flex flex-col gap-2.5">
             <div className="flex items-start justify-between">
               <div>
                 <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-focus/10 text-focus border border-focus/20">
                   {activeGroup?.topic || "Engineering"}
                 </span>
-                <h3 className="text-sm font-bold text-text-primary mt-1">
+                <h3 className="text-xs sm:text-sm font-bold text-text-primary mt-1">
                   {activeGroup?.name}
                 </h3>
               </div>
@@ -394,10 +394,10 @@ export default function SocialStudyRoomPage() {
           </div>
 
           {/* Friends & Online Study Buddies Section */}
-          <div className="p-4 rounded-2xl border border-border bg-surface shadow-xs flex flex-col gap-3">
+          <div className="p-3.5 rounded-xl border border-border bg-surface shadow-xs flex flex-col gap-2.5 min-w-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <User className="w-4 h-4 text-focus" weight="bold" />
+                <User className="w-3.5 h-3.5 text-focus" weight="bold" />
                 <h3 className="text-xs font-bold text-text-primary">Study Buddies & Friends</h3>
               </div>
               <span className="text-[10px] font-mono font-bold text-signal px-2 py-0.5 rounded-md bg-signal/10 border border-signal/20">
@@ -418,7 +418,7 @@ export default function SocialStudyRoomPage() {
             </div>
 
             {/* Friends List */}
-            <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
+            <div className="flex flex-col gap-2 max-h-[280px] overflow-y-auto pr-1">
               {filteredFriends.length === 0 ? (
                 <div className="p-4 text-center text-xs text-text-secondary bg-paper rounded-xl">
                   No friends found. Click &quot;Add Friend&quot; to connect with peers!
@@ -427,18 +427,18 @@ export default function SocialStudyRoomPage() {
                 filteredFriends.map((friend) => (
                   <div
                     key={friend.id}
-                    className="p-2.5 rounded-xl bg-paper hover:bg-sidebar border border-border/80 transition-colors flex items-center justify-between gap-2"
+                    className="p-2 rounded-xl bg-paper hover:bg-sidebar border border-border/80 transition-colors flex items-center justify-between gap-2 min-w-0"
                   >
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex items-center gap-2 min-w-0">
                       <div className="relative shrink-0">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={friend.avatar}
                           alt={friend.name}
-                          className="w-8 h-8 rounded-full bg-surface border border-border"
+                          className="w-7 h-7 rounded-full bg-surface border border-border"
                         />
                         <span
-                          className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-surface ${
+                          className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-surface ${
                             friend.status === "in_session"
                               ? "bg-warning"
                               : friend.status === "online"
@@ -474,9 +474,9 @@ export default function SocialStudyRoomPage() {
         </div>
 
         {/* RIGHT COLUMN (8 Cols): Tabs (Live Discussion, Doubt Board, Study Together, Challenges) */}
-        <div className="lg:col-span-8 flex flex-col gap-3">
+        <div className="lg:col-span-8 flex flex-col gap-2.5 min-w-0">
           {/* Tab Navigation */}
-          <div className="flex items-center p-1 rounded-2xl bg-surface border border-border shadow-xs overflow-x-auto">
+          <div className="flex items-center p-1 rounded-xl bg-surface border border-border shadow-xs overflow-x-auto">
             {[
               { id: "chat", label: "Live Discussion", icon: ChatCircleText, count: messages.length },
               { id: "doubts", label: "Doubt Board", icon: Question, count: doubts.length },
@@ -490,13 +490,13 @@ export default function SocialStudyRoomPage() {
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id as SocialTab)}
-                  className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap ${
+                  className={`flex-1 py-1.5 px-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap ${
                     isActive
-                      ? "bg-focus text-white shadow-xs shadow-focus/25"
+                      ? "bg-focus text-white shadow-xs shadow-focus/25 font-bold"
                       : "text-text-secondary hover:text-text-primary"
                   }`}
                 >
-                  <Icon className="w-4 h-4" weight={isActive ? "fill" : "regular"} />
+                  <Icon className="w-3.5 h-3.5" weight={isActive ? "fill" : "regular"} />
                   <span>{tab.label}</span>
                   {tab.count !== undefined && (
                     <span
@@ -517,7 +517,7 @@ export default function SocialStudyRoomPage() {
 
           {/* TAB 1: Live Discussion */}
           {activeTab === "chat" && (
-            <div className="flex flex-col h-[500px] max-h-[calc(100vh-240px)] min-h-[380px] rounded-2xl border border-border bg-surface shadow-md overflow-hidden">
+            <div className="flex flex-col h-[460px] max-h-[calc(100vh-250px)] min-h-[360px] rounded-xl border border-border bg-surface shadow-xs overflow-hidden min-w-0">
               {/* Chat Header */}
               <div className="px-4 py-2.5 border-b border-border bg-surface flex items-center justify-between shrink-0">
                 <span className="text-xs font-bold text-text-primary flex items-center gap-1.5">
